@@ -12,6 +12,8 @@
 ###############################################################################
 library("tidyverse")
 library("reshape2")
+library("GGally")
+library("qtlcharts")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -55,7 +57,6 @@ clust_order <- function(x) {
 ###############################################################################
 ## Analysis of body composition
 ###############################################################################
-
 ## load data
 bc <- readRDS("data/sample_data_bc.rds")
 survey <- read_csv("data/WELL_China_1969_7.25.2017.csv")
@@ -116,10 +117,24 @@ ggplot(melt_bc_survey) +
   )
 
 ## pairs plot
-q_levels
+bc_df <- as.data.frame(bc_survey)
+bc_df$gender <- as.factor(bc_survey$gender)
 for (i in seq(1, 29, 5)) {
-  pairs(bc_survey[, q_levels[i:(i + 5)]])
+  ggpairs(
+    bc_df,
+    mapping = aes(color = gender),
+    columns = q_levels[i:(i + 5)],
+    lower = NULL,
+    upper = list(continuous = wrap("points", alpha = 0.3, size=0.1))
+  ) %>%
+    print()
 }
+
+## plot correlation matrix
+bc_mat <- bc_survey %>%
+  select(-id, -Number, -gender) %>%
+  as.matrix()
+iplotCorr(bc_mat, bc_survey$gender)
 
 ###############################################################################
 ## And now the microbiome!
