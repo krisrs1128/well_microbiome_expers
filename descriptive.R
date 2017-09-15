@@ -7,7 +7,9 @@
 ## author: sankaran.kris@gmail.com
 ## date: 09/14/2017
 
-## load packages
+###############################################################################
+## Functions and utility functions used below
+###############################################################################
 library("tidyverse")
 library("reshape2")
 
@@ -31,6 +33,28 @@ theme_update(
   legend.key = element_blank()
 )
 
+#' Make histograms
+histo_plot <- function(msurvey) {
+  ggplot(msurvey) +
+    geom_histogram(
+      aes(x = value, fill = as.factor(gender)),
+      bins = 60, position = "identity", alpha = 0.6
+    ) +
+    facet_wrap(~measurement, scales = "free") +
+    theme(
+      axis.text.y = element_blank()
+    )
+}
+
+#' Reorder columns according to a clustering
+clust_order <- function(x) {
+  D <- dist(scale(x))
+  rownames(x)[hclust(D)$order]
+}
+
+###############################################################################
+## Analysis of body composition
+###############################################################################
 
 ## load data
 bc <- readRDS("data/sample_data_bc.rds")
@@ -58,48 +82,19 @@ bc_survey <- bc_survey %>%
   ) %>%
   select_(.dots = c("id", "Number", bc_cols)) # reorder columns
 
-## make histograms
-histo_plot <- function(msurvey) {
-  ggplot(msurvey) +
-    geom_histogram(
-      aes(x = value, fill = as.factor(gender)),
-      bins = 60, position = "identity", alpha = 0.6
-    ) +
-    facet_wrap(~measurement, scales = "free") +
-    theme(
-      axis.text.y = element_blank()
-    )
-}
-
 melt_bc_survey <- bc_survey %>%
   gather(measurement, value, -id, -Number, -gender)
 histo_plot(melt_bc_survey)
 
-## reorder columns according to a clustering
-clust_order <- function(x) {
-  D <- dist(scale(x))
-  rownames(x)[hclust(D)$order]
-}
-
 q_levels <- clust_order(t(bc_survey[, -c(1, 2)]))
 melt_bc_survey <- melt_bc_survey %>%
-  mutate(
-    measurement = factor(measurement, levels = q_levels)
-  )
-
+  mutate(measurement = factor(measurement, levels = q_levels))
 histo_plot(melt_bc_survey)
 
-## let's make some heatmaps
-median_impute <- function(x) {
-  x[is.na(x)] <- median(x, na.rm = TRUE)
-  x
-}
-
+## scale separately within genders
 melt_bc_survey <- melt_bc_survey %>%
   group_by(measurement, gender) %>%
-  mutate(
-    scaled_meas = scale(value)
-  )
+  mutate(scaled_meas = scale(value))
 
 ## reorder rows according to clustering also
 id_levels <- clust_order(bc_survey[, -c(1:2)])
