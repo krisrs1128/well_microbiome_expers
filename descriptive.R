@@ -7,9 +7,13 @@
 ## author: sankaran.kris@gmail.com
 ## date: 09/14/2017
 
-## load packages
+###############################################################################
+## Functions and utility functions used below
+###############################################################################
 library("tidyverse")
 library("reshape2")
+library("GGally")
+library("qtlcharts")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -31,7 +35,28 @@ theme_update(
   legend.key = element_blank()
 )
 
+#' Make histograms
+histo_plot <- function(msurvey) {
+  ggplot(msurvey) +
+    geom_histogram(
+      aes(x = value, fill = as.factor(gender)),
+      bins = 60, position = "identity", alpha = 0.6
+    ) +
+    facet_wrap(~measurement, scales = "free") +
+    theme(
+      axis.text.y = element_blank()
+    )
+}
 
+#' Reorder columns according to a clustering
+clust_order <- function(x) {
+  D <- dist(scale(x))
+  rownames(x)[hclust(D)$order]
+}
+
+###############################################################################
+## Analysis of body composition
+###############################################################################
 ## load data
 bc <- readRDS("data/sample_data_bc.rds")
 survey <- read_csv("data/WELL_China_1969_7.25.2017.csv")
@@ -58,48 +83,19 @@ bc_survey <- bc_survey %>%
   ) %>%
   select_(.dots = c("id", "Number", bc_cols)) # reorder columns
 
-## make histograms
-histo_plot <- function(msurvey) {
-  ggplot(msurvey) +
-    geom_histogram(
-      aes(x = value, fill = as.factor(gender)),
-      bins = 60, position = "identity", alpha = 0.6
-    ) +
-    facet_wrap(~measurement, scales = "free") +
-    theme(
-      axis.text.y = element_blank()
-    )
-}
-
 melt_bc_survey <- bc_survey %>%
   gather(measurement, value, -id, -Number, -gender)
 histo_plot(melt_bc_survey)
 
-## reorder columns according to a clustering
-clust_order <- function(x) {
-  D <- dist(scale(x))
-  rownames(x)[hclust(D)$order]
-}
-
 q_levels <- clust_order(t(bc_survey[, -c(1, 2)]))
 melt_bc_survey <- melt_bc_survey %>%
-  mutate(
-    measurement = factor(measurement, levels = q_levels)
-  )
-
+  mutate(measurement = factor(measurement, levels = q_levels))
 histo_plot(melt_bc_survey)
 
-## let's make some heatmaps
-median_impute <- function(x) {
-  x[is.na(x)] <- median(x, na.rm = TRUE)
-  x
-}
-
+## scale separately within genders
 melt_bc_survey <- melt_bc_survey %>%
   group_by(measurement, gender) %>%
-  mutate(
-    scaled_meas = scale(value)
-  )
+  mutate(scaled_meas = scale(value))
 
 ## reorder rows according to clustering also
 id_levels <- clust_order(bc_survey[, -c(1:2)])
@@ -121,10 +117,24 @@ ggplot(melt_bc_survey) +
   )
 
 ## pairs plot
-q_levels
+bc_df <- as.data.frame(bc_survey)
+bc_df$gender <- as.factor(bc_survey$gender)
 for (i in seq(1, 29, 5)) {
-  pairs(bc_survey[, q_levels[i:(i + 5)]])
+  ggpairs(
+    bc_df,
+    mapping = aes(color = gender),
+    columns = q_levels[i:(i + 5)],
+    lower = NULL,
+    upper = list(continuous = wrap("points", alpha = 0.3, size=0.1))
+  ) %>%
+    print()
 }
+
+## plot correlation matrix
+bc_mat <- bc_survey %>%
+  select(-id, -Number, -gender) %>%
+  as.matrix()
+iplotCorr(bc_mat, bc_survey$gender)
 
 ###############################################################################
 ## And now the microbiome!
