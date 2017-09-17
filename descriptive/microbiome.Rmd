@@ -1,0 +1,35 @@
+---
+title: Descriptive Analysis of Microbiome Composition
+date: "`r Sys.Date()`"
+---
+
+```{r, echo = F}
+library("knitr")
+opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
+```
+
+```{r setup}
+library("tidyverse")
+library("phyloseq")
+```
+
+```{r read_data}
+seqtab <- readRDS("../data/seqtab.rds")
+taxa <- readRDS("../data/taxa.rds")
+```
+
+```{r histograms}
+dim(seqtab)
+seq_map <- setNames(
+  paste0("species_", seq_along(seqtab)),
+  colnames(seqtab)
+)
+
+colnames(seqtab) <- seq_map[colnames(seqtab)]
+mseqtab <- seqtab %>%
+  melt(varnames = c("Number", "species")) %>%
+  left_join()
+
+ggplot(mseqtab) +
+  geom_histogram(aes(x = value))
+```

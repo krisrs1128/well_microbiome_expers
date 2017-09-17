@@ -1,13 +1,11 @@
 ---
 title: Descriptive Analysis of Body Composition
 date: "`r Sys.Date()`"
-output: bookdown::pdf_book
 ---
 
 ```{r, echo = F}
 library("knitr")
 opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
-read_chunk("descriptive.R")
 ```
 
 ```{r setup}
@@ -59,10 +57,8 @@ clust_order <- function(x) {
 ```
 
 ```{r read_data}
-bc <- readRDS("data/sample_data_bc.rds")
-survey <- read_csv("data/WELL_China_1969_7.25.2017.csv")
-seqtab <- readRDS("data/seqtab.rds")
-taxa <- readRDS("data/taxa.rds")
+bc <- readRDS("../data/sample_data_bc.rds")
+survey <- read_csv("../data/WELL_China_1969_7.25.2017.csv")
 
 ## getting names to agree across bc and survey -- not sure where aoi came from
 bc_survey <- survey %>%
