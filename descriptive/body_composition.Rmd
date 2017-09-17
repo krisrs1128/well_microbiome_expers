@@ -1,0 +1,193 @@
+---
+title: Descriptive Analysis of Body Composition
+date: "`r Sys.Date()`"
+---
+
+```{r, echo = F}
+library("knitr")
+opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
+```
+
+```{r setup}
+library("tidyverse")
+library("reshape2")
+library("GGally")
+library("qtlcharts")
+
+## cleaner ggplot theme
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_rect(size = 0.5),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
+)
+```
+
+```{r utils}
+#' Make histograms
+histo_plot <- function(msurvey) {
+  ggplot(msurvey) +
+    geom_histogram(
+      aes(x = value, fill = as.factor(gender)),
+      bins = 60, position = "identity", alpha = 0.6
+    ) +
+    facet_wrap(~measurement, scales = "free") +
+    theme(
+      axis.text.y = element_blank()
+    )
+}
+
+#' Reorder columns according to a clustering
+clust_order <- function(x) {
+  D <- dist(scale(x))
+  rownames(x)[hclust(D)$order]
+}
+```
+
+```{r read_data}
+bc <- readRDS("../data/sample_data_bc.rds")
+survey <- read_csv("../data/WELL_China_1969_7.25.2017.csv")
+
+## getting names to agree across bc and survey -- not sure where aoi came from
+bc_survey <- survey %>%
+  rename(
+    age = age_it,
+    gender = gender_it,
+    height_dxa = height,
+    weight_dxa = weight
+  )
+bc_cols <- intersect(colnames(bc_survey), tolower(colnames(bc)))
+id_map <- setNames(sample_names(bc), bc$id)
+
+## subsetting to the body composition fields
+bc_survey <- bc_survey %>%
+  select_(.dots = bc_cols) %>%
+  mutate(
+    id = as.character(id),
+    Number = id_map[id]
+  ) %>%
+  select_(.dots = c("id", "Number", bc_cols)) # reorder columns
+```
+
+```{r alternative_ordering}
+## place all measurements at a certain site together
+site_ordered <- c(
+  "id", "Number", "gender", "age", "height_dxa", "weight_dxa",
+  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
+  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
+  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
+  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
+  "arms_lm"
+)
+
+mass_type_ordered <- c(
+  site_ordered[!grepl("fm|lm", site_ordered)],
+  site_ordered[grepl("fm", site_ordered)],
+  site_ordered[grepl("lm", site_ordered)]
+)
+```
+
+```{r histograms}
+## survey order
+melt_bc_survey <- bc_survey %>%
+  gather(measurement, value, -id, -Number, -gender) %>%
+  mutate(measurement = factor(measurement, levels = mass_type_ordered))
+
+histo_plot(melt_bc_survey)
+
+## site order
+melt_bc_survey <- melt_bc_survey %>%
+  mutate(measurement = factor(measurement, levels = site_ordered))
+histo_plot(melt_bc_survey)
+```
+
+* two overall panels are split by gender
+* dark vertical stripes are missing values
+* fat and lean mass are not inversely related, because they're both related to
+  overall weight
+
+```{r heatmaps}
+## scale separately within genders
+melt_bc_survey <- melt_bc_survey %>%
+  group_by(measurement, gender) %>%
+  mutate(scaled_meas = scale(value)) %>%
+  ungroup()
+
+## reorder rows according to clustering also
+id_levels <- clust_order(bc_survey[, -c(1:2)])
+id_levels <- bc_survey$id[as.numeric(id_levels)]
+melt_bc_survey <- melt_bc_survey %>%
+  mutate(
+    id = factor(id, levels = id_levels)
+  )
+
+#' plot heatmap of people by measurements
+plot_heatmap <- function(melted_survey) {
+  ggplot(melted_survey) +
+  geom_tile(
+    aes(x = id, y = measurement, fill = scaled_meas)
+  ) +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_gradient2() +
+  facet_grid(. ~ gender, scale = "free") +
+  coord_fixed(ratio = 50) +
+  theme(
+    axis.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+}
+
+melt_bc_survey %>%
+  mutate(measurement = factor(measurement, levels = rev(mass_type_ordered))) %>%
+  plot_heatmap()
+
+melt_bc_survey %>%
+  mutate(measurement = factor(measurement, levels = rev(site_ordered))) %>%
+  plot_heatmap()
+```
+
+```{r pairs}
+## pairs plot
+bc_df <- as.data.frame(bc_survey)[site_ordered]
+bc_df$gender <- as.factor(bc_survey$gender)
+for (i in seq(3, 30, 5)) {
+  ggpairs(
+    bc_df,
+    mapping = aes(color = gender),
+    columns = i:(i + 5),
+    lower = NULL,
+    upper = list(continuous = wrap("points", alpha = 0.3, size=0.1))
+  ) %>%
+    print()
+}
+```
+
+```{r correlation_matrix}
+## ordered by lean vs. fat
+bc_mat <- bc_survey %>%
+  dplyr::select_(.dots = rev(mass_type_ordered)) %>%
+  dplyr::select(-id, -Number, -gender) %>%
+  as.matrix()
+iplotCorr(bc_mat, bc_survey$gender)
+
+## ordered by body site
+bc_mat <- bc_survey %>%
+  dplyr::select_(.dots = rev(site_ordered)) %>%
+  dplyr::select(-id, -Number, -gender) %>%
+  as.matrix()
+iplotCorr(bc_mat, bc_survey$gender)
+```
