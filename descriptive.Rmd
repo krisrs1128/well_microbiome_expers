@@ -1,15 +1,16 @@
-#! /usr/bin/env Rscript
+---
+title: Descriptive Analysis of Body Composition
+date: "`r Sys.Date()`"
+output: bookdown::pdf_book
+---
 
-## File description -------------------------------------------------------------
-##
-## Descriptive statistics on the WELL microbiome dataset.
-##
-## author: sankaran.kris@gmail.com
-## date: 09/14/2017
+```{r, echo = F}
+library("knitr")
+opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
+read_chunk("descriptive.R")
+```
 
-###############################################################################
-## Functions and utility functions used below
-###############################################################################
+```{r setup}
 library("tidyverse")
 library("reshape2")
 library("GGally")
@@ -34,7 +35,9 @@ theme_update(
   strip.text = element_text(size = 8),
   legend.key = element_blank()
 )
+```
 
+```{r utils}
 #' Make histograms
 histo_plot <- function(msurvey) {
   ggplot(msurvey) +
@@ -53,11 +56,9 @@ clust_order <- function(x) {
   D <- dist(scale(x))
   rownames(x)[hclust(D)$order]
 }
+```
 
-###############################################################################
-## Analysis of body composition
-###############################################################################
-## load data
+```{r read_data}
 bc <- readRDS("data/sample_data_bc.rds")
 survey <- read_csv("data/WELL_China_1969_7.25.2017.csv")
 seqtab <- readRDS("data/seqtab.rds")
@@ -82,16 +83,21 @@ bc_survey <- bc_survey %>%
     Number = id_map[id]
   ) %>%
   select_(.dots = c("id", "Number", bc_cols)) # reorder columns
+```
 
+```{r histograms}
 melt_bc_survey <- bc_survey %>%
   gather(measurement, value, -id, -Number, -gender)
 histo_plot(melt_bc_survey)
 
+## sorting questions by a clustering
 q_levels <- clust_order(t(bc_survey[, -c(1, 2)]))
 melt_bc_survey <- melt_bc_survey %>%
   mutate(measurement = factor(measurement, levels = q_levels))
 histo_plot(melt_bc_survey)
+```
 
+```{r heatmaps}
 ## scale separately within genders
 melt_bc_survey <- melt_bc_survey %>%
   group_by(measurement, gender) %>%
@@ -107,15 +113,20 @@ melt_bc_survey <- melt_bc_survey %>%
 
 ggplot(melt_bc_survey) +
   geom_tile(
-    aes(x = measurement, y = id, fill = scaled_meas)
+    aes(x = id, y = measurement, fill = scaled_meas)
   ) +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2() +
-  facet_grid(gender ~ ., scale = "free", space = "free") +
+  facet_grid(. ~ gender, scale = "free") +
+  coord_fixed(ratio = 50) +
   theme(
-    axis.text.x = element_text(angle = 90),
-    axis.text.y = element_blank()
+    axis.text.x = element_blank(),
+    legend.position = "top"
   )
+```
 
+```{r pairs}
 ## pairs plot
 bc_df <- as.data.frame(bc_survey)
 bc_df$gender <- as.factor(bc_survey$gender)
@@ -129,26 +140,11 @@ for (i in seq(1, 29, 5)) {
   ) %>%
     print()
 }
+```
 
-## plot correlation matrix
+```{r correlation_matrix}
 bc_mat <- bc_survey %>%
   select(-id, -Number, -gender) %>%
   as.matrix()
 iplotCorr(bc_mat, bc_survey$gender)
-
-###############################################################################
-## And now the microbiome!
-###############################################################################
-dim(seqtab)
-seq_map <- setNames(
-  paste0("species_", seq_along(seqtab)),
-  colnames(seqtab)
-)
-
-colnames(seqtab) <- seq_map[colnames(seqtab)]
-mseqtab <- seqtab %>%
-  melt(varnames = c("Number", "species")) %>%
-  left_join()
-
-ggplot(seqtab) +
-  geom_histogram()
+```
