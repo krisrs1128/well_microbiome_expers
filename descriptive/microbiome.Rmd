@@ -11,25 +11,83 @@ opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
 ```{r setup}
 library("tidyverse")
 library("phyloseq")
+library("reshape2")
+
+## cleaner ggplot theme
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_rect(size = 0.5),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
+)
 ```
 
 ```{r read_data}
 seqtab <- readRDS("../data/seqtab.rds")
 taxa <- readRDS("../data/taxa.rds")
+survey <- read_csv("../data/WELL_China_1969_7.25.2017.csv")
+
+bc_survey <- survey %>%
+  rename(
+    age = age_it,
+    gender = gender_it,
+    height_dxa = height,
+    weight_dxa = weight
+  )
+bc_cols <- intersect(colnames(bc_survey), tolower(colnames(bc)))
+id_map <- setNames(sample_names(bc), bc$id)
+
+## subsetting to the body composition fields
+bc_survey <- bc_survey %>%
+  select_(.dots = bc_cols) %>%
+  mutate(
+    id = as.character(id),
+    Number = id_map[id]
+  ) %>%
+  select_(.dots = c("id", "Number", bc_cols)) # reorder columns
 ```
 
 ```{r histograms}
-dim(seqtab)
 seq_map <- setNames(
   paste0("species_", seq_along(seqtab)),
   colnames(seqtab)
 )
 
 colnames(seqtab) <- seq_map[colnames(seqtab)]
+
+## include sequence map in tax table
+taxa <- taxa %>%
+  as.data.frame %>%
+  rownames_to_column("seq") %>%
+  mutate(species = seq_map[seq])
+
+## make some histograms
 mseqtab <- seqtab %>%
   melt(varnames = c("Number", "species")) %>%
-  left_join()
+  group_by(species) %>%
+  mutate(total_abund = sum(value))
 
 ggplot(mseqtab) +
-  geom_histogram(aes(x = value))
+  geom_histogram(aes(x = value), bins = 100)
+
+ggplot(mseqtab) +
+  geom_histogram(aes(x = asinh(value)), bins = 100)
+
+ggplot(
+  mseqtab %>%
+    filter(total_abund > 1e5)
+  ) +
+  geom_histogram(aes(x = asinh(value)), bins = 100)
 ```
