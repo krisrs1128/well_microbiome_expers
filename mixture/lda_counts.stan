@@ -13,8 +13,8 @@
 data {
   int<lower=1> K; // num topics
   int<lower=1> V; // num species
-  int<lower=0> D; // num samples
-  int<lower=0> n[D, V]; // species counts for each sample
+  int<lower=0> N; // num samples
+  int<lower=0> x[N, V]; // species counts for each sample
 
   // hyperparameters
   vector<lower=0>[K] alpha;
@@ -22,41 +22,41 @@ data {
 }
 
 parameters {
-  simplex[K] theta[D]; // topic mixtures
+  simplex[K] theta[N]; // topic mixtures
   simplex[V] beta[K]; // word dist for k^th topic
 }
 
 model {
-  for (d in 1:D) {
-    theta[d] ~ dirichlet(alpha);
+  for (i in 1:N) {
+    theta[i] ~ dirichlet(alpha);
   }
 
   for (k in 1:K) {
     beta[k] ~ dirichlet(gamma);
   }
 
-  for (d in 1:D) {
+  for (i in 1:N) {
     vector[V] eta;
-    eta = beta[1] * theta[d, 1];
+    eta = beta[1] * theta[i, 1];
 
     for (k in 2:K) {
-      eta = eta + beta[k] * theta[d, k];
+      eta = eta + beta[k] * theta[i, k];
     }
-    n[d] ~ multinomial(eta);
+    x[i] ~ multinomial(eta);
   }
 
 }
 
 generated quantities {
-  int<lower=0> x_sim[D, V]; // simulated word counts, for posterior checking
+  int<lower=0> x_sim[N, V]; // simulated species counts, for posterior checking
 
-  for (d in 1:D) {
+  for (i in 1:N) {
     vector[V] eta;
-    eta = beta[1] * theta[d, 1];
+    eta = beta[1] * theta[i, 1];
 
     for (k in 2:K) {
-      eta = eta + beta[k] * theta[d, k];
+      eta = eta + beta[k] * theta[i, k];
     }
-    x_sim[d] = multinomial_rng(eta, sum(n[d]));
+    x_sim[i] = multinomial_rng(eta, sum(x[i]));
   }
 }

@@ -19,7 +19,7 @@ data {
 
   // hyperparameters
   vector<lower=0>[K] alpha;
-  vector<lower=0>[V] beta;
+  vector<lower=0>[V] gamma;
 }
 
 parameters {
@@ -31,7 +31,7 @@ model {
   // priors
   thetas ~ dirichlet(alpha);
   for (k in 1:K) {
-    p[k] ~ dirichlet(beta);
+    p[k] ~ dirichlet(gamma);
   }
 
   // likelihood
