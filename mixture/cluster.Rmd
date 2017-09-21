@@ -1,0 +1,89 @@
+---
+title: Clustering Counts with Uneven Depths
+date: "`r Sys.Date()`"
+---
+
+```{r setup}
+library("tidyverse")
+library("rstan")
+library("phyloseq")
+library("reshape2")
+library("forcats")
+
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_blank(),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
+)
+```
+
+```{r read_data}
+seqtab <- readRDS("../data/seqtab.rds")
+samples <- readRDS("../data/sample_data_bc.rds")
+taxa <- readRDS("../data/taxa.rds")
+```
+
+Let's test out the dirichelt multinomial mixture model code (on just a subset of
+samples).
+
+```{r }
+filter_thresh <- 400
+stan_data <- list(
+  "N" = nsamples(seqtab),
+  "V" = filter_thresh,
+  "K" = 4,
+  "x" = as.matrix(seqtab)[, seq_len(filter_thresh)],
+  "alpha" = rep(1, 4),
+  "beta" = rep(1, filter_thresh)
+)
+
+m <- stan_model("dirichlet_multinomial.stan")
+vb_fit <- vb(m, stan_data)
+cluster_res <- extract(vb_fit)
+```
+
+We can study the output -- this method doesn't actually give cluster
+assignments, but it gives cluster compositions, from which we can usually guess
+the cluster assignments.
+
+```{r}
+colMeans(cluster_res$theta) ## how common different clusters are
+p_hat <- apply(cluster_res$p, c(2, 3), mean)
+p_df <- p_hat %>%
+  melt(
+    varnames = c("k", "v"),
+    value.name = "p"
+  )
+p_df$seq <- taxa_names(seqtab)[p_df$v]
+
+## include sequence map in tax table
+taxa <- taxa %>%
+  as.data.frame %>%
+  rownames_to_column("seq")
+
+p_df <- p_df %>%
+  left_join(taxa) %>%
+  mutate(family = fct_lump(Family, 7))
+ggplot(p_df %>% filter(v < 100)) +
+  geom_tile(
+    aes(x = v, y = k, alpha = sqrt(p), fill = family)
+  ) +
+  scale_alpha(range = c(0, 1))
+```
+
+So it looks like the fourth cluster has more prevotella. The others can be
+summarized based on a few species, but it doesn't really seem consistent across
+the whole family.
