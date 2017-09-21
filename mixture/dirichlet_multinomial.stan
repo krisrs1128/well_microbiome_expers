@@ -15,7 +15,6 @@ data {
   int<lower=0> N; // Number of samples
   int<lower=0> V; // Number of species
   int<lower=0> K; // Number of clusters
-  int<lower=0> ns; // word counts per sample
   int<lower=0> x[N, V]; // species abundances
 
   // hyperparameters
@@ -24,8 +23,8 @@ data {
 }
 
 parameters {
-  simplex[V] p[K] // cluster probabilities
-  simplex[K] thetas // overall mixture proportions
+  simplex[V] p[K]; // cluster probabilities
+  simplex[K] thetas; // overall mixture proportions
 }
 
 model {
@@ -36,10 +35,10 @@ model {
   }
 
   // likelihood
-  for (d in 1:D) {
+  for (i in 1:N) {
     real probs[K];
     for (k in 1:K) {
-      probs[k] = log(theta[k]) + multinomial_log(x[d], p[k]);
+      probs[k] = log(thetas[k]) + multinomial_lpmf(x[i] | p[k]);
     }
 
     target += log_sum_exp(probs);
