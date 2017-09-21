@@ -3,11 +3,6 @@ title: Descriptive Analysis of Microbiome Composition
 date: "`r Sys.Date()`"
 ---
 
-```{r, echo = F}
-library("knitr")
-opts_chunk$set(fig.width = 8, fig.height = 8, fig.align = "center")
-```
-
 ```{r setup}
 library("tidyverse")
 library("phyloseq")
@@ -38,6 +33,7 @@ theme_update(
 seqtab <- readRDS("../data/seqtab.rds")
 taxa <- readRDS("../data/taxa.rds")
 survey <- read_csv("../data/WELL_China_1969_7.25.2017.csv")
+bc <- readRDS("../data/sample_data_bc.rds")
 
 bc_survey <- survey %>%
   rename(
@@ -82,12 +78,10 @@ mseqtab <- seqtab %>%
 ggplot(mseqtab) +
   geom_histogram(aes(x = value), bins = 100)
 
-ggplot(mseqtab) +
-  geom_histogram(aes(x = asinh(value)), bins = 100)
-
 ggplot(
   mseqtab %>%
     filter(total_abund > 1e5)
   ) +
   geom_histogram(aes(x = asinh(value)), bins = 100)
 ```
+
