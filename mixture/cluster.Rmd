@@ -36,32 +36,34 @@ samples <- readRDS("../data/sample_data_bc.rds")
 taxa <- readRDS("../data/taxa.rds")
 ```
 
-Let's test out the dirichelt multinomial mixture model code (on just a subset of
-samples).
+## Dirichlet Multinomial Mixtures
 
-```{r }
+Let's test out the dirichelt multinomial mixture model code (on just a subset of
+species).
+
+```{r dmm_fit}
 filter_thresh <- 400
 stan_data <- list(
   "N" = nsamples(seqtab),
   "V" = filter_thresh,
   "K" = 4,
   "x" = as.matrix(seqtab)[, seq_len(filter_thresh)],
-  "alpha" = rep(1, 4),
-  "beta" = rep(1, filter_thresh)
+  "alpha" = rep(10, 4),
+  "gamma" = rep(0.01, filter_thresh)
 )
 
 m <- stan_model("dirichlet_multinomial.stan")
-vb_fit <- vb(m, stan_data)
-cluster_res <- extract(vb_fit)
+dm_fit <- vb(m, stan_data)
+dm_res <- extract(dm_fit)
 ```
 
 We can study the output -- this method doesn't actually give cluster
 assignments, but it gives cluster compositions, from which we can usually guess
 the cluster assignments.
 
-```{r}
-colMeans(cluster_res$theta) ## how common different clusters are
-p_hat <- apply(cluster_res$p, c(2, 3), mean)
+```{r dmm_inspect}
+colMeans(dm_res$theta) ## how common different clusters are
+p_hat <- apply(dm_res$p, c(2, 3), mean)
 p_df <- p_hat %>%
   melt(
     varnames = c("k", "v"),
@@ -87,3 +89,19 @@ ggplot(p_df %>% filter(v < 100)) +
 So it looks like the fourth cluster has more prevotella. The others can be
 summarized based on a few species, but it doesn't really seem consistent across
 the whole family.
+
+## LDA
+
+LDA also conditions on the total counts in each sample, so also lets us model
+variation in sequencing depth. The main difference between this and the
+Dirichlet Multinomial mixture model is that here each sample is allowed to have
+partial memberships across clusters (rather than being fixed to any single one).
+Practically, the big advantage is that we directly get (partial) cluster
+assignments, rather than having to guess them from the fitted clusters.
+
+```{r lda_fit}
+m <- stan_model("lda_counts.stan")
+lda_fit <- vb(m, stan_data)
+lda_res <- extract(vb_fit)
+```
+
