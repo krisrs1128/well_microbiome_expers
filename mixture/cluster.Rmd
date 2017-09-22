@@ -320,11 +320,11 @@ read in the same way as that for the compositions in the Dirichlet Multinomial
 example. Again, we see a prevotella-related difference, with the first cluster
 have quite a bit less prevotella and the second having quite a bit more. Cluster
 3 seems to have a lot of the rarer species which are not so common in the other
-clusters (especially Erysipelos). Cluster 4 seems to have more Ruminoccoceae and less Bacteroidaceae,
-while in Cluster 1 that pattern is reversed. Cluster 1 seems somewhat more
-diverse, though it's a little less clear, since it also has narrower boxplots
-(because most samples have some contribution to Cluster 1, improving the
-posterior estimates).
+clusters (especially Erysipelos). Cluster 4 seems to have more Ruminoccoceae and
+less Bacteroidaceae, while in Cluster 1 that pattern is reversed. Cluster 1
+seems somewhat more diverse, though it's a little less clear, since it also has
+narrower boxplots (because most samples have some contribution to Cluster 1,
+improving the posterior estimates).
 
 ```{r beta_hats}
 ## join in the taxa information
