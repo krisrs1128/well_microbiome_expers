@@ -1,0 +1,402 @@
+---
+title: Clustering Counts with Uneven Depths
+date: "`r Sys.Date()`"
+---
+
+## Approach
+
+There are difficulties in choosing a transformation with which to cluster
+microbiome data. Neither of the two usual choices -- relative abundance and
+asinh (or log(1 + x)) -- is clearly more applicable than the other,
+
+* asinh: While this preserves the overall sequencing depth structure, it can
+  lead to the creation of artificial clusters whose only similarity is that they
+  have low sequencing depth.
+* relative abundance: While this removes the low-sequencing-depth cluster
+  artifacet, it treats all samples the same, when really those samples with
+  deeper sequencing have better estimates.
+
+Here, we'll consider alternatives that cluster based on composition, but which
+take into account the uneven sequencing depth of different samples. The
+essential idea is to model the counts for a single sample as a long multinomial
+vector, with $N_{i}$ equal to the total count for that sample and $p_{i}$ equal
+to the underlying species composition of that sample. If we allowed each sample
+to have a totally different $p_{i}$, then we would be overfitting, and not
+sharing any information between / providing any dimension reduction across
+samples. Instead, the idea is to impose some structure across the $p_{i}$ --
+different strategies yield different methods.
+
+## Setup
+
+But before we do anything complicated, let's load some libraries and read in the
+data. The long "theme" text is just to customize the appearance of the ggplot
+theme. The centered log transformation is used later for displaying fitted
+probabilities (it's like a naive version of PHILR).
+
+```{r setup}
+library("tidyverse")
+library("rstan")
+library("phyloseq")
+library("reshape2")
+library("forcats")
+set.seed(09212017)
+knitr::opts_chunk$set(cache = TRUE)
+
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_rect(size = 0.7, fill = "transparent"),
+  panel.spacing = unit(0, "cm"),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
+)
+
+#' Centered Log Transform
+#'
+#' Log transform probabilities for each species and cluster at a time.
+centered_log <- function(x) {
+  for (i in seq_len(nrow(x))) {
+    for (k in seq_len(ncol(x))) {
+      x[i, k, ] <- log(x[i, k, ])
+      x[i, k, ] <- x[i, k, ] - mean(x[i, k, ])
+    }
+  }
+  x
+}
+```
+
+
+Next we read in all the data into a phyloseq object. We're filtering down to
+those species that appear in at least 5\% of samples -- this does remove quite a
+few species (only 444 are left, out of the original 2565). But to study the
+rarer species, I think it would make more sense to analyze the presence /
+absence data, and that's not something I try in this note (yet).
+
+```{r read_data}
+ps <- phyloseq(
+  otu_table = readRDS("../data/seqtab.rds"),
+  sample_data = readRDS("../data/sample_data_bc.rds"),
+  taxa = readRDS("../data/taxa.rds"),
+  phylo = readRDS("../data/phylo_tree.rds")
+) %>%
+  filter_taxa(function(x) { mean(x > 0) > 0.05}, TRUE) ## appear in 5% of samples
+
+taxa <- tax_table(ps) %>%
+  as.data.frame %>%
+  rownames_to_column("seq")
+phylo_order <- phy_tree(ps)$tip
+```
+
+## Dirichlet Multinomial Mixtures
+
+The first approach we'll consider is a Dirichlet Multinomial Model. This model
+is like a Gaussian Mixture Model, except instead of modeling cluster component
+as a Gaussian, you model it as a Multinomial. The center of each cluster is now
+a distinct composition $p_{k}$, and each sample is thought of as a Multinomial
+draw from one of these $p_{k}$ (with different depths $N_{i}$).
+
+The code below fits this model with $K = 4$. It's possible to study the analog
+of the gap statistic in this model, to choose a better value of $K$, but for now
+I'm thinking of $K$ as a tuning parameter rather than any "real-world" quantity
+to estimate.
+
+```{r dmm_fit}
+K <- 4
+stan_data <- list(
+  "N" = nsamples(ps),
+  "V" = ntaxa(ps),
+  "K" = K,
+  "x" = get_taxa(ps),
+  "alpha" = rep(10, K),
+  "gamma" = rep(1e-2, ntaxa(ps))
+)
+
+m <- stan_model("dirichlet_multinomial.stan")
+dm_fit <- vb(m, stan_data, adapt_engaged = FALSE, eta = 0.1)
+dm_res <- extract(dm_fit)
+rm(dm_fit) ## free some memory
+```
+
+Now we'll study the output. A disadvantage of this model is that it doesn't
+directly provide cluster assignments. However, these could be recovered, by
+comparing the likelihood of different clusters on the samples that we've
+observed. We haven't implemented that here, though.
+
+The main display we consider here shows the fitted probabilities within each of
+the $K$ clusters, given in the figure below. Each row is a different cluster,
+and each individual boxplot gives the posterior of the centered log probability
+for a single species within that cluster (the fact that we're looking at the
+entire posterior, rather than just the mean, is why we have boxplots instead of
+just points). The species are sorted as in the original OTU table, which is why
+the higher probability species appear on the left.
+
+The first thing that stands out is that the first two clusters have basically no
+prevotella (the first also is missing a few relatively common ruminoccocus). The
+first cluster seems a little more diverse than the others, while the second
+seems less diverse -- you can read this by looking at the number of boxplots
+above the horizontal 0 reference line.
+
+```{r dmm_inspect}
+colMeans(dm_res$theta) ## how common different clusters are
+
+## Join in the taxa data
+p_df <- centered_log(dm_res$p) %>%
+  melt(
+    varnames = c("iter", "k", "v"),
+    value.name = "p"
+  ) %>%
+  mutate(
+    seq = taxa_names(ps)[v]
+  ) %>%
+  left_join(taxa %>% select(seq, Family)) %>%
+  mutate(
+    family = fct_lump(Family, 7),
+    seq = droplevels(factor(seq, levels = phylo_order))
+  )
+
+## Plot the fitted probabilities
+ggplot(p_df) +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_boxplot(
+    aes(x = seq, y = p, fill = family, col = family),
+    outlier.size = 0.2,
+    width = 30
+  ) +
+  facet_grid(k ~ ., scale = "free_y") +
+  labs(y = "clog(p)") +
+  theme(
+    axis.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+## LDA
+
+The main difference between LDA and the Dirichlet Multinomial Mixture model is
+that here each sample is allowed to have partial memberships across clusters
+(rather than being fixed to any single one). Practically, the big advantage is
+that we directly get (partial) cluster assignments (we don't have to do extra
+postprocessing, like in the Dirichlet Multinomial).
+
+Formally, instead of assuming that a sample $x_{i}$ is drawn from a multinomial
+with underlying probability $p_{k}$ (for one of the clusters $k$), the LDA model
+assumes that it's drawn from a mulitnomial with underlying probability $\sum_{k}
+\theta_{ik} p_{k}$, where $\theta_{k}$ put different weights on each $p_{k}$.
+This let's us estimate something closer to a gradient, rather than total
+distinct clusters, since the $\theta_{ik}$'s let us interpolate between
+different clusters.
+
+But first, let's fit the model. As before, we set $K = 4$ (without any
+particularly good justification).
+
+```{r lda_fit}
+m <- stan_model("lda_counts.stan")
+lda_fit <- vb(m, stan_data, adapt_engaged = FALSE, eta = 0.1)
+lda_res <- extract(lda_fit)
+rm(lda_fit)
+```
+
+We can now inspect the actual partial cluster assignments ($thetas_{i}$s) and
+cluster compositions ($p_{k}$s). The heatmap below shows the posterior mean of
+the $\theta_{ik}$'s. The column is a different sample, and each row is a
+different cluster. The darkness of a tile is how much that particular cluster
+contributed to that sample. We've tried to arrange samples so that those with
+similar $\theta_{i}$s appear next to one another. We've also square root
+transformed the $theta_{ik}$s, so that differences between smaller probabilities
+are easier to see.
+
+The main things to take away here are that most samples have a pretty good
+amount of cluster 1, but a few have mostly clusters 3 or 4. A few samples seem
+completely dominated by cluster 3. Cluster 2 seems to trade off with cluster 1,
+which might mean they represent very similar compositions (one true cluster
+getting split into two).
+
+```{r}
+theta_hat <- apply(lda_res$theta, c(2, 3), mean) %>%
+  melt(
+    varnames = c("i", "k"),
+    value.name = "theta"
+  )
+
+sample_order <- hclust(dist(theta_hat))$order
+theta_hat <- theta_hat %>%
+  mutate(
+    Number = sample_data(ps)$Number[i],
+    i = factor(i, levels = sample_order),
+    k = as.factor(k)
+  )
+
+ggplot(theta_hat) +
+  geom_tile(
+    aes(x = i, y = k, alpha = sqrt(theta))
+  ) +
+  coord_fixed(10) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_alpha(range = c(0, 1)) +
+  theme(axis.text.x = element_blank())
+```
+
+There's a natural follow-up question to this description: Do these clusters have
+anything to do with observed phenotype? To study this, we have to compare the
+$\theta_{ik}$'s with observed sample information. Below, we give some toy
+examples with gender, aoi, and android / gynoid ratio, but these should be
+replaced with more meaningful comparisons in the future (either by domain
+knowledge or studying correlations separately).
+
+Give one discrete example and two continuous ones. First, we compare the
+$\theta_{ik}$s to gender. Each column corresponds to one of the clusters, and
+each row is one gender. They seem more or less comparable, though maybe an
+argument could be made that the high cluster 3 samples tend to be men, the low
+cluster 2 samples tend to be omen, and the low cluster 4 samples tend to be men.
+But I'd want to see some separate confirmation (maybe using another method) to
+say this confidently.
+
+Instead of comparing against a discrete category (gender), we can compare with
+continuous measurements, here aoi and android / gynoid ratios. The value of the
+$\theta_{ik}$'s is plotted on the x-axis (on a square root scale), and the
+phenotype is on the $y$ axis. The associated topics $k$ are encoded by color.
+We've also averaged across each topic using a lowess smooth.
+
+Again, the associations are relatively ambiguous. The only patterns I think are
+potentially worth investigating are the decrease phenotypes as membership in
+cluster 1 increases and the increase in phenotypes when cluster 3 increases. We
+will see when we interpret the topics that this has to do both with diversity
+and prevotella, so if these associations held up, then they would be consistent
+with the original alpha-diversity story (without using alpha diversity...).
+
+```{r theta_bc_comparison}
+theta_supp <- theta_hat %>%
+  left_join(sample_data(ps))
+
+## compare with gender
+ggplot(theta_supp) +
+  geom_histogram(
+    aes(x = theta, fill = k)
+  ) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  facet_grid(gender ~ k, scale = "free")
+
+## compare with aoi
+ggplot(theta_supp) +
+  geom_smooth(
+    aes(x = theta, y = aoi, col = k),
+    alpha = 0.1
+  ) +
+  geom_point(
+    aes(x = theta, y = aoi, col = k),
+    alpha = 0.6
+  ) +
+  scale_x_sqrt() +
+  facet_wrap(~gender, scales = "free")
+
+## compare with android gynoid ratio
+ggplot(theta_supp) +
+  geom_smooth(
+    aes(x = theta, y = Android_FM / Gynoid_FM, col = k),
+    alpha = 0.1
+  ) +
+  geom_point(
+    aes(x = theta, y = Android_FM / Gynoid_FM, col = k),
+    alpha = 0.6
+  ) +
+  scale_x_sqrt() +
+  facet_wrap(~gender, scales = "free")
+```
+
+Next we study the composition of the different clusters. The display below is
+read in the same way as that for the compositions in the Dirichlet Multinomial
+example. Again, we see a prevotella-related difference, with the first cluster
+have quite a bit less prevotella and the second having quite a bit more. Cluster
+3 seems to have a lot of the rarer species which are not so common in the other
+clusters (especially Erysipelos). Cluster 4 seems to have more Ruminoccoceae and
+less Bacteroidaceae, while in Cluster 1 that pattern is reversed. Cluster 1
+seems somewhat more diverse, though it's a little less clear, since it also has
+narrower boxplots (because most samples have some contribution to Cluster 1,
+improving the posterior estimates).
+
+```{r beta_hats}
+## join in the taxa information
+beta_hat <- centered_log(lda_res$beta + 1e-10) %>%
+  melt(
+    varnames = c("iter", "k", "v"),
+    value.name = "beta"
+  ) %>%
+  mutate(
+    seq = taxa_names(ps)[v]
+  ) %>%
+  left_join(taxa) %>%
+  mutate(
+    family = fct_lump(Family, 7),
+    seq = droplevels(factor(seq, levels = phylo_order))
+  )
+
+## plot cluster distribution over species
+ggplot(beta_hat) +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_boxplot(
+    aes(x = seq, y = beta, fill = family, col = family),
+    outlier.size = 0.2,
+    width = 20
+  ) +
+  ylim(-9, max(beta_hat$beta) + 0.01) +
+  facet_grid(k ~ .) +
+  labs(y = "clog(p)") +
+  theme(
+    axis.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+The previous way of plotting the clusters is pretty complicated. We can try to
+simplify things by only plotting the mean of each posterior $\theta_{ik}$,
+though it's unclear how much this actually helps. The first panel shows the 100
+most abundant species, while the second shows the rest (you've got to really
+zoom in to see everything though).
+
+The only pattern that seems more notable here than in the boxplot view is the
+"competition" between clusters 2 and 3 for Bacteroides and Lachnospiraceae. It
+seems that there are quite a few species that are only large in one of these
+clusters, but not the other, even though overall both 2 and 3 have quite a few
+of these two taxa.
+
+```{r beta_hats_heatmap}
+beta_mean <- beta_hat %>%
+  group_by(k, v, seq, family) %>%
+  summarise(beta_mean = mean(beta))
+
+ggplot(beta_mean %>% filter(v < 100)) +
+  geom_tile(
+    aes(x = k, y = rev(seq), fill = family, alpha = beta_mean)
+  ) +
+  coord_fixed(0.1) +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_alpha(range = c(0, 1)) +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "right"
+  )
+
+ggplot(beta_mean %>% filter(v > 100)) +
+  geom_tile(
+    aes(x = k, y = rev(seq), fill = family, alpha = beta_mean)
+  ) +
+  coord_fixed(0.1) +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_alpha(range = c(0, 1)) +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "right"
+  )
+```
