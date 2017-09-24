@@ -32,23 +32,37 @@ min_theme <- theme_update(
 ```
 
 ```{r read_data}
-seqtab <- readRDS("../data/seqtab.rds")
-taxa <- readRDS("../data/taxa.rds")
-survey <- read_csv("../data/WELL_China_1969_7.25.2017.csv")
-bc <- readRDS("../data/sample_data_bc.rds")
+seqtab <- readRDS("seqtab.rds")
+taxa <- readRDS("taxa.rds")
+survey <- read.csv("WELL_China_1969_7.25.2017.csv", header = TRUE, sep = ",")
+bc <- readRDS("sample_data_bc.rds")
+```
+Add sequecing IDs to survey data of 1,969 participants. Since the rownames of seqtab is using sequencing ID instead of survey id. 
+```{r}
+seq.id <- bc[,1:2]
+seq.id$Rank <- rank(seq.id$Number)
+seq.id$batch[seq.id$Rank <=110] <- 1
+seq.id$batch[seq.id$Rank > 110] <- 2
+survey$batch <- seq.id$batch[match(survey$id, seq.id$id)]
+survey$rank <- seq.id$Rank[match(survey$id, seq.id$id)]
+survey$Number <- seq.id$Number[match(survey$id, seq.id$id)]
 ```
 
 How is sequencing depth related to variables we've measured about the samples?
 It looks like it's mainly related to the date during which the survey was taken
 (the last three in particular seem to have larger sequencing depths).
 ```{r depth_variation}
-depths <- setNames(rowSums(seqtab), bc$id)
-survey$depth <- depths[as.character(survey$id)]
-ggplot(survey %>% filter(!is.na(depth))) +
+depths <- as.data.frame(setNames(rowSums(seqtab), bc$Number))
+depths$Number <- rownames(depths)
+colnames(depths) <- c("depth", "Number")
+survey.depth <- merge(survey, depths, by = "Number")
+ggplot(survey.depth) +
   geom_histogram(
     aes(x = depth)
   ) +
-  facet_wrap(~surveydate_pes)
+  facet_wrap(~batch)
+
+ggplot(data = survey.depth, aes(x = rank, y = depth)) + geom_bar(stat = "identity", fill = "steelblue", width = 0.5)
 ```
 
 This raises two questions
