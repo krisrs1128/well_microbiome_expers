@@ -12,100 +12,89 @@
 
 \section{Classical multivariate methods}
 
-Methods from classical multivariate statistics are a mainstay
-of single-table microbiome data analysis, so it is natural to revisit
-this literature before surveying extensions to the multitable
-setting. Here we describe a few of the classically studied multitable
-methods that fit nicely into the modern microbiome data analysis
-toolbox. We first describe a naive approach based on Principal
-Components Analysis (PCA) -- naive because it lifts a single-table
-method to the multiple table setting without any special
-considerations --  before studying approaches that directly
-characterize covariation across several tables: Canonical Correlation
-Analysis (CCA), Multiple Factor Analysis (MFA), and Principal
-Component Analysis with Instrumental Variables (PCA-IV).
+Methods from classical multivariate statistics are a mainstay of single-table
+microbiome data analysis, so it is natural to revisit this literature before
+surveying extensions to the multitable setting. Here we describe a few of the
+classically studied multitable methods that fit nicely into the modern
+microbiome data analysis toolbox. We first describe a naive approach based on
+Principal Components Analysis (PCA) -- naive because it lifts a single-table
+method to the multiple table setting without any special considerations --
+before studying approaches that directly characterize covariation across several
+tables: Canonical Correlation Analysis (CCA), Multiple Factor Analysis (MFA),
+and Principal Component Analysis with Instrumental Variables (PCA-IV).
 
-The earliest multitable method (CCA) was published in 1936,
-where the motivating data analysis problem was to relate prices of
-groups of commodities \cite{hotelling1936relations}. There are two notable
-aspects of data analysis in this classical paradigm which no longer
-hold in modern statistics:
+The earliest multitable method (CCA) was published in 1936, where the motivating
+data analysis problem was to relate prices of groups of commodities
+\cite{hotelling1936relations}. There are two notable aspects of data analysis in
+this classical paradigm which no longer hold in modern statistics:
 \begin{itemize}
-  \item Even when many samples could be collected, there were
-    typically only a few features for each sample, and it was
-    straightforwards to study all of them simultaneously. In the last
-    few decades, it has become possible to automatically collect a
-    large number of features for each sample.
-  \item Before electronic computers had been invented, it was
-    important that all statistical quantities be easy to
-    calculate, typically necessitating analytical formulas for
-    parameter estimates. This is no longer as important a limitation
-    in an environment with richer computational resources.
+  \item Even when many samples could be collected, there were typically only a
+    few features for each sample, and it was straightforwards to study all of
+    them simultaneously. In the last few decades, it has become possible to
+    automatically collect a large number of features for each sample.
+  \item Before electronic computers had been invented, it was important that all
+    statistical quantities be easy to calculate, typically necessitating
+    analytical formulas for parameter estimates. This is no longer as important
+    a limitation in an environment with richer computational resources.
 \end{itemize}
 
 These changes have motivated the need for high-dimensional methods and
 facilitated the adoption of iterative, more computationally-intensive
-approaches, respectively, some of which are described later in this
-review.
+approaches, respectively, some of which are described later in this review.
 
-Nonetheless, it is worth reviewing these original approaches, both to
-understand the context for many modern techniques, as well as to have
-an easy starting point for practical data analysis. Indeed, these more
-established methods tend to be the most readily available through
-statistical computing packages and can provide a benchmark with which
-to compare more elaborate, modern methods.
+Nonetheless, it is worth reviewing these original approaches, both to understand
+the context for many modern techniques, as well as to have an easy starting
+point for practical data analysis. Indeed, these more established methods tend
+to be the most readily available through statistical computing packages and can
+provide a benchmark with which to compare more elaborate, modern methods.
 
 \subsection{PCA}
 \label{sec:pca}
 
-The simplest approach to dealing with multiple tables is to combine
-them into one and apply a single-table method, for example, PCA. That
-is, write
+The simplest approach to dealing with multiple tables is to combine them into
+one and apply a single-table method, for example, PCA. That is, write
 \begin{align}
 X = \left[X^{(1)} \vert \dots \vert X^{(L)}\right] \in \reals^{n \times p},
 \end{align}
-where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An
-  equivalent procedure is to eigenanalyze the empirical covariance
-  matrix $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal
-component directions are the first $K$ columns $v_{\cdot 1}, \dots,
-v_{\cdot K}$, while the associated scores are $d_{1}u_{\cdot 1},
-\dots, d_{K}u_{\cdot K}$.
+where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An equivalent
+  procedure is to eigenanalyze the empirical covariance matrix
+  $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal component directions
+are the first $K$ columns $v_{\cdot 1}, \dots, v_{\cdot K}$, while the
+associated scores are $d_{1}u_{\cdot 1}, \dots, d_{K}u_{\cdot K}$.
 
-While this does not account for the multitable structure of the data,
-it does accomplish two goals,
+While this does not account for the multitable structure of the data, it does
+accomplish two goals,
 \begin{itemize}
-\item Through the principal component scores, it provides a
-  visualization of the relationships between
-  samples, based on all features.
-\item Through the principal component directions, it gives a way of
-  relating features within and across the multiple tables.
+\item Through the principal component scores, it provides a visualization of the
+  relationships between samples, based on all features.
+\item Through the principal component directions, it gives a way of relating
+  features within and across the multiple tables.
 \end{itemize}
 
 However, two drawbacks of this approach are worth noting,
 \begin{itemize}
-  \item It does not provide a summary of the relationship between the
-    sets of variables defining the tables -- it can only relate pairs
-    of variables. \label{bullet:pca_drawback_one}
-  \item If some tables have many more variables than others, they can
-    dominate the resulting ordination. \label{bullet:pca_drawback_two}
+  \item It does not provide a summary of the relationship between the sets of
+    variables defining the tables -- it can only relate pairs of
+    variables. \label{bullet:pca_drawback_one}
+  \item If some tables have many more variables than others, they can dominate
+    the resulting ordination. \label{bullet:pca_drawback_two}
 \end{itemize}
 
 These limitations are addressed by CCA and MFA, discussed in Sections
 \ref{sec:cca} and \ref{sec:mfa}, respectively.
 
-Here we describe one geometric and one statistical motivation for PCA.
-The geometric motivation is that, if each
-row $x_{i}$ of $X$ is viewed as a point in $p$-dimensional space, then
-the principal component directions provide the best $k$-dimensional
-approximation to the data, see Figure \ref{fig:pca-approx}. Formally,
-recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
-subspace spanned by the columns of $V$. PCA identifies the orthogonal
-matrix $V \in \reals^{p \times K}$ such that
+Here we describe one geometric and one statistical motivation for PCA. The
+geometric motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
+$p$-dimensional space, then the principal component directions provide the best
+$k$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
+Formally, recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
+subspace spanned by the columns of $V$. PCA identifies the orthogonal matrix $V
+\in \reals^{p \times K}$ such that
 \begin{align}
 \sum_{i = 1}^{n}\|x_{i} - VV^{T} x_{i}\|_{2}^{2}
 \end{align}
-is minimized. The principal component scores are then the coordinates
-of the projected points with respect to this subspace.
+is minimized. The principal component scores are then the coordinates of the
+projected points with respect to this subspace.
 
 \begin{figure}
   \caption{A geometric motivation for PCA.}
@@ -117,39 +106,34 @@ of the projected points with respect to this subspace.
   \label{fig:pca-var}
 \end{figure}
 
-The second interpretation is that PCA finds a low-dimensional
-representation of the $x_{i}$ such that the resulting points have
-maximal variance. Qualitatively, this is a desirable
-property, because it means that the simpler representation
-preserves most of the variation present in the original
-data, see Figure \ref{fig:pca-var}. Formally, suppose that the
-$x_{i}\in\reals^{p}$ are drawn independently from some distribution
-$\P$, so that the variance is $\Covsubarg{\P}{x_{i}} = \Sigma$.
-Consider an arbitrary linear combination of $x_{i}$'s $p$
-coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$. The
-first PCA direction gives the $c$ such that the variance of this
-coordinate, $\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The
-second direction gives the linear combination that maximizes variance,
-subject to being orthogonal to the first, and so forth.
+The second interpretation is that PCA finds a low-dimensional representation of
+the $x_{i}$ such that the resulting points have maximal variance. Qualitatively,
+this is a desirable property, because it means that the simpler representation
+preserves most of the variation present in the original data, see Figure
+\ref{fig:pca-var}. Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
+independently from some distribution $\P$, so that the variance is
+$\Covsubarg{\P}{x_{i}} = \Sigma$. Consider an arbitrary linear combination of
+$x_{i}$'s $p$ coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$.
+The first PCA direction gives the $c$ such that the variance of this coordinate,
+$\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second direction gives
+the linear combination that maximizes variance, subject to being orthogonal to
+the first, and so forth.
 
-While our description of the method of concatenating multiple tables
-into a single one has focused on PCA, note that other
-methods could be applied instead. For example, it is possible to define a new
-distance between samples as a mixture of distances based on several
-tables. This can be useful if there are different types of data across
-the different tables: Jaccard, $\chi^{2}$, and euclidean distsances
-can be applied to binary, count, and real valued tables. The combined
-distance can then be input into any distance-based single-table
-procedure, like multidimensional scaling or hierarchical
-clustering. The primary downside of this approach is that the
-resulting distance only allows a comparison between samples, but not
-across features.
+While our description of the method of concatenating multiple tables into a
+single one has focused on PCA, note that other methods could be applied instead.
+For example, it is possible to define a new distance between samples as a
+mixture of distances based on several tables. This can be useful if there are
+different types of data across the different tables: Jaccard, $\chi^{2}$, and
+euclidean distsances can be applied to binary, count, and real valued tables.
+The combined distance can then be input into any distance-based single-table
+procedure, like multidimensional scaling or hierarchical clustering. The primary
+downside of this approach is that the resulting distance only allows a
+comparison between samples, but not across features.
 
-PCA is a very widely used technique, and some standard references
-include \cite{friedman2001elements, mardia1980multivariate,
-  pages2014multiple}. Nonetheless, it is not ideal in the multitable
-setting. Its limitations prompt us to begin our survey of multitable
-methods in earnest.
+PCA is a very widely used technique, and some standard references include
+\cite{friedman2001elements, mardia1980multivariate, pages2014multiple}.
+Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
+us to begin our survey of multitable methods in earnest.
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
