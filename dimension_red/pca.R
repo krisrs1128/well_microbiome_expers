@@ -10,7 +10,6 @@
 ###############################################################################
 ## Libraries and setup
 ###############################################################################
-
 library("tidyverse")
 library("phyloseq")
 library("DESeq2")
@@ -40,16 +39,8 @@ taxa <- readRDS("../data/taxa.rds")
 bc <- readRDS("../data/sample_data_bc.rds")
 
 ###############################################################################
-## Concatenate quantitative body composition (split by gender) and (somewhat
-## filtered) microbiome counts, and transformed
+## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
-bc_vars <- setdiff(colnames(bc), c("Number", "id"))
-
-combined <- data.frame(bc, seqtab[bc$Number, ])
-dim(combined)
-cbind(rownames(combined), combined$Number)
-
-library("DESeq2")
 seqtab <- seqtab[, 1:700]
 dds <- DESeqDataSetFromMatrix(
   countData = t(get_taxa(seqtab)),
@@ -66,11 +57,23 @@ sizeFactors(dds) <- qs / exp(mean(log(qs)))
 
 ## and the regularized data
 vsd <- varianceStabilizingTransformation(dds, fitType = "local")
-x <- assay(vsd)
-## I would prefer rlog, but I haven't been patient enough to let it finish
-## (vst is much faster)
-## rlog(dds, fitType = "local")
+x_seq <- assay(vsd)
 
-## for the record, the difference between asinh and rlog
-hist(x, breaks = 100)
-hist(asinh(get_taxa(seqtab)), breaks = 100)
+###############################################################################
+## concatenate quantitative body composition (split by gender) and (somewhat
+## filtered) microbiome counts, and transformed
+###############################################################################
+combined_df <- data.frame(bc, t(x_seq[, bc$Number]))
+combined <- combined_df %>%
+  select(-Number, -id) %>%
+  split(.$gender, drop = TRUE) %>%
+  lapply(function(x) as.matrix(x[, colnames(x) != "gender"]))
+
+###############################################################################
+## run PCA
+###############################################################################
+pc_res <- lapply(combined, function(x) princomp(t(x)))
+pc_res$Male$scores
+
+plot(-pc_res$Male$scores)
+plot(-pc_res$Male$loadings)
