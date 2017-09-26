@@ -10,6 +10,46 @@
 \begin{document}
 \maketitle
 
+The simultaneous study of multiple measurement types is a commonly encoutered
+problem in practical data analysis. It is especially common in microbiome
+research, where several sources of data -- for example, 16s, metagenomic,
+metabolomic, or transcriptomic data -- can be collected on the same physical
+samples\citep{Franzosa2015, McHardy2013}. There has been a proliferation of
+proposals for analyzing this kind of data, as is often the case when new (or
+more cheaply available) data sources makes inquiry into certain scientific
+questions all of a sudden possible \citep{Fukuyama2017, Rahnavard2017,
+  Chaudhary2017, Chalise2017}.
+
+However, stepping back from the rush of new methods for multiple table analysis
+in the microbiome literature, it is worthwhile to recognize the broader
+landscape of multiple table methods, as they have been relevant in problem
+domains ranging from economics to robotics to computational biology. Of course,
+there is no unique optimal algorithm to use across domains -- different
+instances of the multiple table problem possess specific structure or variation
+that are worth incorporating in methodology.
+
+Our purpose here is not to develop new algorithms, but rather to (1) distill the
+relevant themes across different analysis approaches and (2) provide concrete
+workflows for approaching analysis, as a function of ultimate analysis goals and
+characteristics (heterogeneity, dimensionality, sparsity, ...) of the data.
+Towards the second goal, code for all analysis and figures are available.
+
+First, though, why does anyone bother collecting multiple sources of data, and
+why can't these sources simply be combined into a single, unified table for
+subsequent analysis? One answer is simply that it's now cheaper and easier to
+collect multitable data, but a more satisfactory explanation is that many
+scientific problems can only be answered by collecting several complementary
+measurement types. Indeed, the situation is analogous to using many types of
+sensors to study a single system from many perspectives. Further, while in
+certain supervised problems, it is enough to predict a single measurement of
+interest, with other sources simply collected to provide better features, there
+are often an additional relational components to the analysis: how do different
+types of measurements covary with one another? Here, it is of interest to
+provide a reduction / representation of the data that facilitates comparisons
+across tables, rather than just comparing each table with a single response of
+interest. This richer scientific question motivates the development of methods
+distint from those used to analyze a single measurement type at a time.
+
 - Abstract Goals:
   + simulataneous study of multiple measurement types for a single sample
   + different ``sensors'' giving complementary views of the same phenomena
@@ -17,6 +57,7 @@
   together
   + provide reductions of the data that describe covariation between sets of
   features (not just features and response)
+  + I need some sort of succinct analogy
 - Motivating application
   + WELL study: effort to study...
   + Many sources related to different aspects of health
@@ -38,7 +79,7 @@ and Principal Component Analysis with Instrumental Variables (PCA-IV).
 
 The earliest multitable method (CCA) was published in 1936, where the motivating
 data analysis problem was to relate prices of groups of commodities
-\cite{hotelling1936relations}. There are two notable aspects of data analysis in
+\citep{hotelling1936relations}. There are two notable aspects of data analysis in
 this classical paradigm which no longer hold in modern statistics:
 \begin{itemize}
   \item Even when many samples could be collected, there were typically only a
@@ -110,11 +151,14 @@ is minimized. The principal component scores are then the coordinates of the
 projected points with respect to this subspace.
 
 \begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_1}
   \caption{A geometric motivation for PCA.}
   \label{fig:pca-approx}
 \end{figure}
 
+
 \begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/var_plot}
   \caption{A statistical motivation for PCA.}
   \label{fig:pca-var}
 \end{figure}
@@ -144,9 +188,25 @@ downside of this approach is that the resulting distance only allows a
 comparison between samples, but not across features.
 
 PCA is a very widely used technique, and some standard references include
-\cite{friedman2001elements, mardia1980multivariate, pages2014multiple}.
+\citep{friedman2001elements, mardia1980multivariate, pages2014multiple}.
 Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
 us to begin our survey of multitable methods in earnest.
+
+\section{Appendix}
+
+\subsection{Additional figures}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_2}
+  \caption{A geometric motivation for PCA.}
+  \label{fig:pca-approx-2}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_3}
+  \caption{A geometric motivation for PCA.}
+  \label{fig:pca-approx-3}
+\end{figure}
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
