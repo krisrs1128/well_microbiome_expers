@@ -150,16 +150,21 @@ ggplot(loadings) +
     "y" = perc_label(pc_res$Male, 2),
     "col" = "Family"
   ) +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-0.1, 0.1)) +
+  scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
   ylim(-0.1, .3) +
   xlim(-0.15, 0.15) +
   coord_fixed(asp_ratio)
-ggsave("../chapter/figure/pca/loadings.png")
+ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3.78)
 
 ## and study the scores
 ggplot(scores) +
   geom_point(
     aes(x = PC1, y = PC2, size = PC3, col = weight_dxa)
+  ) +
+  labs(
+    "x" = perc_label(pc_res$Male, 1),
+    "y" = perc_label(pc_res$Male, 2),
+    "col" = "Family"
   ) +
   scale_color_viridis(
     "Weight ",
@@ -167,7 +172,7 @@ ggplot(scores) +
   ) +
   scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
   coord_fixed(ratio = asp_ratio)
-ggsave("../chapter/figure/pca/scores_weight.png")
+ggsave("../chapter/figure/pca/scores_weight.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
 family_means <- mseqtab %>%
@@ -193,4 +198,4 @@ ggplot(scores) +
   ) +
   scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
   coord_fixed(ratio = asp_ratio)
-ggsave("../chapter/figure/pca/scores_rl_ratio.png")
+ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)
