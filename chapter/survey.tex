@@ -48,21 +48,45 @@ types of measurements covary with one another? Here, it is of interest to
 provide a reduction / representation of the data that facilitates comparisons
 across tables, rather than just comparing each table with a single response of
 interest. This richer scientific question motivates the development of methods
-distint from those used to analyze a single measurement type at a time.
+distinct from those used to analyze a single measurement type at a time.
 
-- Abstract Goals:
-  + simulataneous study of multiple measurement types for a single sample
-  + different ``sensors'' giving complementary views of the same phenomena
-  + value in relating complementary views -- better to not just lump everything
-  together
-  + provide reductions of the data that describe covariation between sets of
-  features (not just features and response)
-  + I need some sort of succinct analogy
-- Motivating application
-  + WELL study: effort to study...
-  + Many sources related to different aspects of health
-  + Can be used to study associations between these different aspects
-  + Microbiome and body composition?
+For more concrete motivation, we will use data from a study on the relationship
+between various indicators of wellness and microbial community structure (todo:
+give reference). In this study, 1969 individuals\footnote{Though sampling is
+  still ongoing.} underwent clinical examinations, filled out wellness surveys
+(covering topics such as exercise, sleep, diet, and mental health, for example),
+and provided stool samples, used for 16s sequencing and metabolomic analysis.
+To date, 16s sequencing data is available for 221 of these participants.
+Evidently, various interesting relational questions can be investigated using
+this data source.
+
+For the purpose of illustration, we focus on one relatively focused question
+that can be addressed using this data: How is the distribution of lean and fat
+mass across the body related to patterns of microbial abundance? The measurement
+types most relevant in this analysis are (1) DEXA scans and (2) 16s sequencing.
+DEXA scans use relative X-ray absorption to gauge the among of lean and fat body
+mass within the region of the body being scanned. We will have access to these
+lean and fat body mass measurements at several body sites -- arms, legs, trunk,
+etc. -- along with related body type variables, like height, age, and android
+and gynoid fat measurements. In total, there are 33 of these variables. 16s
+sequencing is a technology for gauging the abundance of differnet bacterial
+species in the gut by counting the alignments of reads to the 16s gene, a
+component of all bacterial genomes with enough variation to allow discimination
+between different individual species. We have counts associated with 2565
+species across 181 genuses, though the vast majority are present in low
+abundances.
+
+This question of the relationship between lean and fat mass distribution
+(informally, body type) and the microbiome follows up findings that certain
+taxonomic groups are over or underrepresented as a function of an individual's
+BMI or obesity \citep{ley2006microbial, turnbaugh2009core, ley2005obesity,
+  ley2010obesity}. Further, since the distribution of fat is often more related
+to underlying biological mechanisms than overall body mass
+\citep{matsuzawa2008role}, and since this distribution is mediated by specific
+metabolic pathways, there is reason to suspect that a joint analysis of DEXA and
+16s microbial abundance data might yield a more complete view of the
+relationship between the microbiome and body type (and the associated disease
+risk factors).
 
 \section{Classical multivariate methods}
 
@@ -152,14 +176,27 @@ projected points with respect to this subspace.
 
 \begin{figure}
   \includegraphics[width=\textwidth]{figure/pca/proj_plot_1}
-  \caption{A geometric motivation for PCA.}
+  \caption{A geometric motivation for PCA. The first principal component spans
+    the one-dimensional subspace $V$ minimizing the squared error between points
+    and their projections, $\sum_{i = 1}^{n}\|\left(I -
+    VV^{T}\right)x_{i}\|_{2}^{2}$ projections. The black points represent the
+    scaled values for two of the body composition variables -- weight and total
+    fat mass -- while the purple points are the projections onto the first
+    principal component when only accounting for these two variables. Contrast
+    this with Figures \ref{fig:pca-approx-2} and \ref{fig:pca-approx-3}, where
+    variables other than weight and fat mass are taken into account.}
   \label{fig:pca-approx}
 \end{figure}
 
-
 \begin{figure}
   \includegraphics[width=\textwidth]{figure/pca/var_plot}
-  \caption{A statistical motivation for PCA.}
+  \caption{A statistical motivation for PCA. Each histogram is computed from the
+    linear combinations $\left(c^{j}x_{i}\right)$, for $c^{j}$ equal to the
+    first and second principal components, the vector $\frac{1}{n}\mathbf{1}$,
+    and a normalized random multivariate Gaussian. At least among these four
+    vectors, the scores obtained from the first PC have the largest variance. It
+    is a theorem that its variance is in fact maximal among all linear
+    combinations with orthogonal vectors.}
   \label{fig:pca-var}
 \end{figure}
 
@@ -167,7 +204,15 @@ The second interpretation is that PCA finds a low-dimensional representation of
 the $x_{i}$ such that the resulting points have maximal variance. Qualitatively,
 this is a desirable property, because it means that the simpler representation
 preserves most of the variation present in the original data, see Figure
-\ref{fig:pca-var}. Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
+\ref{fig:pca-var}. In this figure, histograms of the scores associated with four
+linear combinations of the original body composition measurements are displayed
+side by side, to emphasize the fact that the linear combination $x^{T}v_{1}$
+associated with the first principal component $v_{1}$ has the largest variance.
+The comparison combinations are the second principal component, the mean across
+all columns, and a random linear combination $\frac{c^{T}}{\|c\|} x$ where $c \sim
+\Gsn\left(0, I_{p}\right)$.
+
+Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
 independently from some distribution $\P$, so that the variance is
 $\Covsubarg{\P}{x_{i}} = \Sigma$. Consider an arbitrary linear combination of
 $x_{i}$'s $p$ coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$.
@@ -191,6 +236,27 @@ PCA is a very widely used technique, and some standard references include
 \citep{friedman2001elements, mardia1980multivariate, pages2014multiple}.
 Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
 us to begin our survey of multitable methods in earnest.
+
+\subsubsection{Example}
+\label{subsec:pca_example}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/loadings}
+  \caption{\label{fig:loadings} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca/scores_weight}
+  \caption{\label{fig:scores_weight} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
+  \caption{\label{fig:scores_rl_ratio} }
+\end{figure}
 
 \section{Appendix}
 
