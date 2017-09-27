@@ -155,7 +155,8 @@ ggplot(scores) +
     "y" = perc_label(pc_res$Male, 2)
   ) +
   scale_color_viridis() +
-  coord_fixed(ratio = asp_ratio)
+  coord_fixed(ratio = asp_ratio) +
+  theme(legend.position = "bottom")
 ggsave("../chapter/figure/pca/scores_weight.png")
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
@@ -177,5 +178,6 @@ ggplot(scores) +
     "y" = perc_label(pc_res$Male, 2)
   ) +
   scale_color_viridis() +
-  coord_fixed(ratio = asp_ratio)
+  coord_fixed(ratio = asp_ratio) +
+  theme(legend.position = "bottom")
 ggsave("../chapter/figure/pca/scores_rl_ratio.png")
