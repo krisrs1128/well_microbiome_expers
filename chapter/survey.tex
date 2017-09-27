@@ -1,0 +1,338 @@
+\documentclass{article}
+\usepackage{natbib}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{graphicx}
+\input{preamble.tex}
+
+\title{Multitable Data Analysis for the Microbiome}
+\author{Kris Sankaran}
+
+\begin{document}
+\maketitle
+
+The simultaneous study of multiple measurement types is a commonly encoutered
+problem in practical data analysis. It is especially common in microbiome
+research, where several sources of data -- for example, 16s, metagenomic,
+metabolomic, or transcriptomic data -- can be collected on the same physical
+samples\citep{Franzosa2015, McHardy2013}. There has been a proliferation of
+proposals for analyzing this kind of data, as is often the case when new (or
+more cheaply available) data sources makes inquiry into certain scientific
+questions all of a sudden possible \citep{Fukuyama2017, Rahnavard2017,
+  Chaudhary2017, Chalise2017}.
+
+However, stepping back from the rush of new methods for multiple table analysis
+in the microbiome literature, it is worthwhile to recognize the broader
+landscape of multiple table methods, as they have been relevant in problem
+domains ranging from economics to robotics to computational biology. Of course,
+there is no unique optimal algorithm to use across domains -- different
+instances of the multiple table problem possess specific structure or variation
+that are worth incorporating in methodology.
+
+Our purpose here is not to develop new algorithms, but rather to (1) distill the
+relevant themes across different analysis approaches and (2) provide concrete
+workflows for approaching analysis, as a function of ultimate analysis goals and
+characteristics (heterogeneity, dimensionality, sparsity, ...) of the data.
+Towards the second goal, code for all analysis and figures are available.
+
+First, though, why does anyone bother collecting multiple sources of data, and
+why can't these sources simply be combined into a single, unified table for
+subsequent analysis? One answer is simply that it's now cheaper and easier to
+collect multitable data, but a more satisfactory explanation is that many
+scientific problems can only be answered by collecting several complementary
+measurement types. Indeed, the situation is analogous to using many types of
+sensors to study a single system from many perspectives. Further, while in
+certain supervised problems, it is enough to predict a single measurement of
+interest, with other sources simply collected to provide better features, there
+are often an additional relational components to the analysis: how do different
+types of measurements covary with one another? Here, it is of interest to
+provide a reduction / representation of the data that facilitates comparisons
+across tables, rather than just comparing each table with a single response of
+interest. This richer scientific question motivates the development of methods
+distinct from those used to analyze a single measurement type at a time.
+
+For more concrete motivation, we will use data from the WELL-China study, which
+is focused on the relationship between various indicators of wellness and
+microbial community structure (todo: give reference). In this study, 1969
+individuals\footnote{Though sampling is still ongoing.} underwent clinical
+examinations, filled out wellness surveys (covering topics such as exercise,
+sleep, diet, and mental health, for example), and provided stool samples, used
+for 16s sequencing and metabolomic analysis. To date, 16s sequencing data is
+available for 221 of these participants. Evidently, various interesting
+relational questions can be investigated using this data source.
+
+For the purpose of illustration, we focus on one relatively focused question
+that can be addressed using this data: How is the distribution of lean and fat
+mass across the body related to patterns of microbial abundance? The measurement
+types most relevant in this analysis are (1) DEXA scans and (2) 16s sequencing.
+DEXA scans use relative X-ray absorption to gauge the among of lean and fat body
+mass within the region of the body being scanned. We will have access to these
+lean and fat body mass measurements at several body sites -- arms, legs, trunk,
+etc. -- along with related body type variables, like height, age, and android
+and gynoid fat measurements. In total, there are 33 of these variables. 16s
+sequencing is a technology for gauging the abundance of differnet bacterial
+species in the gut by counting the alignments of reads to the 16s gene, a
+component of all bacterial genomes with enough variation to allow discimination
+between different individual species. We have counts associated with 2565
+species across 181 genuses, though the vast majority are present in low
+abundances.
+
+This question of the relationship between lean and fat mass distribution
+(informally, body type) and the microbiome follows up findings that certain
+taxonomic groups are over or underrepresented as a function of an individual's
+BMI or obesity \citep{ley2006microbial, turnbaugh2009core, ley2005obesity,
+  ley2010obesity}. Further, since the distribution of fat is often more related
+to underlying biological mechanisms than overall body mass
+\citep{matsuzawa2008role}, and since this distribution is mediated by specific
+metabolic pathways, there is reason to suspect that a joint analysis of DEXA and
+16s microbial abundance data might yield a more complete view of the
+relationship between the microbiome and body type (and the associated disease
+risk factors).
+
+\section{Classical multivariate methods}
+
+Methods from classical multivariate statistics are a mainstay of single-table
+microbiome data analysis, so it is natural to revisit this literature before
+surveying extensions to the multitable setting. Here we describe a few of the
+classically studied multitable methods that fit nicely into the modern
+microbiome data analysis toolbox. We first describe a naive approach based on
+Principal Components Analysis (PCA) -- naive because it lifts a single-table
+method to the multiple table setting without any special considerations --
+before studying approaches that directly characterize covariation across several
+tables: Canonical Correlation Analysis (CCA), Multiple Factor Analysis (MFA),
+and Principal Component Analysis with Instrumental Variables (PCA-IV).
+
+The earliest multitable method (CCA) was published in 1936, where the motivating
+data analysis problem was to relate prices of groups of commodities
+\citep{hotelling1936relations}. There are two notable aspects of data analysis in
+this classical paradigm which no longer hold in modern statistics:
+\begin{itemize}
+  \item Even when many samples could be collected, there were typically only a
+    few features for each sample, and it was straightforwards to study all of
+    them simultaneously. In the last few decades, it has become possible to
+    automatically collect a large number of features for each sample.
+  \item Before electronic computers had been invented, it was important that all
+    statistical quantities be easy to calculate, typically necessitating
+    analytical formulas for parameter estimates. This is no longer as important
+    a limitation in an environment with richer computational resources.
+\end{itemize}
+
+These changes have motivated the need for high-dimensional methods and
+facilitated the adoption of iterative, more computationally-intensive
+approaches, respectively, some of which are described later in this review.
+
+Nonetheless, it is worth reviewing these original approaches, both to understand
+the context for many modern techniques, as well as to have an easy starting
+point for practical data analysis. Indeed, these more established methods tend
+to be the most readily available through statistical computing packages and can
+provide a benchmark with which to compare more elaborate, modern methods.
+
+\subsection{PCA}
+\label{sec:pca}
+
+The simplest approach to dealing with multiple tables is to combine them into
+one and apply a single-table method, for example, PCA. That is, write
+\begin{align}
+X = \left[X^{(1)} \vert \dots \vert X^{(L)}\right] \in \reals^{n \times p},
+\end{align}
+where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An equivalent
+  procedure is to eigenanalyze the empirical covariance matrix
+  $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal component directions
+are the first $K$ columns $v_{\cdot 1}, \dots, v_{\cdot K}$, while the
+associated scores are $d_{1}u_{\cdot 1}, \dots, d_{K}u_{\cdot K}$.
+
+While this does not account for the multitable structure of the data, it does
+accomplish two goals,
+\begin{itemize}
+\item Through the principal component scores, it provides a visualization of the
+  relationships between samples, based on all features.
+\item Through the principal component directions, it gives a way of relating
+  features within and across the multiple tables.
+\end{itemize}
+
+However, two drawbacks of this approach are worth noting,
+\begin{itemize}
+  \item It does not provide a summary of the relationship between the sets of
+    variables defining the tables -- it can only relate pairs of
+    variables. \label{bullet:pca_drawback_one}
+  \item If some tables have many more variables than others, they can dominate
+    the resulting ordination. \label{bullet:pca_drawback_two}
+\end{itemize}
+
+These limitations are addressed by CCA and MFA, discussed in Sections
+\ref{sec:cca} and \ref{sec:mfa}, respectively.
+
+Here we describe one geometric and one statistical motivation for PCA. The
+geometric motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
+$p$-dimensional space, then the principal component directions provide the best
+$k$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
+Formally, recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
+subspace spanned by the columns of $V$. PCA identifies the orthogonal matrix $V
+\in \reals^{p \times K}$ such that
+\begin{align}
+\sum_{i = 1}^{n}\|x_{i} - VV^{T} x_{i}\|_{2}^{2}
+\end{align}
+is minimized. The principal component scores are then the coordinates of the
+projected points with respect to this subspace.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_1}
+  \caption{A geometric motivation for PCA. The first principal component spans
+    the one-dimensional subspace $V$ minimizing the squared error between points
+    and their projections, $\sum_{i = 1}^{n}\|\left(I -
+    VV^{T}\right)x_{i}\|_{2}^{2}$ projections. The black points represent the
+    scaled values for two of the body composition variables -- weight and total
+    fat mass -- while the purple points are the projections onto the first
+    principal component when only accounting for these two variables. Contrast
+    this with Figures \ref{fig:pca-approx-2} and \ref{fig:pca-approx-3}, where
+    variables other than weight and fat mass are taken into account.}
+  \label{fig:pca-approx}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/var_plot}
+  \caption{A statistical motivation for PCA. Each histogram is computed from the
+    linear combinations $\left(c^{j}x_{i}\right)$, for $c^{j}$ equal to the
+    first and second principal components, the vector $\frac{1}{n}\mathbf{1}$,
+    and a normalized random multivariate Gaussian. At least among these four
+    vectors, the scores obtained from the first PC have the largest variance. It
+    is a theorem that its variance is in fact maximal among all linear
+    combinations with orthogonal vectors.}
+  \label{fig:pca-var}
+\end{figure}
+
+The second interpretation is that PCA finds a low-dimensional representation of
+the $x_{i}$ such that the resulting points have maximal variance. Qualitatively,
+this is a desirable property, because it means that the simpler representation
+preserves most of the variation present in the original data, see Figure
+\ref{fig:pca-var}. In this figure, histograms of the scores associated with four
+linear combinations of the original body composition measurements are displayed
+side by side, to emphasize the fact that the linear combination $x^{T}v_{1}$
+associated with the first principal component $v_{1}$ has the largest variance.
+The comparison combinations are the second principal component, the mean across
+all columns, and a random linear combination $\frac{c^{T}}{\|c\|} x$ where $c \sim
+\Gsn\left(0, I_{p}\right)$.
+
+Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
+independently from some distribution $\P$, so that the variance is
+$\Covsubarg{\P}{x_{i}} = \Sigma$. Consider an arbitrary linear combination of
+$x_{i}$'s $p$ coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$.
+The first PCA direction gives the $c$ such that the variance of this coordinate,
+$\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second direction gives
+the linear combination that maximizes variance, subject to being orthogonal to
+the first, and so forth.
+
+While our description of the method of concatenating multiple tables into a
+single one has focused on PCA, note that other methods could be applied instead.
+For example, it is possible to define a new distance between samples as a
+mixture of distances based on several tables. This can be useful if there are
+different types of data across the different tables: Jaccard, $\chi^{2}$, and
+euclidean distsances can be applied to binary, count, and real valued tables.
+The combined distance can then be input into any distance-based single-table
+procedure, like multidimensional scaling or hierarchical clustering. The primary
+downside of this approach is that the resulting distance only allows a
+comparison between samples, but not across features.
+
+PCA is a very widely used technique, and some standard references include
+\citep{friedman2001elements, mardia1980multivariate, pages2014multiple}.
+Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
+us to begin our survey of multitable methods in earnest.
+
+\subsubsection{Example}
+\label{subsec:pca_example}
+
+Figure \ref{fig:loadings} and \ref{fig:scores_weight} illustrate this approach
+on body composition and bacterial abundance data from the WELL-China study.
+Note that we have subsetted to only men, since men and women have very different
+body compositions. Further, the 16s data have been variance stabilized according
+the methodology proposed in \citep{Anders2010} and filtered to only those
+amplicon sequence variants (ASVs) that are nonzero in at least 7\% of samples.
+
+Figure \ref{fig:loadings} displays the loadings associated with this
+combined-dataset PCA approach, where body composition (36 columns) and 16s
+abundances (368 columns) were combined into one dataset (401 columns). Columns
+associated with bacterial species are displayed as points, shaded by taxonomic
+family, while columns associated with body composition variables are labeled
+with text.
+
+Most body composition variables lie on the top right, in a direction
+approximately orthogonal to the main direction of variation among ASVs. Columns
+that are highly correlated (e.g., right (R) and left (L) Trunk Fat Mass (FM)
+have loadings nearly equal to one another. Age appears in generally negatively
+correlated with the other, more weight oriented, variables. Among ASVs, the main
+source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
+which appear overrepresented on the left and right, respectively.
+
+To identify relationships between ASVs and body composition variables, it would
+be of interest to isolate those ASVs with large contributions along the axis
+defined by linking the center of the weight variables and the origin. Relatively
+few such species stand out, though note that there is nothing in this
+algorithm's objective that would seek covariation across tables directly, so the
+fact that such associations seem weak with respect to the top two principal
+components does not mean such relationships do not exist.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca/loadings}
+  \caption{The loadings obtained by applying PCA to the combined body
+    composition and microbial abundance data set. \label{fig:loadings} }
+\end{figure}
+
+We can study individual samples with respect to these loadings, by plotting
+their projections onto the top two principal components. This is the content of
+Figures \ref{fig:scores_weight} and \ref{fig:scores_rl_ratio}. These figures
+display samples in the same positions, but shaded by weight and Ruminococcaceae
+/ Lachnospiraceae ratio, respectively. This shading confirms the observations
+from the loadings directly using observed data. Indeed, the increasing weight
+among samples in the top right of Figure \ref{fig:scores_weight} exactly
+corresponds to the fact that weight related variables lie in the top right in
+Figure \ref{fig:loadings}. A left-to-right Ruminococcaceae /
+Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
+which is consistent with the loadings, though we also observe a few samples with
+substantially higher Ruminoccocus ratios.
+
+In this approach, the loadings provide a description of the relationship between
+variables across data sets. Further, scores summarize variation in samples
+across multiple data sets. In this light, this simple heuristic is a natural
+first step in analyzing multiple table data. However, considering the difficulty
+in directly interpreting the covariation across data sets, as well as the
+method's failure to use any sense of covariation in the dimensionality
+reductions trategy, suggests that this method should not be the last step of an
+analysis workflow. Nevertheless, we now have a baseline with which to compare
+the more elaborate methods of subsequent sections.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca/scores_weight}
+  \caption{The scores resulting from PCA applied to the combined body
+    composition and microbial abundance data set.\label{fig:scores_weight} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
+  \caption{The same scores as Figure \ref{fig:scores_weight}, but shaded now by
+    the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
+    slight increase in Ruminococcaceae from left to right is consistent with the
+    loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
+\end{figure}
+
+\section{Appendix}
+
+\subsection{Additional figures}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_2}
+  \caption{A geometric motivation for PCA.}
+  \label{fig:pca-approx-2}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure/pca/proj_plot_3}
+  \caption{A geometric motivation for PCA.}
+  \label{fig:pca-approx-3}
+\end{figure}
+
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+
+\end{document}
