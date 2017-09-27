@@ -11,6 +11,24 @@
 ## libraries
 ###############################################################################
 library("tidyverse")
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_rect(size = 0.7),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 10),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 8),
+  axis.title = element_text(size = 10),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
+)
 
 project <- function(x, pc_x, K = 2) {
   v <- pc_x$rotation
@@ -34,9 +52,9 @@ proj_plot <- function(bc, proj_x) {
       aes(x = weight_dxa, y = Total_FM),
       col = "#9370db", alpha = 0.3
     ) +
-    coord_fixed()
+    coord_fixed() +
+    labs(x = "Weight", y = "Fat Mass")
 }
-
 
 ###############################################################################
 ## run pc examples
@@ -88,5 +106,6 @@ ggplot(contrasts) +
     aes(x = value),
     bins = 70
   ) +
+  scale_y_continuous(expand = c(0, 0)) +
   facet_grid(var ~ .)
 ggsave("../chapter/figure/pca/var_plot.png")
