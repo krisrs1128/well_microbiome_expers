@@ -359,7 +359,21 @@ in each table.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.8\textwidth]{figure/cca/geometric}
-  \caption{\label{fig:cca_geometric} }
+  \caption{The geometric representation of CCA, on a toy subset of the WELL-China
+    data, to facilitate visualization. The three axes correspond correspond to
+    three subjects, and the text labels indicate the positions of (scaled) features with
+    respect to the samples. Features from the 16s table are shaded in blue,
+    while body composition variables are orange. The subspaces spanned by the
+    three features in each table are indicated by a grid of points lying along
+    them, shaded in the same color as the measurement type they correspond to.
+    We only display three features so that the table subspaces do are not simply
+    all of $\reals^{3}$. The ellipses are unit balls with respect to each data
+    set's covariance matrix, estimated using all samples (not just the three
+    displayed). Two arrows are the first CCA directions associated with the two
+    measurement types. Evidently, the correlation between these measurement
+    types, restricted to these few samples and features, is quite high, since
+    the arrows point in nearly the same direction.
+    \label{fig:cca_geometric} }
 \end{figure}
 
 For a statistical interpretation, the idea of CCA is to find the low-dimensional
@@ -473,6 +487,9 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
   \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
   c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
 
+\subsubsection{Example}
+\label{subsec:cca_example}
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/CCA/loadings}
@@ -491,9 +508,8 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:cca_scores_weight}, but shaded now by
-    the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
-    slight increase in Ruminococcaceae from left to right is consistent with the
-    loadings observed in Figure \ref{fig:cca_loadings}.\label{fig:cca_scores_rl_ratio} }
+    the ratio of Ruminococcaceae over Lachnospiraceae relative
+    abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
 
 
