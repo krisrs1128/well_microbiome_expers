@@ -32,10 +32,16 @@ theme_update(
   legend.key = element_blank()
 )
 
-
 ###############################################################################
 ## Load data
 ###############################################################################
+opts <- list(
+  gender = "Male",
+  sf_quantile = 0.95,
+  filt_k = 0.5,
+  filt_a = 0
+)
+
 seqtab <- readRDS("../data/seqtab.rds")
 bc <- readRDS("../data/sample_data_bc.rds")
 colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
@@ -49,7 +55,7 @@ taxa$seq_num <- colnames(seqtab)
 ## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
 seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > 0) > 0.07, prune = TRUE)
+  filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
 dds <- DESeqDataSetFromMatrix(
   countData = t(get_taxa(seqtab)),
   colData = data.frame("unused" = rep(1, nrow(seqtab))),
@@ -60,7 +66,7 @@ dds <- DESeqDataSetFromMatrix(
 ## so, give it a large size factor). Basically related to sequencing depth.
 ##
 ## code copied from here: https://support.bioconductor.org/p/76548/
-qs <- apply(counts(dds), 2, quantile, .95)
+qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
 sizeFactors(dds) <- qs / exp(mean(log(qs)))
 
 ## and the regularized data

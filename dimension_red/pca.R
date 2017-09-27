@@ -49,10 +49,11 @@ perc_label <- function(pc_res, i) {
 ###############################################################################
 ## Load data
 ###############################################################################
-
 opts <- list(
   gender = "Male",
-  sf_quantile = 0.95
+  sf_quantile = 0.95,
+  filt_k = 0.07,
+  filt_a = 0
 )
 
 seqtab <- readRDS("../data/seqtab.rds")
@@ -68,7 +69,7 @@ taxa$seq_num <- colnames(seqtab)
 ## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
 seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > 0) > 0.07, prune = TRUE)
+  filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
 dds <- DESeqDataSetFromMatrix(
   countData = t(get_taxa(seqtab)),
   colData = data.frame("unused" = rep(1, nrow(seqtab))),
