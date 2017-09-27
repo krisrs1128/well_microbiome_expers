@@ -127,7 +127,7 @@ to be the most readily available through statistical computing packages and can
 provide a benchmark with which to compare more elaborate, modern methods.
 
 \subsection{PCA}
-\label{sec:pca}
+\label{subsec:pca}
 
 The simplest approach to dealing with multiple tables is to combine them into
 one and apply a single-table method, for example, PCA. That is, write
@@ -159,7 +159,7 @@ However, two drawbacks of this approach are worth noting,
 \end{itemize}
 
 These limitations are addressed by CCA and MFA, discussed in Sections
-\ref{sec:cca} and \ref{sec:mfa}, respectively.
+\ref{subsec:cca} and \ref{subsec:mfa}, respectively.
 
 Here we describe one geometric and one statistical motivation for PCA. The
 geometric motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
@@ -316,6 +316,160 @@ the more elaborate methods of subsequent sections.
     loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
 \end{figure}
 
+\subsection{CCA}
+\label{subsec:cca}
+
+CCA is a close relative of PCA that designed to compare sets of features across
+tables. Like PCA, it provides low-dimensional representations of samples, but it
+also allows comparisons at the table level. Suppose for now that there are only
+two tables of interest, $X \in \reals^{n \times p_{1}}$ and $Y \in \reals^{n
+  \times p_{2}}$. Let $\hat{\Sigma}_{XX}, \hat{\Sigma}_{YY}$, and
+$\hat{\Sigma}_{XY}$ be the associated covariance estimates. Take the SVD,
+$\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
+= \tilde{U}D\tilde{V}^{T}$. The canonical correlation directions associated with
+the two tables are $u_{k} = \Sigma_{XX}^{-\frac{1}{2}}\tilde{u}_{k} \in
+\reals^{p_{1}}$ and $v_{k} = \Sigma_{YY}^{-\frac{1}{2}}\tilde{v}_{k} \in
+\reals^{p_{2}}$. These directions give two sets of low-dimensional
+representations for each sample, one for each table: $z_{k}^{(1)} = Xu_{k} \in
+\reals^{n}$ and $z_{k}^{(2)} = Yv_{k} \in \reals^{n}$. If the two tables are
+closely related, then the $z_{k}^{(1)}$ and $z_{k}^{(2)}$ will be very
+correlated. The singular values $d_{k}$ are called the canonical correlation
+coefficients. Like the eigenvalues in PCA, they characterize the amount of
+covariation across tables that can be captured by each additional pair of
+directions.
+
+As in PCA, there are many ways to view this procedure; here we discuss
+geometric, statistical, and probabilistic interpretations. Unlike the geometric
+interpretation for PCA, the geometric interpretation for CCA identifies point
+locations with features, not samples. Specifically, the columns of $X$ and $Y$
+are thought of as points in $\reals^{n}$. Consider two subspaces defined as the
+spans of the columns of $X$ and $Y$, respectively. These subspaces correspond to
+the linear combinations of features within each table. Place two ellipses on the
+respective subspaces, centered at the origin and with size and shape depending
+on the within table covariances $\hat{\Sigma}_{XX}$ and $\hat{\Sigma}_{YY}$. The
+first canonical correlation directions are the pair of points, one lying on each
+ellipse, such that the angle from the origin to those two points is smallest. In
+this sense, it finds a pair of variance-constrained linear combinations of
+features within the two tables so that the two combinations appear ``close'' to
+one another. The second pair of canonical correlation directions identify a pair
+of points with similar interpretation, except they are required to be orthogonal
+to the first pair, with respect to the inner product induced by the covariances
+in each table.
+
+For a statistical interpretation, the idea of CCA is to find the low-dimensional
+representations of the two tables with maximal covariance -- this is analogous
+to the maximum variance interpretation. Formally, let $x_{i}$ and $y_{i}$
+samples from $\P^{\X}$ and $\P^{\Y}$. The rows of the two tables are imagined to
+be i.i.d. draws from $\P^{\X\Y}$. Consider arbitrary linear combinations
+$z_{i}^{(1)}\left(u\right) = u^{T} x_{i}$ and $z_{i}^{(2)}\left(v\right) =
+v^{T}y_{i}$ of samples from the two tables. The first pair of CCA directions
+$u_{1}^{\ast}$ and $v_{1}^{\ast}$ are chosen to optimize
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
+  &\Covsubarg{\P^{\X\Y}}{z_{i}^{(1)}\left(u\right),
+    z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\
+\text{subject to } &\Varsubarg{\P^{\X}}{z_{i}^{(1)}\left(u\right)} = 1 \\
+&\Varsubarg{\P^{\Y}}{z_{i}^{(2)}\left(v\right)} = 1.
+\end{align}
+To produce subsequent directions, the same optimization is performed, but with
+the additional constraint that the directions must be orthogonal to all the
+previous directions identified for that table. Of course, in actual
+applications, we estimate these covariances and variances empirically.
+
+This perspective makes it easy to derive the algorithm given at the start of
+this section. The empirical version of the optimization problem
+\ref{eq:cancor_optim} is
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
+  &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\
+  \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \\
+  & v^{T}\hat{\Sigma}_{YY}v = 1.
+\end{align}
+
+Consider the whitened data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$ and
+$\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
+optimization \label{eq:cancor_emp} can now be expressed as
+\begin{align}
+  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
+    \reals^{p_{2}}}
+  &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
+\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \\
+&\|\tilde{v}\|_{2}^{2} = 1.
+\end{align}
+The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
+well known -- they're exactly the first left and right eigenvectors of
+$\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
+= \tilde{U}D\tilde{V}^{T}$, respectively. The argument is standard\footnote{See
+  \citep{mardka1980multivariate}, for example.}, but we include it for
+completeness.
+
+Let $\xi$ and $\nu$ be potential maximizers of length one. We can find $w_{u}$
+and $w_{v}$ such that $\xi = \tilde{U}w_{u}, \nu = \tilde{V}w_{v}$, since
+$\tilde{U}$ and $\tilde{V}$ are both orthonormal bases. Since they are length
+one, $1 = \|\xi\|^{2}_{2} = w_{u}^{T}\tilde{U}^{T}\tilde{U}w_{u} =
+\|w_{u}\|_{2}^{2}$ and similarly $\|w_{v}\|_{2}^{2} = 1$. The objective
+\ref{eq:cancor_trans} can be bounded by
+\begin{align*}
+\xi^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\nu
+&= w_{u}^{T}\tilde{U}^{T}\tilde{U}D\tilde{V}^{T}\tilde{V}w_{v} \\
+&= w_{u}^{T}Dw_{v} \\
+&= \sum_{k = 1}^{p_{1} \wedge p_{2}} d_{k}w_{uk}w_{vk} \\
+&\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\
+&\leq d_{1} \|w_{u}\|\|w_{v}\| = d_{1},
+\end{align*}
+and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their weight
+on the first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu =
+\tilde{v}_{1}$. For subsequent directions, we repeat the argument but require
+that $w_{u}$ and $w_{v}$ have zero weight on the first columns of $\tilde{U}$
+and $\tilde{V}$.
+
+To recover the solutions to the original problem, we reverse the original
+variable transformation, yielding optimal $\hat{u}_{1} = 
+\Sigma_{XX}^{-\frac{1}{2}}\hat{\tilde{u}}_{1}$ and $\hat{v}_{1} =
+\Sigma_{YY}^{-\frac{1}{2}}\hat{\tilde{v}}_{1}$.
+
+A probabilistic interpretation of this procedure views it as estimating the
+factors in an implicit latent variable model. In particular,
+\citep{bach2005probabilistic} supposes that $x_{i}$ and $y_{i}$ are drawn i.i.d.
+from the model,
+\begin{align*}
+  \xi_{i} := \left(\xi_{i}^{s}, \xi_{i}^{X}, \xi_{i}^{Y}\right) &\sim
+  \Gsn\left(0, I_{d}\right) \\
+  x_{i} \vert \xi_{i} &\sim \Gsn\left(W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{X} + \mu_{X},
+  I_{d} \right) \\
+  y_{i} \vert \xi_{i} &\sim \Gsn\left(W_{Y}\xi_{i}^{s} +
+  B_{Y}\xi_{i}^{Y} + \mu_{Y}, I_{d}\right)
+\end{align*}
+That is, each sample is associated with a $d$-dimensional latent variable
+$\xi_{i}$, drawn from a spherical normal prior. A few of the coordinates of
+these latent variables contribute to shared structure, through $W_{X}$ and
+$W_{Y}$. The remaining coordinates model table-specific structure, through
+$B_{X}$ and $B_{Y}$. It can be shown that the posterior expectations of the
+latent $\xi_{i}^{s}$ (assumed $\in \reals^{K}$) given the observed tables must
+lie on the subspace defined by the CCA directions. More precisely,
+\begin{align*}
+  \Earg{\xi_{i} \mid x_{i}^{(1)}} \in \text{span}\left(z_{1}^{(1)},
+    \dots, z_{K}^{(1)}\right),
+\end{align*}
+and
+\begin{align*}
+  \Earg{\xi_{i} \mid x_{i}^{(2)}} \in \text{span}\left(z_{1}^{(2)},
+    \dots, z_{K}^{(2)}\right).
+\end{align*}
+
+Finally, we observe that the logic for CCA generalizes to an arbitrary number
+$L$ of tables, by summing all pairwise covariances. That is, the instead of
+finding directions $c_{k}^{(1)}$ and $c_{k}^{(2)}$ maximizing
+$\Covsubarg{\P^{(1)}, \P^{(2)}}{c_{k}^{(1)T}x_{i}^{(1)},
+  c_{k}^{(2)T}x_{i}^{(2)}}$ subject to normalization and orthogonality
+constraints, we seek directions $c_{k}^{(1)}, \dots, c_{k}^{(L)}$ that maximize
+the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
+  \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
+  c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
+
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+
 \section{Appendix}
 
 \subsection{Additional figures}
@@ -332,7 +486,5 @@ the more elaborate methods of subsequent sections.
   \label{fig:pca-approx-3}
 \end{figure}
 
-\bibliographystyle{plainnat}
-\bibliography{refs.bib}
 
 \end{document}
