@@ -50,15 +50,15 @@ across tables, rather than just comparing each table with a single response of
 interest. This richer scientific question motivates the development of methods
 distinct from those used to analyze a single measurement type at a time.
 
-For more concrete motivation, we will use data from a study on the relationship
-between various indicators of wellness and microbial community structure (todo:
-give reference). In this study, 1969 individuals\footnote{Though sampling is
-  still ongoing.} underwent clinical examinations, filled out wellness surveys
-(covering topics such as exercise, sleep, diet, and mental health, for example),
-and provided stool samples, used for 16s sequencing and metabolomic analysis.
-To date, 16s sequencing data is available for 221 of these participants.
-Evidently, various interesting relational questions can be investigated using
-this data source.
+For more concrete motivation, we will use data from the WELL-China study, which
+is focused on the relationship between various indicators of wellness and
+microbial community structure (todo: give reference). In this study, 1969
+individuals\footnote{Though sampling is still ongoing.} underwent clinical
+examinations, filled out wellness surveys (covering topics such as exercise,
+sleep, diet, and mental health, for example), and provided stool samples, used
+for 16s sequencing and metabolomic analysis. To date, 16s sequencing data is
+available for 221 of these participants. Evidently, various interesting
+relational questions can be investigated using this data source.
 
 For the purpose of illustration, we focus on one relatively focused question
 that can be addressed using this data: How is the distribution of lean and fat
@@ -240,22 +240,80 @@ us to begin our survey of multitable methods in earnest.
 \subsubsection{Example}
 \label{subsec:pca_example}
 
+Figure \ref{fig:loadings} and \ref{fig:scores_weight} illustrate this approach
+on body composition and bacterial abundance data from the WELL-China study.
+Note that we have subsetted to only men, since men and women have very different
+body compositions. Further, the 16s data have been variance stabilized according
+the methodology proposed in \citep{Anders2010} and filtered to only those
+amplicon sequence variants (ASVs) that are nonzero in at least 7\% of samples.
+
+Figure \ref{fig:loadings} displays the loadings associated with this
+combined-dataset PCA approach, where body composition (36 columns) and 16s
+abundances (368 columns) were combined into one dataset (401 columns). Columns
+associated with bacterial species are displayed as points, shaded by taxonomic
+family, while columns associated with body composition variables are labeled
+with text.
+
+Most body composition variables lie on the top right, in a direction
+approximately orthogonal to the main direction of variation among ASVs. Columns
+that are highly correlated (e.g., right (R) and left (L) Trunk Fat Mass (FM)
+have loadings nearly equal to one another. Age appears in generally negatively
+correlated with the other, more weight oriented, variables. Among ASVs, the main
+source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
+which appear overrepresented on the left and right, respectively.
+
+To identify relationships between ASVs and body composition variables, it would
+be of interest to isolate those ASVs with large contributions along the axis
+defined by linking the center of the weight variables and the origin. Relatively
+few such species stand out, though note that there is nothing in this
+algorithm's objective that would seek covariation across tables directly, so the
+fact that such associations seem weak with respect to the top two principal
+components does not mean such relationships do not exist.
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca/loadings}
-  \caption{\label{fig:loadings} }
+  \caption{The loadings obtained by applying PCA to the combined body
+    composition and microbial abundance data set. \label{fig:loadings} }
 \end{figure}
+
+We can study individual samples with respect to these loadings, by plotting
+their projections onto the top two principal components. This is the content of
+Figures \ref{fig:scores_weight} and \ref{fig:scores_rl_ratio}. These figures
+display samples in the same positions, but shaded by weight and Ruminococcaceae
+/ Lachnospiraceae ratio, respectively. This shading confirms the observations
+from the loadings directly using observed data. Indeed, the increasing weight
+among samples in the top right of Figure \ref{fig:scores_weight} exactly
+corresponds to the fact that weight related variables lie in the top right in
+Figure \ref{fig:loadings}. A left-to-right Ruminococcaceae /
+Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
+which is consistent with the loadings, though we also observe a few samples with
+substantially higher Ruminoccocus ratios.
+
+In this approach, the loadings provide a description of the relationship between
+variables across data sets. Further, scores summarize variation in samples
+across multiple data sets. In this light, this simple heuristic is a natural
+first step in analyzing multiple table data. However, considering the difficulty
+in directly interpreting the covariation across data sets, as well as the
+method's failure to use any sense of covariation in the dimensionality
+reductions trategy, suggests that this method should not be the last step of an
+analysis workflow. Nevertheless, we now have a baseline with which to compare
+the more elaborate methods of subsequent sections.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_weight}
-  \caption{\label{fig:scores_weight} }
+  \caption{The scores resulting from PCA applied to the combined body
+    composition and microbial abundance data set.\label{fig:scores_weight} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
-  \caption{\label{fig:scores_rl_ratio} }
+  \caption{The same scores as Figure \ref{fig:scores_weight}, but shaded now by
+    the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
+    slight increase in Ruminococcaceae from left to right is consistent with the
+    loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
 \end{figure}
 
 \section{Appendix}
