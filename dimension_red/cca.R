@@ -11,6 +11,7 @@
 library("phyloseq")
 library("DESeq2")
 library("tidyverse")
+library("forcats")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -60,6 +61,11 @@ taxa <- readRDS("../data/taxa.rds") %>%
 taxa$seq_num <- colnames(seqtab)
 taxa$family <- fct_lump(taxa$Family, n = 7)
 
+mseqtab <- seqtab %>%
+  melt(varnames = c("Number", "seq_num")) %>%
+  left_join(bc) %>%
+  left_join(taxa)
+
 ###############################################################################
 ## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
@@ -83,18 +89,21 @@ vsd <- varianceStabilizingTransformation(dds, fitType = "local")
 x_seq <- t(assay(vsd))
 
 ###############################################################################
-## concatenate quantitative body composition (split by gender) and (somewhat
-## filtered) microbiome counts, and transformed
+## Run CCA on the two (scaled) tables
 ###############################################################################
 bc[, -c(1:3)] <- bc[, -c(1:3)]
 bc_mat <- data.frame(bc) %>%
   filter(gender == opts$gender) %>%
-  select(-id, -Number, -gender) %>%
-  as.matrix() %>%
-  scale()
+  select(-id, -gender)
+rownames(bc_mat) <- bc_mat$Number
+bc_mat$Number <- NULL
+bc_mat <- scale(bc_mat)
 
 cca_res <- cancor(bc_mat, scale(x_seq[bc$gender == opts$gender, ]))
 
+###############################################################################
+## Plot the loadings
+###############################################################################
 loadings <- rbind(
   data.frame(
     variable = rownames(cca_res$xcoef),
@@ -135,3 +144,55 @@ p <- ggplot(loadings) +
   scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
   coord_fixed(asp_ratio)
 ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 3.78)
+
+###############################################################################
+## Plot the scores
+###############################################################################
+
+## extract scores and join in sample data
+scores <- data.frame(
+  Number = rownames(bc_mat),
+  bc_mat[, rownames(cca_res$xcoef)] %*% cca_res$xcoef[, 1:3]
+) %>%
+  left_join(bc)
+
+ggplot(scores) +
+  geom_point(
+    aes(x = X1, y = X2, size = X3, col = weight_dxa)
+  ) +
+  labs(
+    "x" = perc_label(cca_res, 1),
+    "y" = perc_label(cca_res, 2)
+  ) +
+  scale_color_viridis(
+    "Weight ",
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+  ) +
+  coord_fixed(asp_ratio)
+ggsave("../chapter/figure/cca/scores_weight_ratio.png", width = 3.56, height = 2.6)
+
+##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
+family_means <- mseqtab %>%
+  group_by(family, Number) %>%
+  summarise(family_mean = mean(value)) %>%
+  spread(family, family_mean) %>%
+  group_by(Number) %>%
+  summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
+
+scores <- scores %>%
+  left_join(family_means)
+ggplot(scores) +
+  geom_point(
+    aes(x = X1, y = X2, size = X3, col = rl_ratio)
+  ) +
+  labs(
+    "x" = perc_label(cca_res, 1),
+    "y" = perc_label(cca_res, 2)
+  ) +
+  scale_color_viridis(
+    "Rum. / Lach. Ratio  ",
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+  ) +
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
+  coord_fixed(ratio = asp_ratio)
+ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
