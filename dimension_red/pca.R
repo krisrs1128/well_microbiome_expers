@@ -62,7 +62,7 @@ taxa$seq_num <- colnames(seqtab)
 ## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
 seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > 0) > 0.05, prune = TRUE)
+  filter_taxa(function(x) mean(x > 0) > 0.07, prune = TRUE)
 dds <- DESeqDataSetFromMatrix(
   countData = t(get_taxa(seqtab)),
   colData = data.frame("unused" = rep(1, nrow(seqtab))),
@@ -135,14 +135,14 @@ ggplot(loadings) +
   geom_point(
     data = loadings %>%
       filter(type == "seq"),
-    aes(x = PC1, y = PC2, col = family),
-    size = 1, alpha = 0.6
+    aes(x = PC1, y = PC2, size = PC3, col = family),
+    alpha = 0.6
   ) +
   geom_text_repel(
     data = loadings %>%
       filter(type == "body_comp"),
-    aes(x = PC1, y = PC2, label = variable),
-    size = 1.5, segment.size = 0.3,
+    aes(x = PC1, y = PC2, label = variable, size = PC3),
+    segment.size = 0.3,
     segment.alpha = 0.5
   ) +
   labs(
@@ -150,27 +150,23 @@ ggplot(loadings) +
     "y" = perc_label(pc_res$Male, 2),
     "col" = "Family"
   ) +
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-0.1, 0.1)) +
   ylim(-0.1, .3) +
   xlim(-0.15, 0.15) +
   coord_fixed(asp_ratio)
-
 ggsave("../chapter/figure/pca/loadings.png")
 
 ## and study the scores
 ggplot(scores) +
   geom_point(
-    aes(x = PC1, y = PC2, col = weight_dxa)
-  ) +
-  labs(
-    "x" = perc_label(pc_res$Male, 1),
-    "y" = perc_label(pc_res$Male, 2)
+    aes(x = PC1, y = PC2, size = PC3, col = weight_dxa)
   ) +
   scale_color_viridis(
     "Weight ",
-    guide = guide_colorbar(keyheight = 0.2, ticks = FALSE)
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   ) +
-  coord_fixed(ratio = asp_ratio) +
-  theme(legend.position = "bottom")
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
+  coord_fixed(ratio = asp_ratio)
 ggsave("../chapter/figure/pca/scores_weight.png")
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
@@ -185,16 +181,16 @@ scores <- scores %>%
   left_join(family_means)
 ggplot(scores) +
   geom_point(
-    aes(x = PC1, y = PC2, col = rl_ratio)
+    aes(x = PC1, y = PC2, size = PC3, col = rl_ratio)
   ) +
   labs(
     "x" = perc_label(pc_res$Male, 1),
     "y" = perc_label(pc_res$Male, 2)
   ) +
   scale_color_viridis(
-    "Ruminococcaceae / Lachnospiraceae Ratio  ",
-    guide = guide_colorbar(keyheight = 0.2, ticks = FALSE)
+    "Rum. / Lach. Ratio  ",
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   ) +
-  coord_fixed(ratio = asp_ratio) +
-  theme(legend.position = "bottom")
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
+  coord_fixed(ratio = asp_ratio)
 ggsave("../chapter/figure/pca/scores_rl_ratio.png")
