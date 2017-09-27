@@ -61,7 +61,8 @@ taxa$seq_num <- colnames(seqtab)
 ###############################################################################
 ## normalize with DESeq2's varianceStabilizingTransformation
 ###############################################################################
-seqtab <- seqtab[, 1:700]
+seqtab <- seqtab %>%
+  filter_taxa(function(x) mean(x > 0) > 0.05, prune = TRUE)
 dds <- DESeqDataSetFromMatrix(
   countData = t(get_taxa(seqtab)),
   colData = data.frame("unused" = rep(1, nrow(seqtab))),
@@ -83,12 +84,15 @@ x_seq <- assay(vsd)
 ## concatenate quantitative body composition (split by gender) and (somewhat
 ## filtered) microbiome counts, and transformed
 ###############################################################################
-bc[, -c(1:3)] <- scale(bc[, -c(1:3)])
-combined_df <- data.frame(bc, scale(t(x_seq[, bc$Number])))
+bc[, -c(1:3)] <- bc[, -c(1:3)]
+combined_df <- data.frame(bc, t(x_seq[, bc$Number]))
 combined <- combined_df %>%
   select(-Number, -id) %>%
   split(.$gender, drop = TRUE) %>%
-  lapply(function(x) as.matrix(x[, colnames(x) != "gender"]))
+  lapply(function(x) {
+    as.matrix(x[, colnames(x) != "gender"]) %>%
+      scale()
+  })
 
 ###############################################################################
 ## combining into single melted data set (mainly for plotting)
@@ -126,6 +130,8 @@ loadings[loadings$type != "seq", "seq_num"] <- NA
 ## how to species data relate to body composition?
 asp_ratio <- sqrt(pc_res$Male$sdev[2] / pc_res$Male$sdev[1])
 ggplot(loadings) +
+  geom_hline(yintercept = 0, size = 0.5) +
+  geom_vline(xintercept = 0, size = 0.5) +
   geom_point(
     data = loadings %>%
       filter(type == "seq"),
@@ -136,13 +142,18 @@ ggplot(loadings) +
     data = loadings %>%
       filter(type == "body_comp"),
     aes(x = PC1, y = PC2, label = variable),
-    size = 2
+    size = 1.5, segment.size = 0.3,
+    segment.alpha = 0.5
   ) +
   labs(
     "x" = perc_label(pc_res$Male, 1),
-    "y" = perc_label(pc_res$Male, 2)
+    "y" = perc_label(pc_res$Male, 2),
+    "col" = "Family"
   ) +
+  ylim(-0.1, .3) +
+  xlim(-0.15, 0.15) +
   coord_fixed(asp_ratio)
+
 ggsave("../chapter/figure/pca/loadings.png")
 
 ## and study the scores
@@ -154,7 +165,10 @@ ggplot(scores) +
     "x" = perc_label(pc_res$Male, 1),
     "y" = perc_label(pc_res$Male, 2)
   ) +
-  scale_color_viridis() +
+  scale_color_viridis(
+    "Weight ",
+    guide = guide_colorbar(keyheight = 0.2, ticks = FALSE)
+  ) +
   coord_fixed(ratio = asp_ratio) +
   theme(legend.position = "bottom")
 ggsave("../chapter/figure/pca/scores_weight.png")
@@ -177,7 +191,10 @@ ggplot(scores) +
     "x" = perc_label(pc_res$Male, 1),
     "y" = perc_label(pc_res$Male, 2)
   ) +
-  scale_color_viridis() +
+  scale_color_viridis(
+    "Ruminococcaceae / Lachnospiraceae Ratio  ",
+    guide = guide_colorbar(keyheight = 0.2, ticks = FALSE)
+  ) +
   coord_fixed(ratio = asp_ratio) +
   theme(legend.position = "bottom")
 ggsave("../chapter/figure/pca/scores_rl_ratio.png")
