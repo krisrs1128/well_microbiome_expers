@@ -84,7 +84,6 @@ x_seq <- assay(vsd)
 ## concatenate quantitative body composition (split by gender) and (somewhat
 ## filtered) microbiome counts, and transformed
 ###############################################################################
-bc[, -c(1:3)] <- bc[, -c(1:3)]
 combined_df <- data.frame(bc, t(x_seq[, bc$Number]))
 combined <- combined_df %>%
   select(-Number, -id) %>%
