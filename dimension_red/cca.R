@@ -87,11 +87,12 @@ sizeFactors(dds) <- qs / exp(mean(log(qs)))
 ## and the regularized data
 vsd <- varianceStabilizingTransformation(dds, fitType = "local")
 x_seq <- t(assay(vsd))
+x_seq <- x_seq[bc$Number, ]
+x_seq <- scale(x_seq[bc$gender == opts$gender, ])
 
 ###############################################################################
 ## Run CCA on the two (scaled) tables
 ###############################################################################
-bc[, -c(1:3)] <- bc[, -c(1:3)]
 bc_mat <- data.frame(bc) %>%
   filter(gender == opts$gender) %>%
   select(-id, -gender)
@@ -99,7 +100,7 @@ rownames(bc_mat) <- bc_mat$Number
 bc_mat$Number <- NULL
 bc_mat <- scale(bc_mat)
 
-cca_res <- cancor(bc_mat, scale(x_seq[bc$gender == opts$gender, ]))
+cca_res <- cancor(bc_mat, x_seq)
 
 ###############################################################################
 ## Plot the loadings
@@ -120,7 +121,7 @@ loadings <- rbind(
   left_join(taxa)
 
 asp_ratio <- sqrt(cca_res$cor[2] / cca_res$cor[1])
-p <- ggplot(loadings) +
+ggplot(loadings) +
   geom_hline(yintercept = 0, size = 0.5) +
   geom_vline(xintercept = 0, size = 0.5) +
   geom_point(
@@ -150,26 +151,84 @@ ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 3.78)
 ###############################################################################
 
 ## extract scores and join in sample data
-scores <- data.frame(
-  Number = rownames(bc_mat),
-  bc_mat[, rownames(cca_res$xcoef)] %*% cca_res$xcoef[, 1:3]
+scores <- rbind(
+  data.frame(
+    type = "body_comp",
+    Number = rownames(bc_mat),
+    bc_mat[, rownames(cca_res$xcoef)] %*% cca_res$xcoef[, 1:3]
+  ),
+  data.frame(
+    type = "seq",
+    Number = rownames(x_seq),
+    x_seq %*% cca_res$ycoef[, 1:3]
+  )
 ) %>%
   left_join(bc)
 
-ggplot(scores) +
+mscores <- scores %>%
+  select(Number, type, starts_with("X")) %>%
+  gather(comp, value, starts_with("X")) %>%
+  unite(comp_type, comp, type) %>%
+  spread(comp_type, value)
+
+ggplot() +
+  geom_segment(
+    data = mscores,
+    aes(
+      x = X1_body_comp, xend = X1_seq,
+      y = X2_body_comp, yend = X2_seq,
+      size = (X3_body_comp + X3_seq) / 2
+    )
+  ) +
   geom_point(
-    aes(x = X1, y = X2, size = X3, col = weight_dxa)
+    data = scores,
+    aes(
+      x = X1,
+      y = X2,
+      size = X3,
+      col = type
+    ),
+    alpha = 0.1
   ) +
   labs(
     "x" = perc_label(cca_res, 1),
     "y" = perc_label(cca_res, 2)
   ) +
+  scale_color_brewer(palette = "Set1") +
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
+  coord_fixed(asp_ratio)
+ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
+
+ggplot() +
+  geom_segment(
+    data = mscores,
+    aes(
+      x = X1_body_comp, xend = X1_seq,
+      y = X2_body_comp, yend = X2_seq,
+      size = (X3_body_comp + X3_seq) / 2
+    )
+  ) +
+  geom_point(
+    data = scores,
+    aes(
+      x = X1,
+      y = X2,
+      size = X3,
+      col = weight_dxa
+    ),
+    alpha = 0.1
+  ) +
   scale_color_viridis(
     "Weight ",
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   ) +
+  labs(
+    "x" = perc_label(cca_res, 1),
+    "y" = perc_label(cca_res, 2)
+  ) +
+  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
   coord_fixed(asp_ratio)
-ggsave("../chapter/figure/cca/scores_weight_ratio.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
 family_means <- mseqtab %>%
@@ -181,18 +240,33 @@ family_means <- mseqtab %>%
 
 scores <- scores %>%
   left_join(family_means)
-ggplot(scores) +
-  geom_point(
-    aes(x = X1, y = X2, size = X3, col = rl_ratio)
+ggplot() +
+  geom_segment(
+    data = mscores,
+    aes(
+      x = X1_body_comp, xend = X1_seq,
+      y = X2_body_comp, yend = X2_seq,
+      size = (X3_body_comp + X3_seq) / 2
+    ),
+    alpha = 0.1
   ) +
-  labs(
-    "x" = perc_label(cca_res, 1),
-    "y" = perc_label(cca_res, 2)
+  geom_point(
+    data = scores,
+    aes(
+      x = X1,
+      y = X2,
+      size = X3,
+      col = rl_ratio
+    )
   ) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   ) +
+  labs(
+    "x" = perc_label(cca_res, 1),
+    "y" = perc_label(cca_res, 2)
+  ) +
   scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(ratio = asp_ratio)
+  coord_fixed(asp_ratio)
 ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
