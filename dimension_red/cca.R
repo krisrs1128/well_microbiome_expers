@@ -32,6 +32,14 @@ theme_update(
   legend.key = element_blank()
 )
 
+cca_perc <- function(cca_res, i) {
+  round(100 * cca_res$cor[i] / sum(cca_res$cor), 2)
+}
+
+perc_label <- function(cca_res, i) {
+  sprintf("CC%s [%s%%]", i, cca_perc(cca_res, i))
+}
+
 ###############################################################################
 ## Load data
 ###############################################################################
@@ -50,6 +58,7 @@ taxa <- readRDS("../data/taxa.rds") %>%
   data.frame() %>%
   rownames_to_column("seq")
 taxa$seq_num <- colnames(seqtab)
+taxa$family <- fct_lump(taxa$Family, n = 7)
 
 ###############################################################################
 ## normalize with DESeq2's varianceStabilizingTransformation
@@ -79,11 +88,50 @@ x_seq <- t(assay(vsd))
 ###############################################################################
 bc[, -c(1:3)] <- bc[, -c(1:3)]
 bc_mat <- data.frame(bc) %>%
-  filter(gender == "Male") %>%
+  filter(gender == opts$gender) %>%
   select(-id, -Number, -gender) %>%
   as.matrix() %>%
   scale()
 
-cca_res <- cancor(bc_mat, x_seq[bc$gender == "Male", ])
-cca_res$xcoef[, 1:2]
-cca_res$ycoef[, 1:2]
+cca_res <- cancor(bc_mat, scale(x_seq[bc$gender == opts$gender, ]))
+
+loadings <- rbind(
+  data.frame(
+    variable = rownames(cca_res$xcoef),
+    seq_num = NA,
+    type = "body_comp",
+    cca_res$xcoef[, 1:3]),
+  data.frame(
+    variable = rownames(cca_res$ycoef),
+    seq_num = rownames(cca_res$ycoef),
+    type = "seq",
+    cca_res$ycoef[, 1:3]
+  )
+) %>%
+  left_join(taxa)
+
+asp_ratio <- sqrt(cca_res$cor[2] / cca_res$cor[1])
+p <- ggplot(loadings) +
+  geom_hline(yintercept = 0, size = 0.5) +
+  geom_vline(xintercept = 0, size = 0.5) +
+  geom_point(
+    data = loadings %>%
+      filter(type == "seq"),
+    aes(x = X1, y = X2, size = X3, col = family),
+    alpha = 1
+  ) +
+  geom_text_repel(
+    data = loadings %>%
+      filter(type == "body_comp"),
+    aes(x = 0.005 * X1, y = 0.005 * X2, label = variable, size = X3),
+    segment.size = 0.3,
+    segment.alpha = 0.5
+  ) +
+  labs(
+    "x" = perc_label(cca_res, 1),
+    "y" = perc_label(cca_res, 2),
+    "col" = "Family"
+  ) +
+  scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
+  coord_fixed(asp_ratio)
+ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 3.78)
