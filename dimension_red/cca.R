@@ -73,11 +73,11 @@ x_seq <- t(assay(vsd))
 ###############################################################################
 bc[, -c(1:3)] <- bc[, -c(1:3)]
 bc_mat <- data.frame(bc) %>%
-  filter(gender == "Female") %>%
+  filter(gender == "Male") %>%
   select(-id, -Number, -gender) %>%
   as.matrix() %>%
   scale()
 
-cca_res <- cancor(bc_mat, x_seq[bc$gender == "Female", ])
+cca_res <- cancor(bc_mat, x_seq[bc$gender == "Male", ])
 cca_res$xcoef[, 1:2]
 cca_res$ycoef[, 1:2]

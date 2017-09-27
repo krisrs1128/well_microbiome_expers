@@ -49,6 +49,12 @@ perc_label <- function(pc_res, i) {
 ###############################################################################
 ## Load data
 ###############################################################################
+
+opts <- list(
+  gender = "Male",
+  sf_quantile = 0.95
+)
+
 seqtab <- readRDS("../data/seqtab.rds")
 bc <- readRDS("../data/sample_data_bc.rds")
 colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
@@ -73,7 +79,7 @@ dds <- DESeqDataSetFromMatrix(
 ## so, give it a large size factor). Basically related to sequencing depth.
 ##
 ## code copied from here: https://support.bioconductor.org/p/76548/
-qs <- apply(counts(dds), 2, quantile, .95)
+qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
 sizeFactors(dds) <- qs / exp(mean(log(qs)))
 
 ## and the regularized data
@@ -109,15 +115,15 @@ pc_res <- lapply(combined, prcomp)
 
 ## extract scores and join in sample data
 scores <- data.frame(
-  Number = rownames(combined$Male),
-  pc_res$Male$x
+  Number = rownames(combined[[opts$gender]]),
+  pc_res[[opts$gender]]$x
 ) %>%
   left_join(bc)
 
 ## extract loadings and join taxa information
 loadings <- data.frame(
   "variable" = colnames(combined[[1]]),
-  pc_res$Male$rotation
+  pc_res[[opts$gender]]$rotation
   ) %>%
   mutate(
     type = ifelse(variable %in% taxa_names(seqtab), "seq", "body_comp"),
@@ -127,7 +133,7 @@ loadings <- data.frame(
 loadings[loadings$type != "seq", "seq_num"] <- NA
 
 ## how to species data relate to body composition?
-asp_ratio <- sqrt(pc_res$Male$sdev[2] / pc_res$Male$sdev[1])
+asp_ratio <- sqrt(pc_res[[opts$gender]]$sdev[2] / pc_res[[opts$gender]]$sdev[1])
 ggplot(loadings) +
   geom_hline(yintercept = 0, size = 0.5) +
   geom_vline(xintercept = 0, size = 0.5) +
@@ -145,12 +151,12 @@ ggplot(loadings) +
     segment.alpha = 0.5
   ) +
   labs(
-    "x" = perc_label(pc_res$Male, 1),
-    "y" = perc_label(pc_res$Male, 2),
+    "x" = perc_label(pc_res[[opts$gender]], 1),
+    "y" = perc_label(pc_res[[opts$gender]], 2),
     "col" = "Family"
   ) +
   scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
-  ylim(-0.1, .3) +
+  ylim(-0.1, 0.2) +
   xlim(-0.15, 0.15) +
   coord_fixed(asp_ratio)
 ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3.78)
@@ -161,8 +167,8 @@ ggplot(scores) +
     aes(x = PC1, y = PC2, size = PC3, col = weight_dxa)
   ) +
   labs(
-    "x" = perc_label(pc_res$Male, 1),
-    "y" = perc_label(pc_res$Male, 2),
+    "x" = perc_label(pc_res$opts$gender, 1),
+    "y" = perc_label(pc_res$opts$gender, 2),
     "col" = "Family"
   ) +
   scale_color_viridis(
@@ -188,8 +194,8 @@ ggplot(scores) +
     aes(x = PC1, y = PC2, size = PC3, col = rl_ratio)
   ) +
   labs(
-    "x" = perc_label(pc_res$Male, 1),
-    "y" = perc_label(pc_res$Male, 2)
+    "x" = perc_label(pc_res[[opts$gender]], 1),
+    "y" = perc_label(pc_res[[opts$gender]], 2)
   ) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
