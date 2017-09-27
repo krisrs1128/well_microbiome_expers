@@ -473,6 +473,30 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
   \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
   c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/CCA/loadings}
+  \caption{The loadings obtained by applying CCA to the combined body
+    composition and microbial abundance data set. \label{fig:cca_loadings} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_weight}
+  \caption{The scores resulting from CCA applied to the combined body
+    composition and microbial abundance data set.\label{fig:cca_scores_weight} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
+  \caption{The same scores as Figure \ref{fig:cca_scores_weight}, but shaded now by
+    the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
+    slight increase in Ruminococcaceae from left to right is consistent with the
+    loadings observed in Figure \ref{fig:cca_loadings}.\label{fig:cca_scores_rl_ratio} }
+\end{figure}
+
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
