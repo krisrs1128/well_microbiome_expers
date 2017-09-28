@@ -67,8 +67,10 @@ loadings_list <- list(
 loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
   left_join(processed$mseqtab)
 
-plot_loadings(loadings, pc_res$sdev)
-ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3.78)
+plot_loadings(loadings, pc_res$sdev) +
+  ylim(-0.15, 0.35) +
+  xlim(-0.15, 0.2)
+ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3)
 
 ## and study the scores
 plot_scores(scores, "weight_dxa", "Weight", pc_res$sdev) +

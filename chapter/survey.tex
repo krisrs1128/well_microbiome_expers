@@ -597,11 +597,11 @@ and subsequent directions by the same optimization, with the
 additional constraint that they are orthogonal to the previously
 derived directions.
 
-The only difference with the objective\ref{eq:cancor_optim_emp} is that norm
-constraint is imposed on $u$ and $v$ directly, rather than their transformations
-$\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$. It is in this
-sense that the CCA objective maximizes the correlation between scores, while
-CoIA maximizes the covariance.
+The only difference with the objective in equation \ref{eq:cancor_optim_emp} is
+that norm constraint is imposed on $u$ and $v$ directly, rather than their
+transformations $\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$.
+It is in this sense that the CCA objective maximizes the correlation between
+scores, while CoIA maximizes the covariance.
 
 The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
   1}^{K}$ can be obtained as the first $K$ left and right eigenvectors from the
@@ -611,7 +611,7 @@ CCA, by essentially the same argument as in CCA.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_weight}
-  \caption{\label{fig:label} }
+  \caption{\label{fig:coia_scores_weight} }
 \end{figure}
 
 \subsection{MFA}
@@ -680,10 +680,11 @@ $l^{th}$ table far in the $k^{th}$ direction.
   \includegraphics[width=\textwidth]{figure/coia/loadings}
   \caption{\label{fig:coia_loadings} }
 \end{figure}
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{\label{fig:scores_rl_ratio} }
+  \caption{\label{fig:coia_scores_rl_ratio} }
 \end{figure}
 
 \end{document}
