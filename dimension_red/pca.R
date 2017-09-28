@@ -117,8 +117,8 @@ ggplot(scores) +
     aes(x = PC1, y = PC2, size = PC3, col = weight_dxa)
   ) +
   labs(
-    "x" = perc_label(pc_res$opts$gender, 1),
-    "y" = perc_label(pc_res$opts$gender, 2),
+    "x" = perc_label(pc_res, 1),
+    "y" = perc_label(pc_res, 2),
     "col" = "Family"
   ) +
   scale_color_viridis(

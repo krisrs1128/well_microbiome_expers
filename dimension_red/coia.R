@@ -36,12 +36,12 @@ theme_update(
   legend.key = element_blank()
 )
 
-cca_perc <- function(cca_res, i) {
-  round(100 * cca_res$CanCorr[i] / sum(cca_res$CanCorr), 2)
+coia_perc <- function(coia_res, i) {
+  round(100 * coia_res$eig[i] / sum(coia_res$eig), 2)
 }
 
-perc_label <- function(cca_res, i) {
-  sprintf("CC%s [%s%%]", i, cca_perc(cca_res, i))
+perc_label <- function(coia_res, i) {
+  sprintf("CC%s [%s%%]", i, coia_perc(coia_res, i))
 }
 
 ###############################################################################
