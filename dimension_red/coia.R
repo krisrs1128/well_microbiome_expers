@@ -60,7 +60,7 @@ loadings <- prepare_loadings(
   left_join(processed$mseqtab)
 plot_loadings(loadings, coia_res$eig) +
   ylim(-0.55, 0.4)
-ggsave(file.path(out_path, "loadings_linked.png"), width = 4.56, height = 2.3)
+ggsave(file.path(out_path, "loadings.png"), width = 4.56, height = 2.3)
 
 scores <- prepare_scores(
   list(coia_res$lX, coia_res$lY),
@@ -75,7 +75,7 @@ mscores <- melt_scores(scores)
 plot_scores(scores, "type", "Meas. Type", coia_res$eig) +
   link_scores(mscores) +
   scale_color_brewer(palette = "Set1")
-ggsave(file.path(out_path, "scores_rl_linked.png"), width = 4.56, height = 1.6)
+ggsave(file.path(out_path, "scores_linked.png"), width = 4.56, height = 1.6)
 
 plot_scores(scores, "weight_dxa", "Weight", coia_res$eig) +
   link_scores(mscores) +
@@ -83,7 +83,7 @@ plot_scores(scores, "weight_dxa", "Weight", coia_res$eig) +
     "Weight ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave(file.path(out_path "scores_rl_weight.png"), width = 4.56, height = 1.6)
+ggsave(file.path(out_path "scores_weight.png"), width = 4.56, height = 1.6)
 
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
