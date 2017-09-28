@@ -131,9 +131,9 @@ provide a benchmark with which to compare more elaborate, modern methods.
 
 The simplest approach to dealing with multiple tables is to combine them into
 one and apply a single-table method, for example, PCA. That is, write
-\begin{align}
+\begin{align*}
 X = \left[X^{(1)} \vert \dots \vert X^{(L)}\right] \in \reals^{n \times p},
-\end{align}
+\end{align*}
 where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An equivalent
   procedure is to eigenanalyze the empirical covariance matrix
   $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal component directions
@@ -168,9 +168,9 @@ $k$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
 Formally, recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
 subspace spanned by the columns of $V$. PCA identifies the orthogonal matrix $V
 \in \reals^{p \times K}$ such that
-\begin{align}
+\begin{align*}
 \sum_{i = 1}^{n}\|x_{i} - VV^{T} x_{i}\|_{2}^{2}
-\end{align}
+\end{align*}
 is minimized. The principal component scores are then the coordinates of the
 projected points with respect to this subspace.
 
@@ -238,7 +238,7 @@ Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
 us to begin our survey of multitable methods in earnest.
 
 \subsubsection{Example}
-\label{subsec:pca_example}
+\label{subsubsec:pca_example}
 
 Figure \ref{fig:loadings} and \ref{fig:scores_weight} illustrate this approach
 on body composition and bacterial abundance data from the WELL-China study.
@@ -489,11 +489,11 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
   c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
 
 \subsubsection{Example}
-\label{subsec:cca_example}
+\label{subsubsec:cca_example}
 
 We next apply CCA to the WELL-China body composition and microbiome data sets,
 with particular interest in how results compare with those of
-\ref{subsec:pca_example}. To this end, we provide analogous loading and score
+Section \ref{subsubsec:pca_example}. To this end, we provide analogous loading and score
 plots in Figures \ref{fig:cca_loadings} through \ref{fig:cca_scores_rl_ratio}.
 However, note that the data are \textit{not} quite the same between the two
 analysis -- we have filtered down to sequence passing a filter\footnote{Presence
@@ -502,7 +502,7 @@ from 2565. This very aggressive filtering is necessary because CCA requires
 estimation of covariances matrices $\Sigma_{XX}, \Sigma_{XY}$, and
 $\Sigma_{YY}$, which is impossible for $p > n$ and highly unstable when $p$ a
 large fraction of $n$. Besides this stronger filtering, all preprocessing steps
-remain the same as in Section \ref{subsec:pca_example}.
+remain the same as in Section \ref{subsubsec:pca_example}.
 
 \begin{figure}[ht]
   \centering
@@ -546,13 +546,13 @@ high-dimensional setting, where covariance estimation may be unreliable.
 
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
 the PCA biplot. For example, Figures \ref{fig:cca_scores_weight} and
-\ref{fig:cca_scores_rl} display the samples shaded in by weight and
+\ref{fig:cca_scores_rl_ratio} display the samples shaded in by weight and
 Ruminococcaceae vs. Lachnospiraceae ratios, respectively, as in Figures
-\ref{fig:scores_weight} and \ref{fig:cca_scores_rl}. The association between
-these variables and the sample positions is not as strong as when performing PCA
-on the combined table. This is to be expected, however, as PCA maximizes
-variance without any requirements on covariance, and the body composition table
-alone has a large portion of its variance related to weight.
+\ref{fig:scores_weight} and \ref{fig:cca_scores_rl_ratio}. The association
+between these variables and the sample positions is not as strong as when
+performing PCA on the combined table. This is to be expected, however, as PCA
+maximizes variance without any requirements on covariance, and the body
+composition table alone has a large portion of its variance related to weight.
 
 \begin{figure}[ht]
   \centering
@@ -613,13 +613,13 @@ CCA, by essentially the same argument as in CCA.
 \subsubsection{Example}
 \label{subsubsec:coia_example}
 
-We apply CoIA to the same data as used in section \ref{subsubsec:cca_example},
+We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
 as CoIA also needs to estimate the covariance between tables, which is difficult
 when the number of ASVs is large. The loadings are displayed in Supplementary
-Figure \ref{fig:coia_scores_loadings}, and they are similar to those in Figure
-\ref{fig:cca_scores_loadings}. However, the associated scores are quite
+Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
+\ref{fig:cca_loadings}. However, the associated scores are quite
 different than those found using CCA, consider Figure
-\ref{fig:fig:coia_scores_weight}, which shades samples by weight, or
+\ref{fig:coia_scores_weight}, which shades samples by weight, or
 Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
 Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
 closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_weight}), but
@@ -642,7 +642,7 @@ between CoIA and CCA is responsible for this difference.
 \label{subsec:mfa}
 
 MFA gives an alternative approach to producing scores and relating features
-across multiple tables\cite{pages2014multiple}. It can be understood as a
+across multiple tables\citep{pages2014multiple}. It can be understood as a
 reweighted version of the concatenated PCA described in Section \ref{subsec:pca}
 that reweights tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
