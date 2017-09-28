@@ -84,3 +84,35 @@ plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
     ) +
     coord_fixed(sqrt(eigs[2] / eigs[1]))
 }
+
+plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)) {
+  ggplot() +
+    geom_point(
+      data = scores,
+      aes_string(
+        x = "Axis.1",
+        y = "Axis.2",
+        size = "Axis.3",
+        col = col_var
+      )
+    ) +
+    labs(
+      "col" = col_label,
+      "x" = perc_label(eigs, 1),
+      "y" = perc_label(eigs, 2)
+    ) +
+    scale_size_continuous(range = c(0, 1.5), breaks = size_breaks) +
+    coord_fixed(sqrt(eigs[2] / eigs[1]))
+}
+
+link_scores <- function(mscores, alpha = 0.1) {
+  geom_segment(
+    data = mscores,
+    aes(
+      x = Axis.1_body_comp, xend = Axis.1_seq,
+      y = Axis.2_body_comp, yend = Axis.2_seq,
+      size = (Axis.3_body_comp + Axis.3_seq) / 2
+    ),
+    alpha = alpha
+  )
+}

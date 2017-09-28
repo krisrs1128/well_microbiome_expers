@@ -58,7 +58,7 @@ loadings <- prepare_loadings(
 ) %>%
   left_join(processed$mseqtab)
 
-plot_loadings(loadings, cca_res$CanCorr) +
+plot_loadings(loadings, cca_res$Eigenvalues) +
   ylim(-0.5, 0.4) +
   xlim(-0.9, 0.3)
 ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
@@ -72,107 +72,34 @@ scores <- prepare_scores(
   list(cca_res$Cx, cca_res$Cy),
   c("body_comp", "seq")
 ) %>%
-  left_join(processed$mseqtab)
-mscores <- melt_scores(scores)
+  left_join(
+    processed$bc %>%
+    add_rownames("Number")
+  )
 
-ggplot() +
-  geom_segment(
-    data = mscores,
-    aes(
-      x = CanAxis1_body_comp, xend = CanAxis1_seq,
-      y = CanAxis2_body_comp, yend = CanAxis2_seq,
-      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
-    ),
-    alpha = 0.1
-  ) +
-  geom_point(
-    data = scores,
-    aes(
-      x = CanAxis1,
-      y = CanAxis2,
-      size = CanAxis3,
-      col = type
-    )
-  ) +
-  labs(
-    "col" = "Meas. Type",
-    "x" = perc_label(cca_res, 1),
-    "y" = perc_label(cca_res, 2)
-  ) +
-  scale_color_brewer(palette = "Set1") +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(asp_ratio)
+## color by data type
+mscores <- melt_scores(scores)
+plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
+  link_scores(mscores) +
+  scale_color_brewer(palette = "Set1")
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
-## same figure but shaded by weight
-ggplot() +
-  geom_segment(
-    data = mscores,
-    aes(
-      x = CanAxis1_body_comp, xend = CanAxis1_seq,
-      y = CanAxis2_body_comp, yend = CanAxis2_seq,
-      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
-    ),
-    alpha = 0.1
-  ) +
-  geom_point(
-    data = scores,
-    aes(
-      x = CanAxis1,
-      y = CanAxis2,
-      size = CanAxis3,
-      col = weight_dxa
-    )
-  ) +
+## color by weight
+plot_scores(scores, "weight_dxa", "Weight", cca_res$Eigenvalues) +
+  link_scores(mscores) +
   scale_color_viridis(
     "Weight ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
-  ) +
-  labs(
-    "x" = perc_label(cca_res, 1),
-    "y" = perc_label(cca_res, 2)
-  ) +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(asp_ratio)
+  )
 ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
 
-##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
-family_means <- processed$mseqtab %>%
-  group_by(family, Number) %>%
-  summarise(family_mean = mean(value)) %>%
-  spread(family, family_mean) %>%
-  group_by(Number) %>%
-  summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
-
+## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
-  left_join(family_means)
-ggplot() +
-  geom_segment(
-    data = mscores,
-    aes(
-      x = CanAxis1_body_comp, xend = CanAxis1_seq,
-      y = CanAxis2_body_comp, yend = CanAxis2_seq,
-      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
-    ),
-    alpha = 0.1
-  ) +
-  geom_point(
-    data = scores,
-    aes(
-      x = CanAxis1,
-      y = CanAxis2,
-      size = CanAxis3,
-      col = rl_ratio
-    )
-  ) +
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", cca_res$Eigenvalues) +
+  link_scores(mscores) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
-  ) +
-  labs(
-    "x" = perc_label(cca_res, 1),
-    "y" = perc_label(cca_res, 2)
-  ) +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(asp_ratio)
+  )
 ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
