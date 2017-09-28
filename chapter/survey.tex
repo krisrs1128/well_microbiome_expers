@@ -367,12 +367,13 @@ in each table.
     three features in each table are indicated by a grid of points lying along
     them, shaded in the same color as the measurement type they correspond to.
     We only display three features so that the table subspaces do are not simply
-    all of $\reals^{3}$. The ellipses are unit balls with respect to each data
-    set's covariance matrix, estimated using all samples (not just the three
-    displayed). Two arrows are the first CCA directions associated with the two
-    measurement types. Evidently, the correlation between these measurement
-    types, restricted to these few samples and features, is quite high, since
-    the arrows point in nearly the same direction.
+    all of $\reals^{3}$. A set of points lie along ellipses that are unit balls
+    with respect to each data set's covariance matrix, estimated using all
+    samples (not just the three displayed). Two arrows are the first CCA
+    directions associated with the two measurement types. Evidently, the
+    correlation between these measurement types, restricted to these few samples
+    and features, is quite high, since the arrows point in nearly the same
+    direction.
     \label{fig:cca_geometric} }
 \end{figure}
 
@@ -490,6 +491,19 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
 \subsubsection{Example}
 \label{subsec:cca_example}
 
+We next apply CCA to the WELL-China body composition and microbiome data sets,
+with particular interest in how results compare with those of
+\ref{subsec:pca_example}. To this end, we provide analogous loading and score
+plots in Figures \ref{fig:cca_loadings} through \ref{fig:cca_scores_rl_ratio}.
+However, note that the data are \textit{not} quite the same between the two
+analysis -- we have filtered down to sequence passing a filter\footnote{Presence
+  in at least half of samples}, which reduces the number of sequences to 57,
+from 2565. This very aggressive filtering is necessary because CCA requires
+estimation of covariances matrices $\Sigma_{XX}, \Sigma_{XY}$, and
+$\Sigma_{YY}$, which is impossible for $p > n$ and highly unstable when $p$ a
+large fraction of $n$. Besides this stronger filtering, all preprocessing steps
+remain the same as in Section \ref{subsec:pca_example}.
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/CCA/loadings}
@@ -497,11 +511,63 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
     composition and microbial abundance data set. \label{fig:cca_loadings} }
 \end{figure}
 
+Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
+precise, let $X \in \reals^{102\times 33}$ be the matrix of body composition
+measurements and $Y \in \reals^{102 \times 57}$ be the variance stabilized
+microbial abundances. As before, write $\hat{u}_{k} \in \reals^{33}, \hat{v}_{k}
+\in \reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
+\ref{fig:cca_loadings} displays text labels for column $j$ of the body
+composition variables at location $\times \left(u_{j1}, u_{j2}\right)_{j =
+  1}^{33}$ and shaded points for the $j^{th}$ species at position
+$\left(\hat{v}_{j1}, \hat{v}_{j2}\right)_{j = 1}^{57}$.
+
+As in the joint PCA, we find that the groups of variables occupy separates
+spaces. Our interpretation is that sequences further to the left are correlated
+with the body variables further to the left, which are all in some ay variants
+of weight. Note that age is negatively correlated with weight, which is why it
+appears on the opposite end. Among the abundant species that remain, there is
+limited clustering according to taxonomic group, though the Bacteroideceae and
+Ruminoccocus do appear restricted to the bottom and top right, respectively.
+
+In Figure \ref{fig:cca_scores_linked} we plot the corresponding scores. Note
+that in CCA, there are two sets of scores for each $k$ -- $X\hat{u}_{k}$ and
+$Y\hat{v}_{k}$. Indeed, the CCA objective finds directions that maximizes the
+correlation between these scores. In this figure, we display both sets of
+scores, colored differently according to the table to which they are associated
+with. The pairs of scores for each individual sample are drawn with small links.
+Since most links are relatively short, linear combinations of the two tables
+could be found that optimized the objective -- indeed, the top two canonical
+correlations are 0.984 adn 0.961. However, some caution is necessary here, and a
+more honest evaluation would be based scores obtained by projecting new samples
+onto the original CCA directions. This is especially important in this nearly
+high-dimensional setting, where covariance estimation may be unreliable.
+
+Aside from the fact that samples appear as pairs, interpretation proceeds as in
+the PCA biplot. For example, Figures \ref{fig:cca_scores_weight} and
+\ref{fig:cca_scores_rl} display the samples shaded in by weight and
+Ruminococcaceae vs. Lachnospiraceae ratios, respectively, as in Figures
+\ref{fig:scores_weight} and \ref{fig:cca_scores_rl}. The association between
+these variables and the sample positions is not as strong as when performing PCA
+on the combined table. This is to be expected, however, as PCA maximizes
+variance without any requirements on covariance, and the body composition table
+alone has a large portion of its variance related to weight.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_linked}
+  \caption{The scores resulting from CCA applied to the combined body
+    composition and microbial abundance data set. Each measurement type provides
+    a different set of scores for the observed samples, and the similarity
+    between the sets of scores is reflected in the CCA
+    objective.\label{fig:cca_scores_linked}}
+\end{figure}
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_weight}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data set.\label{fig:cca_scores_weight} }
+    composition and microbial abundance data set, shaded in by
+    weight.\label{fig:cca_scores_weight} }
 \end{figure}
 
 \begin{figure}[ht]
@@ -511,7 +577,6 @@ the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
     the ratio of Ruminococcaceae over Lachnospiraceae relative
     abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
-
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
