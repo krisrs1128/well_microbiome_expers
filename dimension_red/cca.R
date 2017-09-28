@@ -9,13 +9,12 @@
 ## date: 09/26/2017
 
 library("phyloseq")
-library("DESeq2")
 library("tidyverse")
-library("forcats")
 library("reshape2")
 library("ggrepel")
 library("viridis")
 library("vegan")
+source("prep_tables.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -46,69 +45,18 @@ perc_label <- function(cca_res, i) {
 }
 
 ###############################################################################
-## Load data
+## read and prepare the data
 ###############################################################################
-opts <- list(
-  gender = "Male",
-  sf_quantile = 0.95,
-  filt_k = 0.5,
-  filt_a = 0
-)
-
-seqtab <- readRDS("../data/seqtab.rds")
-bc <- readRDS("../data/sample_data_bc.rds")
-colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
-
-taxa <- readRDS("../data/taxa.rds") %>%
-  data.frame() %>%
-  rownames_to_column("seq")
-taxa$seq_num <- colnames(seqtab)
-taxa$family <- fct_lump(taxa$Family, n = 7)
-
-mseqtab <- seqtab %>%
-  melt(varnames = c("Number", "seq_num")) %>%
-  left_join(bc) %>%
-  left_join(taxa)
+raw <- read_data()
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
 
 ###############################################################################
-## normalize with DESeq2's varianceStabilizingTransformation
+## Run and plot CCA on the two (scaled) tables
 ###############################################################################
-seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
-dds <- DESeqDataSetFromMatrix(
-  countData = t(get_taxa(seqtab)),
-  colData = data.frame("unused" = rep(1, nrow(seqtab))),
-  design = ~1
-)
-
-## are quantiles for one sample systematically larger than those for others (if
-## so, give it a large size factor). Basically related to sequencing depth.
-##
-## code copied from here: https://support.bioconductor.org/p/76548/
-qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
-sizeFactors(dds) <- qs / exp(mean(log(qs)))
-
-## and the regularized data
-vsd <- varianceStabilizingTransformation(dds, fitType = "local")
-x_seq <- t(assay(vsd))
-x_seq <- x_seq[bc$Number, ]
-x_seq <- scale(x_seq[bc$gender == opts$gender, ])
-
-###############################################################################
-## Run CCA on the two (scaled) tables
-###############################################################################
-bc_mat <- data.frame(bc) %>%
-  filter(gender == opts$gender) %>%
-  select(-id, -gender)
-rownames(bc_mat) <- bc_mat$Number
-bc_mat$Number <- NULL
-bc_mat <- scale(bc_mat)
-
+bc_mat <- scale(processed$bc)
+x_seq <- scale(processed$x_seq)
 cca_res <- CCorA(bc_mat, x_seq)
 
-###############################################################################
-## Plot the loadings
-###############################################################################
 loadings <- rbind(
   data.frame(
     variable = rownames(cca_res$corr.Y.Cy),
@@ -123,7 +71,7 @@ loadings <- rbind(
     cca_res$corr.X.Cx[, 1:3]
   )
 ) %>%
-  left_join(taxa)
+  left_join(processed$mseqtab)
 
 asp_ratio <- sqrt(cca_res$CanCorr[2] / cca_res$CanCorr[1])
 ggplot(loadings) +
@@ -173,7 +121,12 @@ scores <- rbind(
     cca_res$Cy[, 1:3]
   )
 ) %>%
-  left_join(bc)
+  left_join(
+    data.frame(
+      Number = rownames(processed$bc),
+      processed$bc
+    )
+  )
 
 mscores <- scores %>%
   select(Number, type, starts_with("CanAxis")) %>%
@@ -243,7 +196,7 @@ ggplot() +
 ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
-family_means <- mseqtab %>%
+family_means <- processed$mseqtab %>%
   group_by(family, Number) %>%
   summarise(family_mean = mean(value)) %>%
   spread(family, family_mean) %>%

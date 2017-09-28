@@ -47,61 +47,13 @@ perc_label <- function(cca_res, i) {
 ###############################################################################
 ## Load data
 ###############################################################################
-opts <- list(
-  gender = "Male",
-  sf_quantile = 0.95,
-  filt_k = 0.5,
-  filt_a = 0
-)
-
-seqtab <- readRDS("../data/seqtab.rds")
-bc <- readRDS("../data/sample_data_bc.rds")
-colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
-
-taxa <- readRDS("../data/taxa.rds") %>%
-  data.frame() %>%
-  rownames_to_column("seq")
-taxa$seq_num <- colnames(seqtab)
-taxa$family <- fct_lump(taxa$Family, n = 7)
-
-mseqtab <- seqtab %>%
-  melt(varnames = c("Number", "seq_num")) %>%
-  left_join(bc) %>%
-  left_join(taxa)
-
-###############################################################################
-## normalize with DESeq2's varianceStabilizingTransformation
-###############################################################################
-seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
-dds <- DESeqDataSetFromMatrix(
-  countData = t(get_taxa(seqtab)),
-  colData = data.frame("unused" = rep(1, nrow(seqtab))),
-  design = ~1
-)
-
-## are quantiles for one sample systematically larger than those for others (if
-## so, give it a large size factor). Basically related to sequencing depth.
-##
-## code copied from here: https://support.bioconductor.org/p/76548/
-qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
-sizeFactors(dds) <- qs / exp(mean(log(qs)))
-
-## and the regularized data
-vsd <- varianceStabilizingTransformation(dds, fitType = "local")
-x_seq <- t(assay(vsd))
-x_seq <- x_seq[bc$Number, ]
-x_seq <- x_seq[bc$gender == opts$gender, ]
+raw <- read_data()
+opts <- list(filt_k = 0.5, filt_a = 0)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 ###############################################################################
 ## Run CoIA on the two (scaled) tables
 ###############################################################################
-bc_mat <- data.frame(bc) %>%
-  filter(gender == opts$gender) %>%
-  select(-id, -gender)
-rownames(bc_mat) <- bc_mat$Number
-bc_mat$Number <- NULL
-
 dudi1 <- dudi.pca(x_seq, scan = FALSE, nf = 3)
 dudi2 <- dudi.pca(bc_mat, scan = FALSE, nf = 3)
 coin1 <- coinertia(dudi1, dudi2, scan = FALSE, nf = 3)

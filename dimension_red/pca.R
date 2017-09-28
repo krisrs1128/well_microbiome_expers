@@ -12,11 +12,10 @@
 ###############################################################################
 library("tidyverse")
 library("phyloseq")
-library("forcats")
-library("DESeq2")
 library("ggrepel")
 library("reshape2")
 library("viridis")
+source("prep_tables.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -49,92 +48,42 @@ perc_label <- function(pc_res, i) {
 ###############################################################################
 ## Load data
 ###############################################################################
-opts <- list(
-  gender = "Male",
-  sf_quantile = 0.95,
-  filt_k = 0.07,
-  filt_a = 0
-)
-
-seqtab <- readRDS("../data/seqtab.rds")
-bc <- readRDS("../data/sample_data_bc.rds")
-colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
-
-taxa <- readRDS("../data/taxa.rds") %>%
-  data.frame() %>%
-  rownames_to_column("seq")
-taxa$seq_num <- colnames(seqtab)
-
-###############################################################################
-## normalize with DESeq2's varianceStabilizingTransformation
-###############################################################################
-seqtab <- seqtab %>%
-  filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
-dds <- DESeqDataSetFromMatrix(
-  countData = t(get_taxa(seqtab)),
-  colData = data.frame("unused" = rep(1, nrow(seqtab))),
-  design = ~1
-)
-
-## are quantiles for one sample systematically larger than those for others (if
-## so, give it a large size factor). Basically related to sequencing depth.
-##
-## code copied from here: https://support.bioconductor.org/p/76548/
-qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
-sizeFactors(dds) <- qs / exp(mean(log(qs)))
-
-## and the regularized data
-vsd <- varianceStabilizingTransformation(dds, fitType = "local")
-x_seq <- assay(vsd)
-
-###############################################################################
-## concatenate quantitative body composition (split by gender) and (somewhat
-## filtered) microbiome counts, and transformed
-###############################################################################
-combined_df <- data.frame(bc, t(x_seq[, bc$Number]))
-combined <- combined_df %>%
-  select(-Number, -id) %>%
-  split(.$gender, drop = TRUE) %>%
-  lapply(function(x) {
-    as.matrix(x[, colnames(x) != "gender"]) %>%
-      scale()
-  })
-
-###############################################################################
-## combining into single melted data set (mainly for plotting)
-###############################################################################
-taxa$family <- fct_lump(taxa$Family, n = 7)
-mseqtab <- seqtab %>%
-  melt(varnames = c("Number", "seq_num")) %>%
-  left_join(bc) %>%
-  left_join(taxa)
+raw <- read_data()
+opts <- list(filt_k = 0.07, filt_a = 0)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 ###############################################################################
 ## run and visualize PCA
 ###############################################################################
-pc_res <- lapply(combined, prcomp)
+combined <- cbind(processed$bc, processed$x_seq)
+pc_res <- prcomp(scale(combined))
 
 ## extract scores and join in sample data
 scores <- data.frame(
-  Number = rownames(combined[[opts$gender]]),
-  pc_res[[opts$gender]]$x
+  Number = rownames(combined),
+  pc_res$x
 ) %>%
-  left_join(bc)
+  left_join(
+    data.frame(
+      Number = rownames(processed$bc),
+      processed$bc
+    )
+  )
 
 ## extract loadings and join taxa information
 loadings <- data.frame(
-  "variable" = colnames(combined[[1]]),
-  pc_res[[opts$gender]]$rotation
+  "variable" = colnames(combined),
+  pc_res$rotation
   ) %>%
   mutate(
-    type = ifelse(variable %in% taxa_names(seqtab), "seq", "body_comp"),
+    type = ifelse(variable %in% colnames(processed$x_seq), "seq", "body_comp"),
     seq_num = variable
   ) %>%
-  left_join(taxa)
+  left_join(processed$mseqtab)
 loadings[loadings$type != "seq", "seq_num"] <- NA
 
 ## how to species data relate to body composition?
-asp_ratio <- sqrt(pc_res[[opts$gender]]$sdev[2] / pc_res[[opts$gender]]$sdev[1])
+asp_ratio <- sqrt(pc_res$sdev[2] / pc_res$sdev[1])
 ggplot(loadings) +
   geom_hline(yintercept = 0, size = 0.5) +
   geom_vline(xintercept = 0, size = 0.5) +
@@ -152,8 +101,8 @@ ggplot(loadings) +
     segment.alpha = 0.5
   ) +
   labs(
-    "x" = perc_label(pc_res[[opts$gender]], 1),
-    "y" = perc_label(pc_res[[opts$gender]], 2),
+    "x" = perc_label(pc_res, 1),
+    "y" = perc_label(pc_res, 2),
     "col" = "Family"
   ) +
   scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
@@ -181,7 +130,7 @@ ggplot(scores) +
 ggsave("../chapter/figure/pca/scores_weight.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
-family_means <- mseqtab %>%
+family_means <- processed$mseqtab %>%
   group_by(family, Number) %>%
   summarise(family_mean = mean(value)) %>%
   spread(family, family_mean) %>%
@@ -195,8 +144,8 @@ ggplot(scores) +
     aes(x = PC1, y = PC2, size = PC3, col = rl_ratio)
   ) +
   labs(
-    "x" = perc_label(pc_res[[opts$gender]], 1),
-    "y" = perc_label(pc_res[[opts$gender]], 2)
+    "x" = perc_label(pc_res, 1),
+    "y" = perc_label(pc_res, 2)
   ) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
