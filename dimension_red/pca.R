@@ -74,7 +74,7 @@ ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3)
 
 ## and study the scores
 plot_scores(scores, "weight_dxa", "Weight", pc_res$sdev) +
-  scale_fill_viridis(
+  scale_color_viridis(
     "Weight ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
