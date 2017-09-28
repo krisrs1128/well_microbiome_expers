@@ -766,7 +766,18 @@ onto the span of $\left(x_{\cdot j}\right)$, and the residuals are the distance
 to this span. The PCA-IV procedure is an attempt to find a further
 $K$-dimensional subspace within the span of the $\left(x_{\cdot j}\right)$ such
 that the residuals of the regressions from $x_{\cdot j}^{(1)}$ onto this further
-subspace is not much worse.
+subspace is not much worse. This is displayed in Figure
+\ref{fig:pca_iv_geometry}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figure/pca_iv_geometry}
+  \caption{A geometric view of PCA-IV. The columns of the response $Y$ are views
+    as $n$-dimensional vectors. The grey plane is the span of
+    $X$. Multivariate OLS simply projects the columns of $Y$ onto the plane,
+    while PCA-IV searches for a further subspace $V$ on which to project all
+    responses. \label{fig:pca_iv_geometry} }
+\end{figure}
 
 Indeed, write the usual estimates for the covariance matrices of interest,
 \begin{align*}
