@@ -624,7 +624,7 @@ Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
 Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
 closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_weight}), but
 that they are more strongly associated with variation in weight, as in the
-concatenated-PCA result of Figure \ref{fig:pca_scores_weight}. It is not
+concatenated-PCA result of Figure \ref{fig:scores_weight}. It is not
 clear whether this phenomena -- the CoIA scores being more similar to those from
 PCA than CCA -- holds in general, or what about the change in inner products
 between CoIA and CCA is responsible for this difference.
@@ -689,26 +689,43 @@ $l^{th}$ table far in the $k^{th}$ direction.
 
 \begin{figure}
   \includegraphics[width=\textwidth]{figure/pca/proj_plot_2}
-  \caption{A geometric motivation for PCA.}
-  \label{fig:pca-approx-2}
+  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
+    PCA is run on all body composition variables, rather than just Weight and
+    Fatmass. That is, we project the original values for these two features
+    onto the top two PCs obtained from a PCA on all body composition variables.
+    Since the PCA is working in a large space, the projected points are
+    generally not too far from their original positions. However, note that one
+    outlier on the far right is projected into the bulk of points in the center
+    -- the variation coming from this one point is too specific to be preserved
+    by PCA.
+  \label{fig:pca-approx-2}}
 \end{figure}
 
 \begin{figure}
   \includegraphics[width=\textwidth]{figure/pca/proj_plot_3}
-  \caption{A geometric motivation for PCA.}
-  \label{fig:pca-approx-3}
+  \caption{Here we perform the same procedure as in Figure
+    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
+    we project onto only the top PC. The main point is that, while in two
+    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
+    easy to understand in terms of orthogonal errors, the corresponding
+    orthogonal projection in higher dimensions is more complex.
+  \label{fig:pca-approx-3}}
 \end{figure}
 
 \begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/coia/loadings}
-  \caption{\label{fig:coia_loadings} }
+  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
+  \caption{These are the loadings obtained from CoIA, which are analogous to
+    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
+    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{\label{fig:coia_scores_rl_ratio} }
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_weight},
+    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
+    \ref{fig:scores_rl_ratio} and
+    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
 \end{figure}
 
 \end{document}
