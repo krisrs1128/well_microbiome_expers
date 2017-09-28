@@ -15,6 +15,7 @@ library("ggrepel")
 library("viridis")
 library("vegan")
 source("prep_tables.R")
+source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -36,9 +37,6 @@ theme_update(
   legend.key = element_blank()
 )
 
-cca_perc <- function(cca_res, i) {
-  round(100 * cca_res$CanCorr[i] / sum(cca_res$CanCorr), 2)
-}
 ###############################################################################
 ## read and prepare the data
 ###############################################################################
@@ -52,6 +50,7 @@ bc_mat <- scale(processed$bc)
 x_seq <- scale(processed$x_seq)
 cca_res <- CCorA(bc_mat, x_seq)
 
+## Plot the loadings
 loadings <- prepare_loadings(
   list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
   c("body_comp", "seq")
@@ -63,21 +62,16 @@ plot_loadings(loadings, cca_res$Eigenvalues) +
   xlim(-0.9, 0.3)
 ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
 
-###############################################################################
 ## Plot the scores
-###############################################################################
-
-## extract scores and join in sample data
 scores <- prepare_scores(
   list(cca_res$Cx, cca_res$Cy),
   c("body_comp", "seq")
 ) %>%
   left_join(
     processed$bc %>%
-    add_rownames("Number")
+    rownames_to_column("Number")
   )
 
-## color by data type
 mscores <- melt_scores(scores)
 plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
   link_scores(mscores) +

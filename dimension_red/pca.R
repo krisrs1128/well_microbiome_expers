@@ -16,6 +16,7 @@ library("ggrepel")
 library("reshape2")
 library("viridis")
 source("prep_tables.R")
+source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -37,14 +38,6 @@ theme_update(
   legend.key = element_blank()
 )
 
-pc_perc <- function(pc_res, i) {
-  round(100 * pc_res$sdev[i] / sum(pc_res$sdev), 2)
-}
-
-perc_label <- function(pc_res, i) {
-  sprintf("PC%s [%s%%]", i, pc_perc(pc_res, i))
-}
-
 ###############################################################################
 ## Load data
 ###############################################################################
@@ -59,98 +52,38 @@ combined <- cbind(processed$bc, processed$x_seq)
 pc_res <- prcomp(scale(combined))
 
 ## extract scores and join in sample data
-scores <- data.frame(
-  Number = rownames(combined),
-  pc_res$x
-) %>%
+scores <- prepare_scores(list(pc_res$x), c("combined")) %>%
   left_join(
-    data.frame(
-      Number = rownames(processed$bc),
-      processed$bc
-    )
+    processed$bc %>%
+    rownames_to_column("Number")
   )
 
 ## extract loadings and join taxa information
-loadings <- data.frame(
-  "variable" = colnames(combined),
-  pc_res$rotation
-  ) %>%
-  mutate(
-    type = ifelse(variable %in% colnames(processed$x_seq), "seq", "body_comp"),
-    seq_num = variable
-  ) %>%
-  left_join(processed$mseqtab)
-loadings[loadings$type != "seq", "seq_num"] <- NA
+loadings_list <- list(
+  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$bc), ],
+  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$x_seq), ]
+)
 
-## how to species data relate to body composition?
-asp_ratio <- sqrt(pc_res$sdev[2] / pc_res$sdev[1])
-ggplot(loadings) +
-  geom_hline(yintercept = 0, size = 0.5) +
-  geom_vline(xintercept = 0, size = 0.5) +
-  geom_point(
-    data = loadings %>%
-      filter(type == "seq"),
-    aes(x = PC1, y = PC2, size = PC3, col = family),
-    alpha = 0.6
-  ) +
-  geom_text_repel(
-    data = loadings %>%
-      filter(type == "body_comp"),
-    aes(x = PC1, y = PC2, label = variable, size = PC3),
-    segment.size = 0.3,
-    segment.alpha = 0.5
-  ) +
-  labs(
-    "x" = perc_label(pc_res, 1),
-    "y" = perc_label(pc_res, 2),
-    "col" = "Family"
-  ) +
-  scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
-  ylim(-0.1, 0.2) +
-  xlim(-0.15, 0.15) +
-  coord_fixed(asp_ratio)
+loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
+  left_join(processed$mseqtab)
+
+plot_loadings(loadings, pc_res$sdev)
 ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3.78)
 
 ## and study the scores
-ggplot(scores) +
-  geom_point(
-    aes(x = PC1, y = PC2, size = PC3, col = weight_dxa)
-  ) +
-  labs(
-    "x" = perc_label(pc_res, 1),
-    "y" = perc_label(pc_res, 2),
-    "col" = "Family"
-  ) +
-  scale_color_viridis(
+plot_scores(scores, "weight_dxa", "Weight", pc_res$sdev) +
+  scale_fill_viridis(
     "Weight ",
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
-  ) +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(ratio = asp_ratio)
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  )
 ggsave("../chapter/figure/pca/scores_weight.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
-family_means <- processed$mseqtab %>%
-  group_by(family, Number) %>%
-  summarise(family_mean = mean(value)) %>%
-  spread(family, family_mean) %>%
-  group_by(Number) %>%
-  summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
-
 scores <- scores %>%
-  left_join(family_means)
-ggplot(scores) +
-  geom_point(
-    aes(x = PC1, y = PC2, size = PC3, col = rl_ratio)
-  ) +
-  labs(
-    "x" = perc_label(pc_res, 1),
-    "y" = perc_label(pc_res, 2)
-  ) +
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", pc_res$sdev) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
-  ) +
-  scale_size_continuous(range = c(0, 1.5), breaks = c(-8, 8)) +
-  coord_fixed(ratio = asp_ratio)
+  )
 ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)
