@@ -52,7 +52,7 @@ melt_scores <- function(scores) {
 }
 
 perc_label <- function(eigs, i) {
-  perc <- 100 * eigs[1] / sum(eigs)
+  perc <- 100 * eigs[i] / sum(eigs)
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
 }
 
