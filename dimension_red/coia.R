@@ -36,13 +36,8 @@ theme_update(
   legend.key = element_blank()
 )
 
-coia_perc <- function(coia_res, i) {
-  round(100 * coia_res$eig[i] / sum(coia_res$eig), 2)
-}
-
-perc_label <- function(coia_res, i) {
-  sprintf("CC%s [%s%%]", i, coia_perc(coia_res, i))
-}
+out_path <- "../chapter/figure/coia"
+dir.create(out_path)
 
 ###############################################################################
 ## Load data
@@ -56,4 +51,46 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 dudi1 <- dudi.pca(x_seq, scan = FALSE, nf = 3)
 dudi2 <- dudi.pca(bc_mat, scan = FALSE, nf = 3)
-coin1 <- coinertia(dudi1, dudi2, scan = FALSE, nf = 3)
+coia_res <- coinertia(dudi1, dudi2, scan = FALSE, nf = 3)
+
+loadings <- prepare_loadings(
+  list(coia_res$l1, coia_res$c1),
+  c("body_comp", "seq")
+) %>%
+  left_join(processed$mseqtab)
+plot_loadings(loadings, coia_res$eig) +
+  ylim(-0.55, 0.4)
+ggsave(file.path(out_path, "loadings_linked.png"), width = 4.56, height = 2.3)
+
+scores <- prepare_scores(
+  list(coia_res$lX, coia_res$lY),
+  c("body_comp", "seq")
+) %>%
+  left_join(
+    processed$bc %>%
+    rownames_to_column("Number")
+  )
+
+mscores <- melt_scores(scores)
+plot_scores(scores, "type", "Meas. Type", coia_res$eig) +
+  link_scores(mscores) +
+  scale_color_brewer(palette = "Set1")
+ggsave(file.path(out_path, "scores_rl_linked.png"), width = 4.56, height = 1.6)
+
+plot_scores(scores, "weight_dxa", "Weight", coia_res$eig) +
+  link_scores(mscores) +
+  scale_color_viridis(
+    "Weight ",
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  )
+ggsave(file.path(out_path "scores_rl_weight.png"), width = 4.56, height = 1.6)
+
+scores <- scores %>%
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", coia_res$eig) +
+  link_scores(mscores) +
+  scale_color_viridis(
+    "Rum. / Lach. Ratio  ",
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+  )
+ggsave(file.path(out_path, "scores_rl_ratio.png"), width = 4.56, height = 1.6)
