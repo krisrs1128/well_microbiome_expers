@@ -16,9 +16,9 @@ prepare_loadings <- function(loadings_list, types, K = 3) {
   for (m in seq_along(loadings_list)) {
     colnames(loadings_list[[m]]) <- NULL
     df_list[[m]] <- data.frame(
-      variable = rownames(loadings_list[[m]]),
-      seq_num = NA,
-      type = types[m],
+      "variable" = rownames(loadings_list[[m]]),
+      "seq_num" = NA,
+      "type" = types[m],
       "Axis" = loadings_list[[m]][, 1:K]
     )
   }
@@ -27,6 +27,28 @@ prepare_loadings <- function(loadings_list, types, K = 3) {
   df_list[[seq_ix]]$seq_num <- df_list[[seq_ix]]$variable
 
   do.call(rbind, df_list)
+}
+
+prepare_scores <- function(scores_list, types, K = 3) {
+  df_list <- list()
+  for (m in seq_along(scores_list)) {
+    colnames(scores_list[[m]]) <- NULL
+    df_list[[m]] <- data.frame(
+      "Number" = rownames(scores_list[[m]]),
+      "type" = types[m],
+      "Axis" = scores_list[[m]][, 1:K]
+    )
+  }
+
+  do.call(rbind, df_list)
+}
+
+melt_scores <- function(scores) {
+  scores %>%
+    select(Number, type, starts_with("Axis")) %>%
+    gather(comp, value, starts_with("Axis")) %>%
+    unite(comp_type, comp, type) %>%
+    spread(comp_type, value)
 }
 
 perc_label <- function(eigs, i) {

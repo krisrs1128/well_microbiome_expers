@@ -68,30 +68,12 @@ ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
 ###############################################################################
 
 ## extract scores and join in sample data
-scores <- rbind(
-  data.frame(
-    type = "body_comp",
-    Number = rownames(bc_mat),
-    cca_res$Cx[, 1:3]
-  ),
-  data.frame(
-    type = "seq",
-    Number = rownames(x_seq),
-    cca_res$Cy[, 1:3]
-  )
+scores <- prepare_scores(
+  list(cca_res$Cx, cca_res$Cy),
+  c("body_comp", "seq")
 ) %>%
-  left_join(
-    data.frame(
-      Number = rownames(processed$bc),
-      processed$bc
-    )
-  )
-
-mscores <- scores %>%
-  select(Number, type, starts_with("CanAxis")) %>%
-  gather(comp, value, starts_with("CanAxis")) %>%
-  unite(comp_type, comp, type) %>%
-  spread(comp_type, value)
+  left_join(processed$mseqtab)
+mscores <- melt_scores(scores)
 
 ggplot() +
   geom_segment(
