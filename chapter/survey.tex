@@ -616,10 +616,10 @@ across multiple tables\cite{pages2014multiple}. It can be understood as a
 reweighted version of the concatenated PCA described in Section \ref{subsec:pca}
 that reweights tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
-\begin{align}
+\begin{align*}
 X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots
   \vert \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
-\end{align}
+\end{align*}
 which reweights each table by its largest eigenvalue. This procedure is the
 multitable analog of the standard practice of standardizing variables before
 performing PCA.
@@ -631,19 +631,19 @@ sample's projection describes the relative weight of each feature for
 that sample. Moreover, MFA gives a way of comparing full tables to
 each other, called a ``canonical analysis'' \cite{pages2004multiple}. A
 $K$-dimensional representation of the $l^{th}$ group is given by
-\begin{align}
+\begin{align*}
 \left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots,
   \mathcal{L}\left(z_{K}, X^{(l)}\right)\right]
-\end{align}
+\end{align*}
 where $z_{k} = d_{k}u_{k} \in \reals^{n}$ is the $k^{th}$ column of principal
 component scores and
-\begin{align}
+\begin{align*}
   \mathcal{L}\left(z_{k}, X^{(l)}\right) =
   \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\tr\left(X^{(l)}X^{(l)
       T} z_{k}z_{k}^{T}\right) =
   \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\|X^{(l)
   T} z_{k}\|^{2}_{2}
-\end{align}
+\end{align*}
 is a measure of aggregate similarity between the coordinates in the $l^{th}$
 table and the $k^{th}$ column of scores. According to this definition, if the
 samples, as represented by the $l^{th}$ table, have high correlation with the
