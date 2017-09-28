@@ -578,6 +578,36 @@ alone has a large portion of its variance related to weight.
     abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
 
+\subsection{Co-Inertia Analysis}
+
+Co-Inertia Analysis (CoIA) emerged in ecology to facilitate analysis of
+variation in species abundance as a function of environmental conditions
+\cite{doledec1994co}. It can be viewed as a slight modification -- perhaps even
+a simplification -- of CCA. Again, we seek sets of orthonormal directions
+$\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k = 1}^{K}$ such that
+the associated projections $Xu_{k}$ and $Yv_{k}$ explain most of the covariation
+between the tables. Unlike CCA, CoIA finds directions that maximize the
+covariance -- not the correlation -- between scores,
+\begin{align}
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}X^{T}Yv \\
+\text{ such that}\medspace &\|u\| = 1\\
+&\|v\| = 1,
+\end{align}
+and subsequent directions by the same optimization, with the
+additional constraint that they are orthogonal to the previously
+derived directions.
+
+The only difference with the objective\ref{eq:cancor_optim_emp} is that norm
+constraint is imposed on $u$ and $v$ directly, rather than their transformations
+$\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$. It is in this
+sense that the CCA objective maximizes the correlation between scores, while
+CoIA maximizes the covariance.
+
+The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
+  1}^{K}$ can be obtained as the first $K$ left and right eigenvectors from the
+SVD of $X^{T}Y$, as opposed to the first $K$ generalized eigenvectors, as in
+CCA, by essentially the same argument as in CCA.
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
