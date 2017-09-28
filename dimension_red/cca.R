@@ -12,6 +12,10 @@ library("phyloseq")
 library("DESeq2")
 library("tidyverse")
 library("forcats")
+library("reshape2")
+library("ggrepel")
+library("viridis")
+library("vegan")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -34,7 +38,7 @@ theme_update(
 )
 
 cca_perc <- function(cca_res, i) {
-  round(100 * cca_res$cor[i] / sum(cca_res$cor), 2)
+  round(100 * cca_res$CanCorr[i] / sum(cca_res$CanCorr), 2)
 }
 
 perc_label <- function(cca_res, i) {
@@ -100,40 +104,41 @@ rownames(bc_mat) <- bc_mat$Number
 bc_mat$Number <- NULL
 bc_mat <- scale(bc_mat)
 
-cca_res <- cancor(bc_mat, x_seq)
+cca_res <- CCorA(bc_mat, x_seq)
 
 ###############################################################################
 ## Plot the loadings
 ###############################################################################
 loadings <- rbind(
   data.frame(
-    variable = rownames(cca_res$xcoef),
+    variable = rownames(cca_res$corr.Y.Cy),
     seq_num = NA,
     type = "body_comp",
-    cca_res$xcoef[, 1:3]),
+    cca_res$corr.Y.Cy[, 1:3]
+  ),
   data.frame(
-    variable = rownames(cca_res$ycoef),
-    seq_num = rownames(cca_res$ycoef),
+    variable = rownames(cca_res$corr.X.Cx),
+    seq_num = rownames(cca_res$corr.X.Cx),
     type = "seq",
-    cca_res$ycoef[, 1:3]
+    cca_res$corr.X.Cx[, 1:3]
   )
 ) %>%
   left_join(taxa)
 
-asp_ratio <- sqrt(cca_res$cor[2] / cca_res$cor[1])
+asp_ratio <- sqrt(cca_res$CanCorr[2] / cca_res$CanCorr[1])
 ggplot(loadings) +
   geom_hline(yintercept = 0, size = 0.5) +
   geom_vline(xintercept = 0, size = 0.5) +
   geom_point(
     data = loadings %>%
       filter(type == "seq"),
-    aes(x = X1, y = X2, size = X3, col = family),
+    aes(x = CanAxis1, y = CanAxis2, size = CanAxis3, col = family),
     alpha = 1
   ) +
   geom_text_repel(
     data = loadings %>%
       filter(type == "body_comp"),
-    aes(x = 0.005 * X1, y = 0.005 * X2, label = variable, size = X3),
+    aes(x = CanAxis1, y = CanAxis2, label = variable, size = CanAxis3),
     segment.size = 0.3,
     segment.alpha = 0.5
   ) +
@@ -142,9 +147,14 @@ ggplot(loadings) +
     "y" = perc_label(cca_res, 2),
     "col" = "Family"
   ) +
-  scale_size_continuous(range = c(0, 2.5), breaks = c(-0.1, 0.1)) +
+  scale_size_continuous(
+    range = c(0, 4),
+    breaks = c(-5, 5)
+  ) +
+  ylim(-0.5, 0.4) +
+  xlim(-0.9, 0.3) +
   coord_fixed(asp_ratio)
-ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 3.78)
+ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
 
 ###############################################################################
 ## Plot the scores
@@ -155,19 +165,19 @@ scores <- rbind(
   data.frame(
     type = "body_comp",
     Number = rownames(bc_mat),
-    bc_mat[, rownames(cca_res$xcoef)] %*% cca_res$xcoef[, 1:3]
+    cca_res$Cx[, 1:3]
   ),
   data.frame(
     type = "seq",
     Number = rownames(x_seq),
-    x_seq %*% cca_res$ycoef[, 1:3]
+    cca_res$Cy[, 1:3]
   )
 ) %>%
   left_join(bc)
 
 mscores <- scores %>%
-  select(Number, type, starts_with("X")) %>%
-  gather(comp, value, starts_with("X")) %>%
+  select(Number, type, starts_with("CanAxis")) %>%
+  gather(comp, value, starts_with("CanAxis")) %>%
   unite(comp_type, comp, type) %>%
   spread(comp_type, value)
 
@@ -175,22 +185,23 @@ ggplot() +
   geom_segment(
     data = mscores,
     aes(
-      x = X1_body_comp, xend = X1_seq,
-      y = X2_body_comp, yend = X2_seq,
-      size = (X3_body_comp + X3_seq) / 2
-    )
+      x = CanAxis1_body_comp, xend = CanAxis1_seq,
+      y = CanAxis2_body_comp, yend = CanAxis2_seq,
+      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
+    ),
+    alpha = 0.1
   ) +
   geom_point(
     data = scores,
     aes(
-      x = X1,
-      y = X2,
-      size = X3,
+      x = CanAxis1,
+      y = CanAxis2,
+      size = CanAxis3,
       col = type
-    ),
-    alpha = 0.1
+    )
   ) +
   labs(
+    "col" = "Meas. Type",
     "x" = perc_label(cca_res, 1),
     "y" = perc_label(cca_res, 2)
   ) +
@@ -199,24 +210,25 @@ ggplot() +
   coord_fixed(asp_ratio)
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
+## same figure but shaded by weight
 ggplot() +
   geom_segment(
     data = mscores,
     aes(
-      x = X1_body_comp, xend = X1_seq,
-      y = X2_body_comp, yend = X2_seq,
-      size = (X3_body_comp + X3_seq) / 2
-    )
+      x = CanAxis1_body_comp, xend = CanAxis1_seq,
+      y = CanAxis2_body_comp, yend = CanAxis2_seq,
+      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
+    ),
+    alpha = 0.1
   ) +
   geom_point(
     data = scores,
     aes(
-      x = X1,
-      y = X2,
-      size = X3,
+      x = CanAxis1,
+      y = CanAxis2,
+      size = CanAxis3,
       col = weight_dxa
-    ),
-    alpha = 0.1
+    )
   ) +
   scale_color_viridis(
     "Weight ",
@@ -244,18 +256,18 @@ ggplot() +
   geom_segment(
     data = mscores,
     aes(
-      x = X1_body_comp, xend = X1_seq,
-      y = X2_body_comp, yend = X2_seq,
-      size = (X3_body_comp + X3_seq) / 2
+      x = CanAxis1_body_comp, xend = CanAxis1_seq,
+      y = CanAxis2_body_comp, yend = CanAxis2_seq,
+      size = (CanAxis3_body_comp + CanAxis3_seq) / 2
     ),
     alpha = 0.1
   ) +
   geom_point(
     data = scores,
     aes(
-      x = X1,
-      y = X2,
-      size = X3,
+      x = CanAxis1,
+      y = CanAxis2,
+      size = CanAxis3,
       col = rl_ratio
     )
   ) +

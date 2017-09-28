@@ -45,7 +45,7 @@ bc_cols <- c("age", "Android_LM", "Total_FM")
 bc_sub <- scale(bc[2:4, bc_cols])
 counts_sub <- scale(asinh(counts[2:4, 1:3]))
 
-x_grid <- seq(-2, 2, 0.5)
+x_grid <- seq(-2, 2, 0.1)
 xyz_grid <- as.matrix(expand.grid(x_grid, x_grid, x_grid))
 bc_plane <- matrix(nrow = nrow(xyz_grid), ncol = 3)
 counts_plane <- matrix(nrow = nrow(xyz_grid), ncol = 3)
@@ -57,9 +57,9 @@ for (i in seq_len(nrow(xyz_grid))) {
 sigma_bc <- cov(scale(bc[, bc_cols]))
 sigma_counts <- cov(scale(counts[, 1:3]))
 
-bc_circle <- matrix(nrow = 1000, ncol = 3)
-counts_circle <- matrix(nrow = 1000, ncol = 3)
-for (i in seq_len(1000)) {
+bc_circle <- matrix(nrow = 5000, ncol = 3)
+counts_circle <- matrix(nrow = 5000, ncol = 3)
+for (i in seq_len(5000)) {
   z <- rnorm(3)
   bc_circle[i, ] <- z / sqrt(t(z) %*% sigma_bc %*% z)
   counts_circle[i, ] <- z / sqrt(t(z) %*% sigma_counts %*% z)
@@ -127,8 +127,8 @@ points3D(
   y = counts_circle[, 2],
   z = counts_circle[, 3],
   col = "#ccb3ff",
-  alpha = 0.6,
-  cex = 0.2,
+  alpha = 0.1,
+  cex = 0.1,
   add = TRUE
 )
 
@@ -138,8 +138,8 @@ points3D(
   y = bc_plane[, 2],
   z = bc_plane[, 3],
   col = "#ff9966",
-  alpha = 0.9,
-  cex = 0.5,
+  alpha = 0.1,
+  cex = 0.1,
   add = TRUE
 )
 
@@ -149,8 +149,8 @@ points3D(
   y = counts_plane[, 2],
   z = counts_plane[, 3],
   col = "#ccb3ff",
-  alpha = 0.9,
-  cex = 0.5,
+  alpha = 0.1,
+  cex = 0.1,
   add = TRUE
 )
 
