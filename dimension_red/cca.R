@@ -39,11 +39,6 @@ theme_update(
 cca_perc <- function(cca_res, i) {
   round(100 * cca_res$CanCorr[i] / sum(cca_res$CanCorr), 2)
 }
-
-perc_label <- function(cca_res, i) {
-  sprintf("CC%s [%s%%]", i, cca_perc(cca_res, i))
-}
-
 ###############################################################################
 ## read and prepare the data
 ###############################################################################
@@ -57,51 +52,15 @@ bc_mat <- scale(processed$bc)
 x_seq <- scale(processed$x_seq)
 cca_res <- CCorA(bc_mat, x_seq)
 
-loadings <- rbind(
-  data.frame(
-    variable = rownames(cca_res$corr.Y.Cy),
-    seq_num = NA,
-    type = "body_comp",
-    cca_res$corr.Y.Cy[, 1:3]
-  ),
-  data.frame(
-    variable = rownames(cca_res$corr.X.Cx),
-    seq_num = rownames(cca_res$corr.X.Cx),
-    type = "seq",
-    cca_res$corr.X.Cx[, 1:3]
-  )
+loadings <- prepare_loadings(
+  list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
+  c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
 
-asp_ratio <- sqrt(cca_res$CanCorr[2] / cca_res$CanCorr[1])
-ggplot(loadings) +
-  geom_hline(yintercept = 0, size = 0.5) +
-  geom_vline(xintercept = 0, size = 0.5) +
-  geom_point(
-    data = loadings %>%
-      filter(type == "seq"),
-    aes(x = CanAxis1, y = CanAxis2, size = CanAxis3, col = family),
-    alpha = 1
-  ) +
-  geom_text_repel(
-    data = loadings %>%
-      filter(type == "body_comp"),
-    aes(x = CanAxis1, y = CanAxis2, label = variable, size = CanAxis3),
-    segment.size = 0.3,
-    segment.alpha = 0.5
-  ) +
-  labs(
-    "x" = perc_label(cca_res, 1),
-    "y" = perc_label(cca_res, 2),
-    "col" = "Family"
-  ) +
-  scale_size_continuous(
-    range = c(0, 4),
-    breaks = c(-5, 5)
-  ) +
+plot_loadings(loadings, cca_res$CanCorr) +
   ylim(-0.5, 0.4) +
-  xlim(-0.9, 0.3) +
-  coord_fixed(asp_ratio)
+  xlim(-0.9, 0.3)
 ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
 
 ###############################################################################
