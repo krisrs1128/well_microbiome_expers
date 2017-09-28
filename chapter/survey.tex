@@ -127,13 +127,13 @@ to be the most readily available through statistical computing packages and can
 provide a benchmark with which to compare more elaborate, modern methods.
 
 \subsection{PCA}
-\label{sec:pca}
+\label{subsec:pca}
 
 The simplest approach to dealing with multiple tables is to combine them into
 one and apply a single-table method, for example, PCA. That is, write
-\begin{align}
+\begin{align*}
 X = \left[X^{(1)} \vert \dots \vert X^{(L)}\right] \in \reals^{n \times p},
-\end{align}
+\end{align*}
 where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An equivalent
   procedure is to eigenanalyze the empirical covariance matrix
   $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal component directions
@@ -159,7 +159,7 @@ However, two drawbacks of this approach are worth noting,
 \end{itemize}
 
 These limitations are addressed by CCA and MFA, discussed in Sections
-\ref{sec:cca} and \ref{sec:mfa}, respectively.
+\ref{subsec:cca} and \ref{subsec:mfa}, respectively.
 
 Here we describe one geometric and one statistical motivation for PCA. The
 geometric motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
@@ -168,14 +168,14 @@ $k$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
 Formally, recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
 subspace spanned by the columns of $V$. PCA identifies the orthogonal matrix $V
 \in \reals^{p \times K}$ such that
-\begin{align}
+\begin{align*}
 \sum_{i = 1}^{n}\|x_{i} - VV^{T} x_{i}\|_{2}^{2}
-\end{align}
+\end{align*}
 is minimized. The principal component scores are then the coordinates of the
 projected points with respect to this subspace.
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure/pca/proj_plot_1}
+  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_1}
   \caption{A geometric motivation for PCA. The first principal component spans
     the one-dimensional subspace $V$ minimizing the squared error between points
     and their projections, $\sum_{i = 1}^{n}\|\left(I -
@@ -238,7 +238,7 @@ Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
 us to begin our survey of multitable methods in earnest.
 
 \subsubsection{Example}
-\label{subsec:pca_example}
+\label{subsubsec:pca_example}
 
 Figure \ref{fig:loadings} and \ref{fig:scores_weight} illustrate this approach
 on body composition and bacterial abundance data from the WELL-China study.
@@ -316,23 +316,419 @@ the more elaborate methods of subsequent sections.
     loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
 \end{figure}
 
+\subsection{CCA}
+\label{subsec:cca}
+
+CCA is a close relative of PCA that designed to compare sets of features across
+tables. Like PCA, it provides low-dimensional representations of samples, but it
+also allows comparisons at the table level. Suppose for now that there are only
+two tables of interest, $X \in \reals^{n \times p_{1}}$ and $Y \in \reals^{n
+  \times p_{2}}$. Let $\hat{\Sigma}_{XX}, \hat{\Sigma}_{YY}$, and
+$\hat{\Sigma}_{XY}$ be the associated covariance estimates. Take the SVD,
+$\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
+= \tilde{U}D\tilde{V}^{T}$. The canonical correlation directions associated with
+the two tables are $u_{k} = \Sigma_{XX}^{-\frac{1}{2}}\tilde{u}_{k} \in
+\reals^{p_{1}}$ and $v_{k} = \Sigma_{YY}^{-\frac{1}{2}}\tilde{v}_{k} \in
+\reals^{p_{2}}$. These directions give two sets of low-dimensional
+representations for each sample, one for each table: $z_{k}^{(1)} = Xu_{k} \in
+\reals^{n}$ and $z_{k}^{(2)} = Yv_{k} \in \reals^{n}$. If the two tables are
+closely related, then the $z_{k}^{(1)}$ and $z_{k}^{(2)}$ will be very
+correlated. The singular values $d_{k}$ are called the canonical correlation
+coefficients. Like the eigenvalues in PCA, they characterize the amount of
+covariation across tables that can be captured by each additional pair of
+directions.
+
+As in PCA, there are many ways to view this procedure; here we discuss
+geometric, statistical, and probabilistic interpretations. Unlike the geometric
+interpretation for PCA, the geometric interpretation for CCA identifies point
+locations with features, not samples. Specifically, the columns of $X$ and $Y$
+are thought of as points in $\reals^{n}$. Consider two subspaces defined as the
+spans of the columns of $X$ and $Y$, respectively. These subspaces correspond to
+the linear combinations of features within each table. Place two ellipses on the
+respective subspaces, centered at the origin and with size and shape depending
+on the within table covariances $\hat{\Sigma}_{XX}$ and $\hat{\Sigma}_{YY}$. The
+first canonical correlation directions are the pair of points, one lying on each
+ellipse, such that the angle from the origin to those two points is smallest. In
+this sense, it finds a pair of variance-constrained linear combinations of
+features within the two tables so that the two combinations appear ``close'' to
+one another. The second pair of canonical correlation directions identify a pair
+of points with similar interpretation, except they are required to be orthogonal
+to the first pair, with respect to the inner product induced by the covariances
+in each table.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figure/cca/geometric}
+  \caption{The geometric representation of CCA, on a toy subset of the WELL-China
+    data, to facilitate visualization. The three axes correspond correspond to
+    three subjects, and the text labels indicate the positions of (scaled) features with
+    respect to the samples. Features from the 16s table are shaded in blue,
+    while body composition variables are orange. The subspaces spanned by the
+    three features in each table are indicated by a grid of points lying along
+    them, shaded in the same color as the measurement type they correspond to.
+    We only display three features so that the table subspaces do are not simply
+    all of $\reals^{3}$. A set of points lie along ellipses that are unit balls
+    with respect to each data set's covariance matrix, estimated using all
+    samples (not just the three displayed). Two arrows are the first CCA
+    directions associated with the two measurement types. Evidently, the
+    correlation between these measurement types, restricted to these few samples
+    and features, is quite high, since the arrows point in nearly the same
+    direction.
+    \label{fig:cca_geometric} }
+\end{figure}
+
+For a statistical interpretation, the idea of CCA is to find the low-dimensional
+representations of the two tables with maximal covariance -- this is analogous
+to the maximum variance interpretation. Formally, let $x_{i}$ and $y_{i}$
+samples from $\P^{\X}$ and $\P^{\Y}$. The rows of the two tables are imagined to
+be i.i.d. draws from $\P^{\X\Y}$. Consider arbitrary linear combinations
+$z_{i}^{(1)}\left(u\right) = u^{T} x_{i}$ and $z_{i}^{(2)}\left(v\right) =
+v^{T}y_{i}$ of samples from the two tables. The first pair of CCA directions
+$u_{1}^{\ast}$ and $v_{1}^{\ast}$ are chosen to optimize
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
+  &\Covsubarg{\P^{\X\Y}}{z_{i}^{(1)}\left(u\right),
+    z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\
+\text{subject to } &\Varsubarg{\P^{\X}}{z_{i}^{(1)}\left(u\right)} = 1 \\
+&\Varsubarg{\P^{\Y}}{z_{i}^{(2)}\left(v\right)} = 1.
+\end{align}
+To produce subsequent directions, the same optimization is performed, but with
+the additional constraint that the directions must be orthogonal to all the
+previous directions identified for that table. Of course, in actual
+applications, we estimate these covariances and variances empirically.
+
+This perspective makes it easy to derive the algorithm given at the start of
+this section. The empirical version of the optimization problem
+\ref{eq:cancor_optim} is
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
+  &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\
+  \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \\
+  & v^{T}\hat{\Sigma}_{YY}v = 1.
+\end{align}
+
+Consider the whitened data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$ and
+$\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
+optimization \label{eq:cancor_emp} can now be expressed as
+\begin{align}
+  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
+    \reals^{p_{2}}}
+  &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
+\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \\
+&\|\tilde{v}\|_{2}^{2} = 1.
+\end{align}
+The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
+well known -- they're exactly the first left and right eigenvectors of
+$\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
+= \tilde{U}D\tilde{V}^{T}$, respectively. The argument is standard\footnote{See
+  \citep{mardka1980multivariate}, for example.}, but we include it for
+completeness.
+
+Let $\xi$ and $\nu$ be potential maximizers of length one. We can find $w_{u}$
+and $w_{v}$ such that $\xi = \tilde{U}w_{u}, \nu = \tilde{V}w_{v}$, since
+$\tilde{U}$ and $\tilde{V}$ are both orthonormal bases. Since they are length
+one, $1 = \|\xi\|^{2}_{2} = w_{u}^{T}\tilde{U}^{T}\tilde{U}w_{u} =
+\|w_{u}\|_{2}^{2}$ and similarly $\|w_{v}\|_{2}^{2} = 1$. The objective
+\ref{eq:cancor_trans} can be bounded by
+\begin{align*}
+\xi^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\nu
+&= w_{u}^{T}\tilde{U}^{T}\tilde{U}D\tilde{V}^{T}\tilde{V}w_{v} \\
+&= w_{u}^{T}Dw_{v} \\
+&= \sum_{k = 1}^{p_{1} \wedge p_{2}} d_{k}w_{uk}w_{vk} \\
+&\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\
+&\leq d_{1} \|w_{u}\|\|w_{v}\| = d_{1},
+\end{align*}
+and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their weight
+on the first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu =
+\tilde{v}_{1}$. For subsequent directions, we repeat the argument but require
+that $w_{u}$ and $w_{v}$ have zero weight on the first columns of $\tilde{U}$
+and $\tilde{V}$.
+
+To recover the solutions to the original problem, we reverse the original
+variable transformation, yielding optimal $\hat{u}_{1} =
+\Sigma_{XX}^{-\frac{1}{2}}\hat{\tilde{u}}_{1}$ and $\hat{v}_{1} =
+\Sigma_{YY}^{-\frac{1}{2}}\hat{\tilde{v}}_{1}$.
+
+A probabilistic interpretation of this procedure views it as estimating the
+factors in an implicit latent variable model. In particular,
+\citep{bach2005probabilistic} supposes that $x_{i}$ and $y_{i}$ are drawn i.i.d.
+from the model,
+\begin{align*}
+  \xi_{i} := \left(\xi_{i}^{s}, \xi_{i}^{X}, \xi_{i}^{Y}\right) &\sim
+  \Gsn\left(0, I_{d}\right) \\
+  x_{i} \vert \xi_{i} &\sim \Gsn\left(W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{X} + \mu_{X},
+  I_{d} \right) \\
+  y_{i} \vert \xi_{i} &\sim \Gsn\left(W_{Y}\xi_{i}^{s} +
+  B_{Y}\xi_{i}^{Y} + \mu_{Y}, I_{d}\right)
+\end{align*}
+That is, each sample is associated with a $d$-dimensional latent variable
+$\xi_{i}$, drawn from a spherical normal prior. A few of the coordinates of
+these latent variables contribute to shared structure, through $W_{X}$ and
+$W_{Y}$. The remaining coordinates model table-specific structure, through
+$B_{X}$ and $B_{Y}$. It can be shown that the posterior expectations of the
+latent $\xi_{i}^{s}$ (assumed $\in \reals^{K}$) given the observed tables must
+lie on the subspace defined by the CCA directions. More precisely,
+\begin{align*}
+  \Earg{\xi_{i} \mid x_{i}^{(1)}} \in \text{span}\left(z_{1}^{(1)},
+    \dots, z_{K}^{(1)}\right),
+\end{align*}
+and
+\begin{align*}
+  \Earg{\xi_{i} \mid x_{i}^{(2)}} \in \text{span}\left(z_{1}^{(2)},
+    \dots, z_{K}^{(2)}\right).
+\end{align*}
+
+Finally, we observe that the logic for CCA generalizes to an arbitrary number
+$L$ of tables, by summing all pairwise covariances. That is, the instead of
+finding directions $c_{k}^{(1)}$ and $c_{k}^{(2)}$ maximizing
+$\Covsubarg{\P^{(1)}, \P^{(2)}}{c_{k}^{(1)T}x_{i}^{(1)},
+  c_{k}^{(2)T}x_{i}^{(2)}}$ subject to normalization and orthogonality
+constraints, we seek directions $c_{k}^{(1)}, \dots, c_{k}^{(L)}$ that maximize
+the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
+  \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
+  c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
+
+\subsubsection{Example}
+\label{subsubsec:cca_example}
+
+We next apply CCA to the WELL-China body composition and microbiome data sets,
+with particular interest in how results compare with those of
+Section \ref{subsubsec:pca_example}. To this end, we provide analogous loading and score
+plots in Figures \ref{fig:cca_loadings} through \ref{fig:cca_scores_rl_ratio}.
+However, note that the data are \textit{not} quite the same between the two
+analysis -- we have filtered down to sequence passing a filter\footnote{Presence
+  in at least half of samples}, which reduces the number of sequences to 57,
+from 2565. This very aggressive filtering is necessary because CCA requires
+estimation of covariances matrices $\Sigma_{XX}, \Sigma_{XY}$, and
+$\Sigma_{YY}$, which is impossible for $p > n$ and highly unstable when $p$ a
+large fraction of $n$. Besides this stronger filtering, all preprocessing steps
+remain the same as in Section \ref{subsubsec:pca_example}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/CCA/loadings}
+  \caption{The loadings obtained by applying CCA to the combined body
+    composition and microbial abundance data set. \label{fig:cca_loadings} }
+\end{figure}
+
+Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
+precise, let $X \in \reals^{102\times 33}$ be the matrix of body composition
+measurements and $Y \in \reals^{102 \times 57}$ be the variance stabilized
+microbial abundances. As before, write $\hat{u}_{k} \in \reals^{33}, \hat{v}_{k}
+\in \reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
+\ref{fig:cca_loadings} displays text labels for column $j$ of the body
+composition variables at location $\times \left(u_{j1}, u_{j2}\right)_{j =
+  1}^{33}$ and shaded points for the $j^{th}$ species at position
+$\left(\hat{v}_{j1}, \hat{v}_{j2}\right)_{j = 1}^{57}$.
+
+As in the joint PCA, we find that the groups of variables occupy separates
+spaces. Our interpretation is that sequences further to the left are correlated
+with the body variables further to the left, which are all in some ay variants
+of weight. Note that age is negatively correlated with weight, which is why it
+appears on the opposite end. Among the abundant species that remain, there is
+limited clustering according to taxonomic group, though the Bacteroideceae and
+Ruminoccocus do appear restricted to the bottom and top right, respectively.
+Note that the third CCA axis (the size of plotted text and points) distinguishes
+lean and fat mass variables.
+
+In Figure \ref{fig:cca_scores_linked} we plot the corresponding scores. Note
+that in CCA, there are two sets of scores for each $k$, the $X\hat{u}_{k}$ and
+$Y\hat{v}_{k}$. Indeed, the CCA objective finds directions that maximizes the
+correlation between these scores. In this figure, we display both sets of
+scores, colored differently according to the table to which they are associated
+with. The pairs of scores for each individual sample are drawn with small links.
+Since most links are relatively short, linear combinations of the two tables
+could be found that optimized the objective -- indeed, the top two canonical
+correlations are 0.984 adn 0.961. However, some caution is necessary here, and a
+more honest evaluation would be based scores obtained by projecting new samples
+onto the original CCA directions. This is especially important in this nearly
+high-dimensional setting, where covariance estimation may be unreliable.
+
+Aside from the fact that samples appear as pairs, interpretation proceeds as in
+the PCA biplot. For example, Figures \ref{fig:cca_scores_weight} and
+\ref{fig:cca_scores_rl_ratio} display the samples shaded in by weight and
+Ruminococcaceae vs. Lachnospiraceae ratios, respectively, as in Figures
+\ref{fig:scores_weight} and \ref{fig:cca_scores_rl_ratio}. The association
+between these variables and the sample positions is not as strong as when
+performing PCA on the combined table. This is to be expected, however, as PCA
+maximizes variance without any requirements on covariance, and the body
+composition table alone has a large portion of its variance related to weight.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_linked}
+  \caption{The scores resulting from CCA applied to the combined body
+    composition and microbial abundance data set. Each measurement type provides
+    a different set of scores for the observed samples, and the similarity
+    between the sets of scores is reflected in the CCA
+    objective.\label{fig:cca_scores_linked}}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_weight}
+  \caption{The scores resulting from CCA applied to the combined body
+    composition and microbial abundance data set, shaded in by
+    weight.\label{fig:cca_scores_weight} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
+  \caption{The same scores as Figure \ref{fig:cca_scores_weight}, but shaded now by
+    the ratio of Ruminococcaceae over Lachnospiraceae relative
+    abundances. \label{fig:cca_scores_rl_ratio} }
+\end{figure}
+
+\subsection{Co-Inertia Analysis}
+
+Co-Inertia Analysis (CoIA) emerged in ecology to facilitate analysis of
+variation in species abundance as a function of environmental conditions
+\cite{doledec1994co}. It can be viewed as a slight modification -- perhaps even
+a simplification -- of CCA. Again, we seek sets of orthonormal directions
+$\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k = 1}^{K}$ such that
+the associated projections $Xu_{k}$ and $Yv_{k}$ explain most of the covariation
+between the tables. Unlike CCA, CoIA finds directions that maximize the
+covariance -- not the correlation -- between scores,
+\begin{align}
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}X^{T}Yv \\
+\text{ such that}\medspace &\|u\| = 1\\
+&\|v\| = 1,
+\end{align}
+and subsequent directions by the same optimization, with the
+additional constraint that they are orthogonal to the previously
+derived directions.
+
+The only difference with the objective in equation \ref{eq:cancor_optim_emp} is
+that norm constraint is imposed on $u$ and $v$ directly, rather than their
+transformations $\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$.
+It is in this sense that the CCA objective maximizes the correlation between
+scores, while CoIA maximizes the covariance.
+
+The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
+  1}^{K}$ can be obtained as the first $K$ left and right eigenvectors from the
+SVD of $X^{T}Y$, as opposed to the first $K$ generalized eigenvectors, as in
+CCA, by essentially the same argument as in CCA.
+
+\subsubsection{Example}
+\label{subsubsec:coia_example}
+
+We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
+as CoIA also needs to estimate the covariance between tables, which is difficult
+when the number of ASVs is large. The loadings are displayed in Supplementary
+Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
+\ref{fig:cca_loadings}. However, the associated scores are quite
+different than those found using CCA, consider Figure
+\ref{fig:coia_scores_weight}, which shades samples by weight, or
+Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
+Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
+closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_weight}), but
+that they are more strongly associated with variation in weight, as in the
+concatenated-PCA result of Figure \ref{fig:scores_weight}. It is not
+clear whether this phenomena -- the CoIA scores being more similar to those from
+PCA than CCA -- holds in general, or what about the change in inner products
+between CoIA and CCA is responsible for this difference.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/coia/scores_weight}
+  \caption{The normalized scores from each table, displayed
+    simultaneously, as obtained by CoIA. This is the analog of Figure
+    \ref{fig:cca_scores_weight} from CCA. \label{fig:coia_scores_weight} }
+\end{figure}
+
+
+\subsection{MFA}
+\label{subsec:mfa}
+
+MFA gives an alternative approach to producing scores and relating features
+across multiple tables\citep{pages2014multiple}. It can be understood as a
+reweighted version of the concatenated PCA described in Section \ref{subsec:pca}
+that reweights tables in a way that prevents any one table from dominating the
+resulting ordination Specifically, MFA is a concatenated PCA on the matrix
+\begin{align*}
+X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots
+  \vert \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
+\end{align*}
+which reweights each table by its largest eigenvalue. This procedure is the
+multitable analog of the standard practice of standardizing variables before
+performing PCA.
+
+The resulting MFA directions and scores can be interpreted in the same
+way as those from PCA -- the MFA directions still specify the
+relationship between measured features, and the position of each
+sample's projection describes the relative weight of each feature for
+that sample. Moreover, MFA gives a way of comparing full tables to
+each other, called a ``canonical analysis'' \cite{pages2004multiple}. A
+$K$-dimensional representation of the $l^{th}$ group is given by
+\begin{align*}
+\left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots,
+  \mathcal{L}\left(z_{K}, X^{(l)}\right)\right]
+\end{align*}
+where $z_{k} = d_{k}u_{k} \in \reals^{n}$ is the $k^{th}$ column of principal
+component scores and
+\begin{align*}
+  \mathcal{L}\left(z_{k}, X^{(l)}\right) =
+  \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\tr\left(X^{(l)}X^{(l)
+      T} z_{k}z_{k}^{T}\right) =
+  \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\|X^{(l)
+  T} z_{k}\|^{2}_{2}
+\end{align*}
+is a measure of aggregate similarity between the coordinates in the $l^{th}$
+table and the $k^{th}$ column of scores. According to this definition, if the
+samples, as represented by the $l^{th}$ table, have high correlation with the
+$k^{th}$ dimension of scores, then the canonical analysis display positions the
+$l^{th}$ table far in the $k^{th}$ direction.
+
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+
 \section{Appendix}
 
 \subsection{Additional figures}
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure/pca/proj_plot_2}
-  \caption{A geometric motivation for PCA.}
-  \label{fig:pca-approx-2}
+  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
+  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
+    PCA is run on all body composition variables, rather than just Weight and
+    Fatmass. That is, we project the original values for these two features
+    onto the top two PCs obtained from a PCA on all body composition variables.
+    Since the PCA is working in a large space, the projected points are
+    generally not too far from their original positions. However, note that one
+    outlier on the far right is projected into the bulk of points in the center
+    -- the variation coming from this one point is too specific to be preserved
+    by PCA.
+  \label{fig:pca-approx-2}}
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure/pca/proj_plot_3}
-  \caption{A geometric motivation for PCA.}
-  \label{fig:pca-approx-3}
+  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_3}
+  \caption{Here we perform the same procedure as in Figure
+    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
+    we project onto only the top PC. The main point is that, while in two
+    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
+    easy to understand in terms of orthogonal errors, the corresponding
+    orthogonal projection in higher dimensions is more complex.
+  \label{fig:pca-approx-3}}
 \end{figure}
 
-\bibliographystyle{plainnat}
-\bibliography{refs.bib}
+\begin{figure}[ht]
+  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
+  \caption{These are the loadings obtained from CoIA, which are analogous to
+    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
+    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_weight},
+    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
+    \ref{fig:scores_rl_ratio} and
+    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
+\end{figure}
+
+\end{document}
+
 
 \end{document}

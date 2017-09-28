@@ -2,19 +2,18 @@
 
 ## File description -------------------------------------------------------------
 ##
-## An example studying multiple tables by concatenating and then using PCA.
+## Illustration of canonical correlation analysis on the body composition and
+## microbiome elements of the WELL-China data.
 ##
 ## author: sankaran.kris@gmail.com
-## date: 09/25/2017
+## date: 09/26/2017
 
-###############################################################################
-## Libraries and setup
-###############################################################################
-library("tidyverse")
 library("phyloseq")
-library("ggrepel")
+library("tidyverse")
 library("reshape2")
+library("ggrepel")
 library("viridis")
+library("vegan")
 source("prep_tables.R")
 source("plot.R")
 
@@ -39,53 +38,62 @@ theme_update(
 )
 
 ###############################################################################
-## Load data
+## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list(filt_k = 0.07, filt_a = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
 
 ###############################################################################
-## run and visualize PCA
+## Run and plot CCA on the two (scaled) tables
 ###############################################################################
-combined <- cbind(processed$bc, processed$x_seq)
-pc_res <- prcomp(scale(combined))
+bc_mat <- scale(processed$bc)
+x_seq <- scale(processed$x_seq)
+cca_res <- CCorA(bc_mat, x_seq)
 
-## extract scores and join in sample data
-scores <- prepare_scores(list(pc_res$x), c("combined")) %>%
+## Plot the loadings
+loadings <- prepare_loadings(
+  list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
+  c("body_comp", "seq")
+) %>%
+  left_join(processed$mseqtab)
+
+plot_loadings(loadings, cca_res$Eigenvalues) +
+  ylim(-0.5, 0.4) +
+  xlim(-0.9, 0.3)
+ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
+
+## Plot the scores
+scores <- prepare_scores(
+  list(cca_res$Cx, cca_res$Cy),
+  c("body_comp", "seq")
+) %>%
   left_join(
     processed$bc %>%
     rownames_to_column("Number")
   )
 
-## extract loadings and join taxa information
-loadings_list <- list(
-  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$bc), ],
-  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$x_seq), ]
-)
+mscores <- melt_scores(scores)
+plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
+  link_scores(mscores) +
+  scale_color_brewer(palette = "Set1")
+ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
-loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
-  left_join(processed$mseqtab)
-
-plot_loadings(loadings, pc_res$sdev) +
-  ylim(-0.15, 0.35) +
-  xlim(-0.15, 0.2)
-ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3)
-
-## and study the scores
-plot_scores(scores, "weight_dxa", "Weight", pc_res$sdev) +
+## color by weight
+plot_scores(scores, "weight_dxa", "Weight", cca_res$Eigenvalues) +
+  link_scores(mscores) +
   scale_color_viridis(
     "Weight ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca/scores_weight.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
 
-##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
+## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", pc_res$sdev) +
+plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", cca_res$Eigenvalues) +
+  link_scores(mscores) +
   scale_color_viridis(
     "Rum. / Lach. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
