@@ -445,7 +445,7 @@ that $w_{u}$ and $w_{v}$ have zero weight on the first columns of $\tilde{U}$
 and $\tilde{V}$.
 
 To recover the solutions to the original problem, we reverse the original
-variable transformation, yielding optimal $\hat{u}_{1} = 
+variable transformation, yielding optimal $\hat{u}_{1} =
 \Sigma_{XX}^{-\frac{1}{2}}\hat{\tilde{u}}_{1}$ and $\hat{v}_{1} =
 \Sigma_{YY}^{-\frac{1}{2}}\hat{\tilde{v}}_{1}$.
 
@@ -528,9 +528,11 @@ of weight. Note that age is negatively correlated with weight, which is why it
 appears on the opposite end. Among the abundant species that remain, there is
 limited clustering according to taxonomic group, though the Bacteroideceae and
 Ruminoccocus do appear restricted to the bottom and top right, respectively.
+Note that the third CCA axis (the size of plotted text and points) distinguishes
+lean and fat mass variables.
 
 In Figure \ref{fig:cca_scores_linked} we plot the corresponding scores. Note
-that in CCA, there are two sets of scores for each $k$ -- $X\hat{u}_{k}$ and
+that in CCA, there are two sets of scores for each $k$, the $X\hat{u}_{k}$ and
 $Y\hat{v}_{k}$. Indeed, the CCA objective finds directions that maximizes the
 correlation between these scores. In this figure, we display both sets of
 scores, colored differently according to the table to which they are associated
@@ -608,14 +610,36 @@ The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
 SVD of $X^{T}Y$, as opposed to the first $K$ generalized eigenvectors, as in
 CCA, by essentially the same argument as in CCA.
 
+\subsubsection{Example}
+\label{subsubsec:coia_example}
+
+We apply CoIA to the same data as used in section \ref{subsubsec:cca_example},
+as CoIA also needs to estimate the covariance between tables, which is difficult
+when the number of ASVs is large. The loadings are displayed in Supplementary
+Figure \ref{fig:coia_scores_loadings}, and they are similar to those in Figure
+\ref{fig:cca_scores_loadings}. However, the associated scores are quite
+different than those found using CCA, consider Figure
+\ref{fig:fig:coia_scores_weight}, which shades samples by weight, or
+Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
+Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
+closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_weight}), but
+that they are more strongly associated with variation in weight, as in the
+concatenated-PCA result of Figure \ref{fig:pca_scores_weight}. It is not
+clear whether this phenomena -- the CoIA scores being more similar to those from
+PCA than CCA -- holds in general, or what about the change in inner products
+between CoIA and CCA is responsible for this difference.
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_weight}
-  \caption{\label{fig:coia_scores_weight} }
+  \caption{The normalized scores from each table, displayed
+    simultaneously, as obtained by CoIA. This is the analog of Figure
+    \ref{fig:cca_scores_weight} from CCA. \label{fig:coia_scores_weight} }
 \end{figure}
 
+
 \subsection{MFA}
-\label{sec:mfa}
+\label{subsec:mfa}
 
 MFA gives an alternative approach to producing scores and relating features
 across multiple tables\cite{pages2014multiple}. It can be understood as a
