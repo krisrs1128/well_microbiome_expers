@@ -86,7 +86,7 @@ plot_scores(scores, "Total_FM", "Total FM", pcaiv_res$eig) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca_iv/scores_total_fm.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca_iv/scores_total_fm.png", width = 3.56, height = 1.8)
 
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
@@ -95,4 +95,4 @@ plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", pcaiv_res$eig) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca_iv/scores_rl_ratio.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca_iv/scores_rl_ratio.png", width = 3.56, height = 1.8)
