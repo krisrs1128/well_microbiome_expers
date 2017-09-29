@@ -15,6 +15,8 @@ library("reshape2")
 library("ggrepel")
 library("viridis")
 library("ade4")
+source("prep_tables.R")
+source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -49,8 +51,8 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 ## Run CoIA on the two (scaled) tables
 ###############################################################################
-dudi1 <- dudi.pca(x_seq, scan = FALSE, nf = 3)
-dudi2 <- dudi.pca(bc_mat, scan = FALSE, nf = 3)
+dudi1 <- dudi.pca(processed$x_seq, scan = FALSE, nf = 3)
+dudi2 <- dudi.pca(processed$bc, scan = FALSE, nf = 3)
 coia_res <- coinertia(dudi1, dudi2, scan = FALSE, nf = 3)
 
 loadings <- prepare_loadings(
