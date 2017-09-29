@@ -12,7 +12,9 @@
 ###############################################################################
 library("tidyverse")
 library("rstan")
+library("viridis")
 source("prep_tables.R")
+source("plot.R")
 set.seed(9282017)
 
 scale_colour_discrete <- function(...)
@@ -122,27 +124,47 @@ stan_data <- list(
   "p2" = ncol(processed$x_seq),
   "n" = nrow(processed$bc),
   "tau" = 5,
-  "x" = processed$bc,
-  "y" = processed$x_seq,
+  "x" = scale(processed$bc),
+  "y" = scale(processed$x_seq),
   "id_x" = diag(ncol(processed$bc)),
   "id_y" = diag(ncol(processed$x_seq)),
   "id_k" = diag(K),
   "zeros_k" = rep(0, K)
 )
 
-micro_fit <- vb(m, stan_data, iter = 5000)
+micro_fit <- vb(m, stan_data, iter = 100)
 micro_samples <- rstan::extract(micro_fit)
 rm(micro_fit)
 
 micro_hat <- parameter_means(micro_samples)
-shared_scores <- cbind(micro_hat, processed$bc)
+shared_scores <- cbind(micro_hat$xi_s, processed$bc)
+colnames(shared_scores)[1:K] <- paste0("Axis", 1:K)
 
+## should try to plot posteriors, not just means
 ggplot(shared_scores) +
   geom_point(
-    aes(x = X1, y = X2, col = weight_dxa)
+    aes(x = Axis1, y = Axis2, col = weight_dxa)
   ) +
   scale_color_viridis(
-    "Rum. / Lach. Ratio  ",
+    "Weight ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 
+rownames(micro_hat$Wx) <- colnames(processed$bc)
+rownames(micro_hat$Wy) <- colnames(processed$x_seq)
+rownames(micro_hat$Bx) <- colnames(processed$bc)
+rownames(micro_hat$By) <- colnames(processed$x_seq)
+
+loadings <- prepare_loadings(
+  list(micro_hat$Wx, micro_hat$Wy),
+  c("body_comp", "seq")
+) %>%
+  left_join(processed$mseqtab)
+plot_loadings(loadings, c(1, 1))
+
+loadings_distinct <- prepare_loadings(
+  list(micro_hat$Bx, micro_hat$By),
+  c("body_comp", "seq")
+) %>%
+  left_join(processed$mseqtab)
+plot_loadings(loadings_distinct, c(1, 1))
