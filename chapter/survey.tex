@@ -389,8 +389,8 @@ $u_{1}^{\ast}$ and $v_{1}^{\ast}$ are chosen to optimize
   \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
   &\Covsubarg{\P^{\X\Y}}{z_{i}^{(1)}\left(u\right),
     z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\
-\text{subject to } &\Varsubarg{\P^{\X}}{z_{i}^{(1)}\left(u\right)} = 1 \\
-&\Varsubarg{\P^{\Y}}{z_{i}^{(2)}\left(v\right)} = 1.
+\text{subject to } &\Varsubarg{\P^{\X}}{z_{i}^{(1)}\left(u\right)} = 1 \nonumber \\
+&\Varsubarg{\P^{\Y}}{z_{i}^{(2)}\left(v\right)} = 1. \nonumber
 \end{align}
 To produce subsequent directions, the same optimization is performed, but with
 the additional constraint that the directions must be orthogonal to all the
@@ -403,8 +403,8 @@ this section. The empirical version of the optimization problem
 \begin{align}
   \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
   &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\
-  \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \\
-  & v^{T}\hat{\Sigma}_{YY}v = 1.
+  \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \nonumber \\
+  & v^{T}\hat{\Sigma}_{YY}v = 1. \nonumber
 \end{align}
 
 Consider the whitened data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$ and
@@ -590,11 +590,11 @@ $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k = 1}^{K}$ such that
 the associated projections $Xu_{k}$ and $Yv_{k}$ explain most of the covariation
 between the tables. Unlike CCA, CoIA finds directions that maximize the
 covariance -- not the correlation -- between scores,
-\begin{align}
+\begin{align*}
 \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}X^{T}Yv \\
 \text{ such that}\medspace &\|u\| = 1\\
 &\|v\| = 1,
-\end{align}
+\end{align*}
 and subsequent directions by the same optimization, with the
 additional constraint that they are orthogonal to the previously
 derived directions.
@@ -680,6 +680,132 @@ samples, as represented by the $l^{th}$ table, have high correlation with the
 $k^{th}$ dimension of scores, then the canonical analysis display positions the
 $l^{th}$ table far in the $k^{th}$ direction.
 
+\subsection{PCA-IV}
+
+PCA-IV adapts the dimension reduction ideas of PCA to the multivariate
+regression setting \citep{rao1964use}. It can also be viewed as a version of PCA
+that chooses a dimension reduction of $X$ depending on its ability to predict
+$Y$. In this sense, it anticipates methods like Partial Least Squares (PLS),
+Canonical Correspondence Analysis (CCpnA), the Curds \& Whey procedure, and
+various approaches to multitask learning, which are described in Sections
+\ref{subsec:PLS}, \ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
+\ref{subsec:multitask}, respectively.
+
+Formally, suppose we are predicting $y_{i} \in \reals^{p_{1}}$ from $x_{i} \in
+\reals^{p_{2}}$. Since $p_{2}$ may be large, it might be useful to work with a
+lower-dimensional representation $z_{i} = V^{T}x_{i} \in \reals^{K}$, that is
+potentially more interpretable and still as (or more) predictive of $y_{i}$. As
+in PCA, we require that $V$ be orthonormal.
+
+The criterion that PCA-IV uses to identify the weights $V$ and scores $Z$
+mirrors the maximum variance criterion for PCA. Instead of choosing $V$ to
+maximize the variance of the $z_{i}$, we choose it to minimize the residual
+covariance of $y_{i}$ given $z_{i}$. That is, suppose that $y_{i}$ and $x_{i}$
+are jointly normal with mean 0 and covariance
+\begin{align*}
+\Var_{\P}\begin{pmatrix}y_{i} \\ x_{i}\end{pmatrix} &=
+\begin{pmatrix}
+  \Sigma_{YY} & \Sigma_{YX} \\
+  \Sigma_{XY} & \Sigma_{XX}
+\end{pmatrix}.
+\end{align*}
+
+If $z_{i} = V^{T}x_{i}$, then the joint covariance of $y_{i}$ and $z_{i}$ is
+\begin{align*}
+  \Var_{\P}\begin{pmatrix} y_{i} \\ z_{i} \end{pmatrix} &=
+  \begin{pmatrix}
+    \Sigma_{YY} & \Sigma_{YX}V \\
+    V^{T}\Sigma_{XY} & V^{T}\Sigma_{XX}V
+  \end{pmatrix},
+\end{align*}
+and the residual covariance of $x_{i}^{(1)}$ given $z_{i}$ is
+\begin{align}
+  \Sigma_{YY} -
+  \Sigma_{YX}V\left(V^{T}\Sigma_{XX}V\right)^{-1}V^{T}\Sigma_{XY}. \label{eq:pca_iv_resid_cov}
+\end{align}
+\citep{rao1964use} uses the trace to measure the ``size'' of this matrix. The
+true population covariances are unknown to us, so we replace them by their
+empirical estimates. The formal optimization for PCA-IV then becomes
+\begin{align}
+  \minimize_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
+  \tr\left(\hat{\Sigma}_{YY} -
+  \hat{\Sigma}_{YX}V\left(V^{T}\hat{\Sigma}_{XX}V\right)^{-1}V^{T}\hat{\Sigma}_{XY}\right) \label{eq:pca_iv_obj},
+\end{align}
+or, equivalently,
+\begin{align}
+  \maximize_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
+  \tr\left(\hat{\Sigma}_{YX}V\left(V^{T}\hat{\Sigma}_{XX}V\right)^{-1}V^{T}\hat{\Sigma}_{XY}\right) \label{eq:pca_iv_obj_2},
+\end{align}
+
+The optimal $V$ are the top $K$ generalized eigenvectors of
+$\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}$ with respect to $\hat{\Sigma}_{XX}$, that
+is, the orthonormal set of $\left(v_{k}\right)$ satisfying
+\begin{align*}
+  \hat{\Sigma}_{XY}\hat{\Sigma}_{YX}v_{k} &= \lambda_{k}
+  \hat{\Sigma}_{XX}v_{k}, \text{for } k = 1, \dots, K
+\end{align*}
+or more concisely,
+\begin{align*}
+\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}V &= \left( \lambda_{1}
+  \hat{\Sigma}_{XX}v_{1} \vert \dots \vert
+  \lambda_{k}\hat{\Sigma}_{XX}v_{k}\right) =
+\hat{\Sigma}_{XX}V\Lambda,
+\end{align*}
+where $\Lambda = \diag\left(\lambda_{k}\right) \in \reals^{K \times K}$. In
+particular, $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}$ has generalized
+eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} = \hat{\Sigma}_{XX}
+V\Lambda V^{T}$. A derivation for why this choice is optimal is provided in
+Supplemental Section \ref{subsec:pca_iv_derivation}.
+
+For a geometric interpretation of PCA-IV, view each column $y_{\cdot j}$ in $Y$
+and $x_{\cdot j}$ in $X$ as a point in $\reals^{n}$. Assuming $X$ and $Y$ are
+full rank, the collections $\left(y_{ \cdot j}\right)$ and $\left(x_{\cdot
+  j}\right)$ span $p_{1}$ and $p_{2}$-dimensional subspaces. A set of
+independent regressions of $X$ onto the $y_{\cdot j}$ projects the $y_{\cdot j}$
+onto the span of $\left(x_{\cdot j}\right)$, and the residuals are the distance
+to this span. The PCA-IV procedure is an attempt to find a further
+$K$-dimensional subspace within the span of the $\left(x_{\cdot j}\right)$ such
+that the residuals of the regressions from $x_{\cdot j}^{(1)}$ onto this further
+subspace is not much worse. This is displayed in Figure
+\ref{fig:pca_iv_geometry}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figure/pca_iv/pca_iv_geometry}
+  \caption{A geometric view of PCA-IV. The columns of the response $Y$ are views
+    as $n$-dimensional vectors. The grey plane is the span of
+    $X$. Multivariate OLS simply projects the columns of $Y$ onto the plane,
+    while PCA-IV searches for a further subspace $V$ on which to project all
+    responses. \label{fig:pca_iv_geometry} }
+\end{figure}
+
+Indeed, write the usual estimates for the covariance matrices of interest,
+\begin{align*}
+  \hat{\Sigma}_{YY} = \frac{1}{n}Y^{T}Y \\
+  \hat{\Sigma}_{YX} = \frac{1}{n}Y^{T}X \\
+  \hat{\Sigma}_{XX} = \frac{1}{n}X^{T}X
+\end{align*}
+and observe that the residual covariance of equation \ref{eq:pca_iv_resid_cov}
+can be expressed
+\begin{align*}
+  &\frac{1}{n}\left[Y^{T}Y -
+    Y^{T}XV\left(V^{T}X^{T}XV\right)^{-1}V^{T}X^{T}Y\right] \\
+  = &\frac{1}{n}\left[Y^{T}Y^{(T)} - Y^{T}Z\left(Z^{T}Z\right)^{-1}Z^{T}Y\right] \\
+  = &Y\left(I - P_{Z}\right)Y,
+\end{align*}
+where $P_{Z} = Z\left(Z^{T}Z\right)^{-1}Z^{T}$ is the projection operator onto
+the columns of $Z$. Minimizing the trace of this matrix is equivalent to
+minimizing
+\begin{align*}
+  \tr\left(Y^{T}\left(I - P_{Z}\right)Y\right) &=
+  \tr\left(Y^{T}\left(I - P_{Z}\right)^{T}\left(I -
+      P_{Z}\right)Y\right) \\
+  &= \|\left(I - P_{Z}\right)Y\|_{F}^{2} \\
+  &= \sum_{j = 1}^{p_{1}}\|\left(I - P_{j}\right)y_{\cdot j}\|^{2}_{2},
+\end{align*}
+which is exactly the sum of squared residuals from the columns of $Y$ onto the
+span of the PCA-IV subspace, justifying geometric picture.
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
@@ -728,7 +854,40 @@ $l^{th}$ table far in the $k^{th}$ direction.
     \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
 \end{figure}
 
-\end{document}
+\subsection{Derivation details for PCA-IV}
+\label{subsec:pca_iv_derivation}
 
+In this section, we provide the argument for why the generalized
+eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
+\hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
+
+First consider $k = 1$. Then, for any $\tilde{v}$, the objective
+\ref{eq:pca_iv_obj_2} has the form
+\begin{align}
+  \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
+  \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
+  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \label{eq:gev_opt_1}\\
+  &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
+\end{align}
+where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
+to maximize \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
+eigenvector of
+$\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
+which implies that $\tilde{v}$ is the top generalized eigenvector of
+$\Sigma_{XY}\Sigma_{YX}$ with respect to $\Sigma_{XX}$. Indeed, in this case,
+\begin{align*}
+  \Sigma_{XY}\Sigma_{YX}\tilde{v}
+  &=\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w} \\
+  &= \Sigma_{XX}^{\frac{1}{2}} \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX} \Sigma_{XX}^{-\frac{1}{2}}\tilde{w}\\
+  &= \Sigma_{XX}^{\frac{1}{2}}\lambda_{1}\tilde{w} \\
+  &= \lambda_{1}\Sigma_{XX}\tilde{v}.
+\end{align*}
+
+Hence, in the case $K = 1$, the criterion is maximized by the top generalized
+eigenvector. For larger $K$, recall that the problem of maximizing
+$\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
+- 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
+applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
+result for general $K$.
 
 \end{document}

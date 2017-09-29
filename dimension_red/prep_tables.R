@@ -12,6 +12,7 @@ library("phyloseq")
 library("DESeq2")
 library("tidyverse")
 library("forcats")
+library("reshape2")
 
 ###############################################################################
 ## Prepare opts and read data

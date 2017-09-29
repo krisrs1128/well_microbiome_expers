@@ -7,6 +7,9 @@
 ## author: sankaran.kris@gmail.com
 ## date: 09/26/2017
 
+library("ggplot2")
+library("ggrepel")
+
 #' Combine Loadings
 #'
 #' This combines loadings across data types. It's just a helper for the
