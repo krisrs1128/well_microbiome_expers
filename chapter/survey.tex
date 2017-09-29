@@ -180,11 +180,11 @@ projected points with respect to this subspace.
     the one-dimensional subspace $V$ minimizing the squared error between points
     and their projections, $\sum_{i = 1}^{n}\|\left(I -
     VV^{T}\right)x_{i}\|_{2}^{2}$ projections. The black points represent the
-    scaled values for two of the body composition variables -- weight and total
+    scaled values for two of the body composition variables --  and total
     fat mass -- while the purple points are the projections onto the first
     principal component when only accounting for these two variables. Contrast
     this with Figures \ref{fig:pca-approx-2} and \ref{fig:pca-approx-3}, where
-    variables other than weight and fat mass are taken into account.}
+    variables other than  and fat mass are taken into account.}
   \label{fig:pca-approx}
 \end{figure}
 
@@ -240,7 +240,7 @@ us to begin our survey of multitable methods in earnest.
 \subsubsection{Example}
 \label{subsubsec:pca_example}
 
-Figure \ref{fig:loadings} and \ref{fig:scores_weight} illustrate this approach
+Figure \ref{fig:loadings} and \ref{fig:scores_total_fm} illustrate this approach
 on body composition and bacterial abundance data from the WELL-China study.
 Note that we have subsetted to only men, since men and women have very different
 body compositions. Further, the 16s data have been variance stabilized according
@@ -258,13 +258,13 @@ Most body composition variables lie on the top right, in a direction
 approximately orthogonal to the main direction of variation among ASVs. Columns
 that are highly correlated (e.g., right (R) and left (L) Trunk Fat Mass (FM)
 have loadings nearly equal to one another. Age appears in generally negatively
-correlated with the other, more weight oriented, variables. Among ASVs, the main
+correlated with the other, more  oriented, variables. Among ASVs, the main
 source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
 which appear overrepresented on the left and right, respectively.
 
 To identify relationships between ASVs and body composition variables, it would
 be of interest to isolate those ASVs with large contributions along the axis
-defined by linking the center of the weight variables and the origin. Relatively
+defined by linking the center of the  variables and the origin. Relatively
 few such species stand out, though note that there is nothing in this
 algorithm's objective that would seek covariation across tables directly, so the
 fact that such associations seem weak with respect to the top two principal
@@ -279,12 +279,12 @@ components does not mean such relationships do not exist.
 
 We can study individual samples with respect to these loadings, by plotting
 their projections onto the top two principal components. This is the content of
-Figures \ref{fig:scores_weight} and \ref{fig:scores_rl_ratio}. These figures
-display samples in the same positions, but shaded by weight and Ruminococcaceae
+Figures \ref{fig:scores_total_fm} and \ref{fig:scores_rl_ratio}. These figures
+display samples in the same positions, but shaded by  and Ruminococcaceae
 / Lachnospiraceae ratio, respectively. This shading confirms the observations
-from the loadings directly using observed data. Indeed, the increasing weight
-among samples in the top right of Figure \ref{fig:scores_weight} exactly
-corresponds to the fact that weight related variables lie in the top right in
+from the loadings directly using observed data. Indeed, the increasing 
+among samples in the top right of Figure \ref{fig:scores_total_fm} exactly
+corresponds to the fact that  related variables lie in the top right in
 Figure \ref{fig:loadings}. A left-to-right Ruminococcaceae /
 Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
 which is consistent with the loadings, though we also observe a few samples with
@@ -302,15 +302,15 @@ the more elaborate methods of subsequent sections.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_weight}
+  \includegraphics[width=\textwidth]{figure/pca/scores_total_fm}
   \caption{The scores resulting from PCA applied to the combined body
-    composition and microbial abundance data set.\label{fig:scores_weight} }
+    composition and microbial abundance data set.\label{fig:scores_total_fm} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
-  \caption{The same scores as Figure \ref{fig:scores_weight}, but shaded now by
+  \caption{The same scores as Figure \ref{fig:scores_total_fm}, but shaded now by
     the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
     slight increase in Ruminococcaceae from left to right is consistent with the
     loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
@@ -438,10 +438,10 @@ one, $1 = \|\xi\|^{2}_{2} = w_{u}^{T}\tilde{U}^{T}\tilde{U}w_{u} =
 &\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\
 &\leq d_{1} \|w_{u}\|\|w_{v}\| = d_{1},
 \end{align*}
-and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their weight
+and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their 
 on the first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu =
 \tilde{v}_{1}$. For subsequent directions, we repeat the argument but require
-that $w_{u}$ and $w_{v}$ have zero weight on the first columns of $\tilde{U}$
+that $w_{u}$ and $w_{v}$ have zero  on the first columns of $\tilde{U}$
 and $\tilde{V}$.
 
 To recover the solutions to the original problem, we reverse the original
@@ -524,7 +524,7 @@ $\left(\hat{v}_{j1}, \hat{v}_{j2}\right)_{j = 1}^{57}$.
 As in the joint PCA, we find that the groups of variables occupy separates
 spaces. Our interpretation is that sequences further to the left are correlated
 with the body variables further to the left, which are all in some ay variants
-of weight. Note that age is negatively correlated with weight, which is why it
+of . Note that age is negatively correlated with total fat mass, which is why it
 appears on the opposite end. Among the abundant species that remain, there is
 limited clustering according to taxonomic group, though the Bacteroideceae and
 Ruminoccocus do appear restricted to the bottom and top right, respectively.
@@ -545,14 +545,14 @@ onto the original CCA directions. This is especially important in this nearly
 high-dimensional setting, where covariance estimation may be unreliable.
 
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
-the PCA biplot. For example, Figures \ref{fig:cca_scores_weight} and
-\ref{fig:cca_scores_rl_ratio} display the samples shaded in by weight and
+the PCA biplot. For example, Figures \ref{fig:cca_scores_total_fm} and
+\ref{fig:cca_scores_rl_ratio} display the samples shaded in by  and
 Ruminococcaceae vs. Lachnospiraceae ratios, respectively, as in Figures
-\ref{fig:scores_weight} and \ref{fig:cca_scores_rl_ratio}. The association
+\ref{fig:scores_total_fm} and \ref{fig:cca_scores_rl_ratio}. The association
 between these variables and the sample positions is not as strong as when
 performing PCA on the combined table. This is to be expected, however, as PCA
 maximizes variance without any requirements on covariance, and the body
-composition table alone has a large portion of its variance related to weight.
+composition table alone has a large portion of its variance related to .
 
 \begin{figure}[ht]
   \centering
@@ -566,16 +566,16 @@ composition table alone has a large portion of its variance related to weight.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_weight}
+  \includegraphics[width=\textwidth]{figure/cca/scores_total_fm}
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data set, shaded in by
-    weight.\label{fig:cca_scores_weight} }
+    .\label{fig:cca_scores_total_fm} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
-  \caption{The same scores as Figure \ref{fig:cca_scores_weight}, but shaded now by
+  \caption{The same scores as Figure \ref{fig:cca_scores_total_fm}, but shaded now by
     the ratio of Ruminococcaceae over Lachnospiraceae relative
     abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
@@ -619,22 +619,22 @@ when the number of ASVs is large. The loadings are displayed in Supplementary
 Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
 \ref{fig:cca_loadings}. However, the associated scores are quite
 different than those found using CCA, consider Figure
-\ref{fig:coia_scores_weight}, which shades samples by weight, or
+\ref{fig:coia_scores_total_fm}, which shades samples by total fat mass, or
 Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
 Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
-closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_weight}), but
-that they are more strongly associated with variation in weight, as in the
-concatenated-PCA result of Figure \ref{fig:scores_weight}. It is not
+closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_total_fm}), but
+that they are more strongly associated with variation in , as in the
+concatenated-PCA result of Figure \ref{fig:scores_total_fm}. It is not
 clear whether this phenomena -- the CoIA scores being more similar to those from
 PCA than CCA -- holds in general, or what about the change in inner products
 between CoIA and CCA is responsible for this difference.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_weight}
+  \includegraphics[width=\textwidth]{figure/coia/scores_total_fm}
   \caption{The normalized scores from each table, displayed
     simultaneously, as obtained by CoIA. This is the analog of Figure
-    \ref{fig:cca_scores_weight} from CCA. \label{fig:coia_scores_weight} }
+    \ref{fig:cca_scores_total_fm} from CCA. \label{fig:coia_scores_total_fm} }
 \end{figure}
 
 
@@ -643,21 +643,21 @@ between CoIA and CCA is responsible for this difference.
 
 MFA gives an alternative approach to producing scores and relating features
 across multiple tables\citep{pages2014multiple}. It can be understood as a
-reweighted version of the concatenated PCA described in Section \ref{subsec:pca}
-that reweights tables in a way that prevents any one table from dominating the
+reed version of the concatenated PCA described in Section \ref{subsec:pca}
+that res tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
 \begin{align*}
 X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots
   \vert \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
 \end{align*}
-which reweights each table by its largest eigenvalue. This procedure is the
+which res each table by its largest eigenvalue. This procedure is the
 multitable analog of the standard practice of standardizing variables before
 performing PCA.
 
 The resulting MFA directions and scores can be interpreted in the same
 way as those from PCA -- the MFA directions still specify the
 relationship between measured features, and the position of each
-sample's projection describes the relative weight of each feature for
+sample's projection describes the relative  of each feature for
 that sample. Moreover, MFA gives a way of comparing full tables to
 each other, called a ``canonical analysis'' \cite{pages2004multiple}. A
 $K$-dimensional representation of the $l^{th}$ group is given by
@@ -697,7 +697,7 @@ lower-dimensional representation $z_{i} = V^{T}x_{i} \in \reals^{K}$, that is
 potentially more interpretable and still as (or more) predictive of $y_{i}$. As
 in PCA, we require that $V$ be orthonormal.
 
-The criterion that PCA-IV uses to identify the weights $V$ and scores $Z$
+The criterion that PCA-IV uses to identify the s $V$ and scores $Z$
 mirrors the maximum variance criterion for PCA. Instead of choosing $V$ to
 maximize the variance of the $z_{i}$, we choose it to minimize the residual
 covariance of $y_{i}$ given $z_{i}$. That is, suppose that $y_{i}$ and $x_{i}$
@@ -727,7 +727,7 @@ and the residual covariance of $x_{i}^{(1)}$ given $z_{i}$ is
 true population covariances are unknown to us, so we replace them by their
 empirical estimates. The formal optimization for PCA-IV then becomes
 \begin{align}
-  \minimize_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
+  \text{minimize}_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
   \tr\left(\hat{\Sigma}_{YY} -
   \hat{\Sigma}_{YX}V\left(V^{T}\hat{\Sigma}_{XX}V\right)^{-1}V^{T}\hat{\Sigma}_{XY}\right) \label{eq:pca_iv_obj},
 \end{align}
@@ -806,6 +806,59 @@ minimizing
 which is exactly the sum of squared residuals from the columns of $Y$ onto the
 span of the PCA-IV subspace, justifying geometric picture.
 
+\subsubsection{Example}
+\label{subsec:pcaiv_example}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
+  \caption{\label{fig:pca_iv_loadings} }
+\end{figure}
+
+\subsection{Partial Triadic Analysis}
+\label{subsec:partial_triadic_analysis}
+
+Partial Triadic Analysis (PTA) gives an approach to working with multitable data
+when each table has the same dimension \citep{thioulouse2011simultaneous}.
+Specifically, it gives a way of analyzing data of the form $\left(X_{\cdot\cdot
+  l}\right)_{l = 1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$;
+this is called a data cube because it can also be written as a three-dimensional
+array $X \in \reals^{n \times p \times L}$. We denote the $j^{th}$ feature
+measured on the $i^{th}$ sample in the $l^{th}$ table by $x_{ijl}$, and the
+slices over fixed $i$, $j$, and $l$ by $X_{i \cdot \cdot}$, $X_{\cdot j \cdot}$
+and $X_{\cdot \cdot l}$. This type of data arises frequently in longitudinal
+data analysis, where the same features are collected for the same samples across
+a series of $L$ times. However, the actual ordering of the $L$ tables is not
+ever used by this: if we scrambled the time ordering for $L$ tables, the
+algorithm's result would not change.
+
+The main idea in PTA is to divide the analysis into two steps,
+\begin{itemize}
+  \item Combine the $L$ tables into a single compromise table.
+  \item Apply any standard single-table method, e.g., PCA, on the
+    compromise table.
+\end{itemize}
+
+A naive approach to constructing the compromise table would be to average each
+entry across the $L$ tables. Instead, PTA upweights tables that are more similar
+to the average table, as these are considered more representative. Formally, the
+compromise is defined as $X^{(c)} = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l}
+= X\alpha \in \reals^{n \times p}$, where $\alpha$ (constrained to norm one) is
+chosen to maximize $\sum_{l = 1}^{L} \alpha_{l} \left<\overline{X},
+X_{\cdot\cdot l}\right>$, a weighted average of inner-products\footnote{We are
+  using $\left<A, B\right> = \tr\left(A^{T}B\right)$.} between each of the $L$
+tables and the naive-average table, $\overline{X} = \frac{1}{L}\sum_{l = 1}^{L}
+X_{\cdot\cdot l}$.
+
+The optimal $\alpha$ can be derived using Lagrange multipliers (see Supplemental
+Section \ref{sec:pta_alpha_derivation}), and leads to the compromise table,
+
+\begin{align*}
+  X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime}
+      =1}^{L}\left<\overline{X},
+      X_{\cdot\cdot l^{\prime}}\right>^{2}}} X_{\cdot\cdot l}.
+\end{align*}
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
@@ -816,7 +869,7 @@ span of the PCA-IV subspace, justifying geometric picture.
 \begin{figure}
   \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
   \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
-    PCA is run on all body composition variables, rather than just Weight and
+    PCA is run on all body composition variables, rather than just  and
     Fatmass. That is, we project the original values for these two features
     onto the top two PCs obtained from a PCA on all body composition variables.
     Since the PCA is working in a large space, the projected points are
@@ -848,11 +901,26 @@ span of the PCA-IV subspace, justifying geometric picture.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_weight},
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_total_fm},
     but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
     \ref{fig:scores_rl_ratio} and
     \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
 \end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca_iv/scores_total_fm}
+  \caption{\label{fig:pca_iv_scores_total_fm} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
+  \caption{\label{fig:pca_iv_scores_rl_ratio} }
+\end{figure}
+
+
+
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}
