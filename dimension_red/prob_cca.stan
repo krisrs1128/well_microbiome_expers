@@ -10,11 +10,13 @@ data {
   int<lower=1> p1;
   int<lower=1> p2;
   int<lower=1> n;
-  matrix[p1, p1] id1;
-  matrix[p2, p2] id2;
-  matrix[p2, p2] idk;
+  real<lower=0> tau;
   matrix[n, p1] x;
   matrix[n, p2] y;
+  matrix[p1, p1] id_x;
+  matrix[p2, p2] id_y;
+  matrix[K, K] id_k;
+  vector<lower=0, upper=0>[K] zeros_k;
 }
 
 
@@ -31,29 +33,18 @@ parameters {
 }
 
 transformed parameters {
-  vector[K] zeros;
   matrix[p1, p1] cov_x;
   matrix[p2, p2] cov_y;
-
-  for (i in 1:p1) {
-    for (j in 1:p1) {
-      cov_x[i, j] = sigma_x ^ 2;
-    }
-  }
-
-  for (i in 1:p2) {
-    for (j in 1:p2) {
-      cov_y[i, j] = sigma_y ^ 2;
-    }
-  }
+  cov_x = sigma_x ^ 2 * id_x;
+  cov_y = sigma_y ^ 2 * id_y;
 }
 
 model {
   // prior
   for (i in 1:n) {
-    xi_s[i] ~ multi_normal(zeros, idk);
-    xi_x[i] ~ multi_normal(zeros, idk);
-    xi_y[i] ~ multi_normal(zeros, idk);
+    xi_s[i] ~ multi_normal(zeros_k, tau * id_k);
+    xi_x[i] ~ multi_normal(zeros_k, tau * id_k);
+    xi_y[i] ~ multi_normal(zeros_k, tau * id_k);
   }
 
   // likelihood
