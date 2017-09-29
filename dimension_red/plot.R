@@ -104,7 +104,7 @@ plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)
       "x" = perc_label(eigs, 1),
       "y" = perc_label(eigs, 2)
     ) +
-    scale_size_continuous(range = c(0, 1.5), breaks = size_breaks) +
+    scale_size_continuous(range = c(0, 2.5), breaks = size_breaks) +
     coord_fixed(sqrt(eigs[2] / eigs[1]))
 }
 
