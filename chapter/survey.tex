@@ -282,7 +282,7 @@ their projections onto the top two principal components. This is the content of
 Figures \ref{fig:scores_total_fm} and \ref{fig:scores_rl_ratio}. These figures
 display samples in the same positions, but shaded by  and Ruminococcaceae
 / Lachnospiraceae ratio, respectively. This shading confirms the observations
-from the loadings directly using observed data. Indeed, the increasing 
+from the loadings directly using observed data. Indeed, the increasing
 among samples in the top right of Figure \ref{fig:scores_total_fm} exactly
 corresponds to the fact that  related variables lie in the top right in
 Figure \ref{fig:loadings}. A left-to-right Ruminococcaceae /
@@ -438,7 +438,7 @@ one, $1 = \|\xi\|^{2}_{2} = w_{u}^{T}\tilde{U}^{T}\tilde{U}w_{u} =
 &\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\
 &\leq d_{1} \|w_{u}\|\|w_{v}\| = d_{1},
 \end{align*}
-and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their 
+and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their
 on the first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu =
 \tilde{v}_{1}$. For subsequent directions, we repeat the argument but require
 that $w_{u}$ and $w_{v}$ have zero  on the first columns of $\tilde{U}$
@@ -852,12 +852,29 @@ X_{\cdot\cdot l}$.
 
 The optimal $\alpha$ can be derived using Lagrange multipliers (see Supplemental
 Section \ref{sec:pta_alpha_derivation}), and leads to the compromise table,
-
 \begin{align*}
   X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime}
       =1}^{L}\left<\overline{X},
       X_{\cdot\cdot l^{\prime}}\right>^{2}}} X_{\cdot\cdot l}.
 \end{align*}
+
+We can try to interpret the compromise matrix geometrically. Suppose
+the $X_{\cdot\cdot l}$ define an orthonormal basis; so $\left<X^{l},
+  X^{l^{\prime}}\right> = \indic{l = l^{\prime}}$. Then, we can write
+the compromise table as
+\begin{align}
+  X_{c} = \sqrt{L}\sum_{l = 1}^{L}\left<\overline{X},
+    X_{\cdot\cdot l}\right>X_{\cdot\cdot l} = \sqrt{L}\overline{X},
+\end{align}
+a scaled version of the mean.
+
+If however, the tables are not orthonormal, then we place more weight
+on directions that are correlated. For example, if $X^{(1)} =
+X^{(2)}$, but the rest of the tables are orthogonal to each other and
+to these first two tables, then the compromise double counts the
+direction $X^{(1)}$. In this sense, $X_{c}$ is different from the
+naive-average $\overline{X}$ -- it upweights more highly
+represented tables.
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
@@ -919,9 +936,6 @@ Section \ref{sec:pta_alpha_derivation}), and leads to the compromise table,
   \caption{\label{fig:pca_iv_scores_rl_ratio} }
 \end{figure}
 
-
-
-
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}
 
@@ -957,5 +971,24 @@ $\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
 - 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
 applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
 result for general $K$.
+
+\subsection{Derivation of PTA $\alpha$}
+\ref{subsec:pta_alpha_derivation}
+
+ The lagrangian of the optimization defined by PTA is
+\begin{align*}
+\mathcal{L}\left(\alpha, \lambda\right) &= \sum_{l = 1}^{L}
+\alpha_{l}\left<\overline{X}, X_{\cdot\cdot l}\right> +
+\lambda\left(\|\alpha\|^{2}_{2} - 1\right),
+\end{align*}
+which when differentiated with respect to $\alpha$ yields $\alpha_{l} =
+-\frac{1}{2\lambda} \left<\overline{X}, X_{\cdot\cdot l}\right>$ for all $l$.
+The constraint that $\|\alpha\|_{2}^{2} = 1$ implies that
+$\frac{1}{4\lambda^{2}} \sum_{l^{\prime} = 1}^{L} \left<\overline{X},
+X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
+\sqrt{\sum_{l^{\prime} =1 }^{L} \left<\overline{X}, X_{\cdot\cdot
+    l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
+  X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
+    X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
 
 \end{document}
