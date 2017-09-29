@@ -73,12 +73,12 @@ plot_loadings(loadings, pc_res$sdev) +
 ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3)
 
 ## and study the scores
-plot_scores(scores, "weight_dxa", "Weight", pc_res$sdev) +
+plot_scores(scores, "Total_FM", "Trunk FM", pc_res$sdev) +
   scale_color_viridis(
-    "Weight ",
+    "Total FM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca/scores_weight.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca/scores_total_fm.png", width = 3.56, height = 2.6)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
 scores <- scores %>%

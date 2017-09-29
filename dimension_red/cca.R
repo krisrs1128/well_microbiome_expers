@@ -67,10 +67,7 @@ scores <- prepare_scores(
   list(cca_res$Cx, cca_res$Cy),
   c("body_comp", "seq")
 ) %>%
-  left_join(
-    processed$bc %>%
-    rownames_to_column("Number")
-  )
+  left_join(raw$bc)
 
 mscores <- melt_scores(scores)
 plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
@@ -79,10 +76,9 @@ plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
 ## color by weight
-plot_scores(scores, "weight_dxa", "Weight", cca_res$Eigenvalues) +
+plot_scores(scores, "Total_FM", "Trunk FM", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
-    "Weight ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
@@ -90,10 +86,9 @@ ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", cca_res$Eigenvalues) +
+plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
-    "Rum. / Lach. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)

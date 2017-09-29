@@ -79,13 +79,13 @@ plot_scores(scores, "type", "Meas. Type", coia_res$eig) +
   scale_color_brewer(palette = "Set1")
 ggsave(file.path(out_path, "scores_linked.png"), width = 4.7, height = 1.7)
 
-plot_scores(scores, "weight_dxa", "Weight", coia_res$eig) +
+plot_scores(scores, "Total_FM", "Trunk FM", coia_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    "Weight ",
+    "Total FM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave(file.path(out_path, "scores_weight.png"), width = 4.7, height = 1.7)
+ggsave(file.path(out_path, "scores_total_fm.png"), width = 4.7, height = 1.7)
 
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
