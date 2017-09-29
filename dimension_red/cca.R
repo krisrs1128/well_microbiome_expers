@@ -76,12 +76,12 @@ plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
 ## color by weight
-plot_scores(scores, "Total_FM", "Trunk FM", cca_res$Eigenvalues) +
+plot_scores(scores, "Total_FM", "Total FM", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_weight.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_total_fm.png", width = 3.56, height = 2.6)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
