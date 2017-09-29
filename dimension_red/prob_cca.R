@@ -12,6 +12,7 @@
 ###############################################################################
 library("tidyverse")
 library("rstan")
+source("prep_tables.R")
 set.seed(9282017)
 
 scale_colour_discrete <- function(...)
@@ -40,11 +41,30 @@ matnorm <- function(n, p, mu = 0, sigma = 1) {
   )
 }
 
+#' Average across first dimension
+slice_mean <- function(x) {
+  apply(x, c(2, 3), mean)
+}
+
+#' Means from posterior samples
+parameter_means <- function(theta_samples) {
+  theta_hat <- list()
+  for (i in seq_along(theta_samples)) {
+    if (length(dim(theta_samples[[i]])) > 2) {
+      theta_hat[[i]] <- slice_mean(theta_samples[[i]])
+    } else {
+      theta_hat[[i]] <- mean(theta_samples[[i]])
+    }
+  }
+
+  names(theta_hat) <- names(theta_samples)
+  theta_hat
+}
+
 ###############################################################################
 ## Simulation study to validate approach
 ###############################################################################
-
-K <- 5
+K <- 3
 ps <- c(20, 50)
 n <- 100
 
@@ -73,15 +93,56 @@ stan_data <- list(
   "p1" = ps[1],
   "p2" = ps[2],
   "n" = n,
-  "id1" = diag(ps[1]),
-  "id2" = diag(ps[2]),
-  "idk" = diag(K),
+  "tau" = 5,
   "x" = x,
-  "y" = y
+  "y" = y,
+  "id_x" = diag(ps[1]),
+  "id_y" = diag(ps[2]),
+  "id_k" = diag(K),
+  "zeros_k" = rep(0, K)
 )
 
-fit <- vb(m, stan_data)
+fit <- vb(m, stan_data, iter = 5000)
+theta_samples <- rstan::extract(fit)
+rm(fit)
+theta_hat <- parameter_means(theta_samples)
+plot(theta_hat$xi_s[, 1], theta$xi_s[, 2], asp = 1)
 
 ###############################################################################
 ## Real data application
 ###############################################################################
+
+## read and prepare data
+raw <- read_data()
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
+
+stan_data <- list(
+  "K" = K,
+  "p1" = ncol(processed$bc),
+  "p2" = ncol(processed$x_seq),
+  "n" = nrow(processed$bc),
+  "tau" = 5,
+  "x" = processed$bc,
+  "y" = processed$x_seq,
+  "id_x" = diag(ncol(processed$bc)),
+  "id_y" = diag(ncol(processed$x_seq)),
+  "id_k" = diag(K),
+  "zeros_k" = rep(0, K)
+)
+
+micro_fit <- vb(m, stan_data, iter = 5000)
+micro_samples <- rstan::extract(micro_fit)
+rm(micro_fit)
+
+micro_hat <- parameter_means(micro_samples)
+shared_scores <- cbind(micro_hat, processed$bc)
+
+ggplot(shared_scores) +
+  geom_point(
+    aes(x = X1, y = X2, col = weight_dxa)
+  ) +
+  scale_color_viridis(
+    "Rum. / Lach. Ratio  ",
+    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+  )
+
