@@ -422,7 +422,7 @@ The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
 well known -- they're exactly the first left and right eigenvectors of
 $\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
 = \tilde{U}D\tilde{V}^{T}$, respectively. The argument is standard\footnote{See
-  \citep{mardka1980multivariate}, for example.}, but we include it for
+  \citep{mardia1980multivariate}, for example.}, but we include it for
 completeness.
 
 Let $\xi$ and $\nu$ be potential maximizers of length one. We can find $w_{u}$
@@ -877,7 +877,7 @@ tables and the naive-average table, $\overline{X} = \frac{1}{L}\sum_{l = 1}^{L}
 X_{\cdot\cdot l}$.
 
 The optimal $\alpha$ can be derived using Lagrange multipliers (see Supplemental
-Section \ref{sec:pta_alpha_derivation}), and leads to the compromise table,
+Section \ref{subsec:pta_alpha_derivation}), and leads to the compromise table,
 \begin{align*}
   X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime}
       =1}^{L}\left<\overline{X},
@@ -934,6 +934,57 @@ between the CoIA and the PTA. Indeed, this is reflected in the names of the
 methods: Statis is an abbreviation for a PTA, and Statico performs a CoIA before
 a Statis while Costatis reverses the order.
 
+\subsection{Reduced-rank regression}
+\label{subsec:label}
+
+Reduced-rank regression is an approach to multiresponse regression which pools
+information across responses \citep{izenman1975reduced, mukherjee2011reduced}.
+Compared This pooling can lead to meaningful performance improvements. Further,
+we will see that the reduced-rank estimates can aid interpretation as well.
+
+Suppose we have collected $p_{1}$ responses and $p_{2}$ features across $n$
+samples, $y_{i} \in \reals^{p_{1}}$ and $x_{i} \in \reals^{p_{2}}$,
+respectively. Our goal is to use this training data to predict the response
+$y^{\ast}$ given the $x^{\ast}$ from a new sample. Arrange these data into two
+matrices, $Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times p_{2}}$.
+
+The simplest approach to this problem is to fit a coefficient matrix $B \in
+\reals^{p_{2} \times p_{1}}$ relating the $p_{2}$ features to the $p_{1}$
+response coordinates by minimizing $\|Y - XB\|_{F}^{2}$. A slight modification
+supposes that the responses might be correlated, and instead optimizes a
+whitened version of the problem\footnote{This can also be viewed as using a
+  Mahalanobis metric.}, $\|\left(Y -
+XB\right)\hat{\Sigma}_{YY}^{-\frac{1}{2}}\|_{F}^{2}$
+
+The optimal $B$ for these two approaches are $\left(X^{T}X\right)^{-1}X^{T}Y$
+and $\left(X^{T}\hat{\Sigma}_{YY} X\right)^{-1}X^{T}\hat{\Sigma}_{YY}Y$
+respectively. These simply concatenate coefficients from $p_{1}$ independent
+(weighted) linear regressions, one per response dimension.
+
+This is not a very satisfactory solution, because we would have hoped to share
+information across the different response dimensions: we should be able to
+improve performance compared to the univariate regressions. Towards this goal,
+consider that while there may be $p_{1}$ responses, their effective dimension
+may be relatively low. Reduced-rank regression formalizes this with an explicit
+constraint on the rank of $B$, defined by an estimate $\hat{B}^{\text{rr}}$ by
+the optimal value of
+\begin{align}
+\text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} &\|\left(Y - XB\right)\Sigma_{YY}^{-\frac{1}{2}}\|_{F}^{2} \label{eq:rr_obj}\\
+\text{such that } &\text{ rank}\left(B\right) \leq K,
+\end{align}
+for some $K < p_{1}\wedge p_{2}$.
+
+The optimal value is given by $\hat{B}^{\text{ols}}V_{K}V_{K}^{-}$, where the
+columns of $V_{K}$ are the top $K$ response CCA directions and $V_{K}^{-}$
+denotes their pseudoinverse. The derivation is provided in Supplementary Section
+\ref{subsec:reduced_rank_derivation}.
+
+Similarly, we can view directly $\hat{Y}^{\text{rr}} = X\hat{B}^{\text{rr}} =
+P_{X}YV_{k}V_{k}^{-}$, which means that the reduced-rank fits can be obtained by
+first projecting the data columns of $Y$ onto the top $K$ response canonical
+directions, and then projecting these pooled $Y$ onto the span of $X$. If the
+$Y$ had not been pooled, then the projection onto the span of the $X$'s is
+exactly the independent linear regressions approach described above.
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
@@ -1054,5 +1105,66 @@ X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
     l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
   X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
     X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
+
+\subsection{Derivation of Reduced Rank Solution}
+\label{subsec:reduced_rank_derivation}
+
+Consider the data and parameters in the whitened space, $Y^{\ast} =
+Y\hat{\Sigma}_{YY}^{-\frac{1}{2}}$ and $B^{\ast} =
+B\hat{\Sigma}_{YY}^{-\frac{1}{2}}$, and rewrite the objective \ref{eq:rr_obj} as
+\begin{align*}
+\|Y^{\ast} - XB^{\ast}\|_{F}^{2} &= \|Y^{\ast} - \hat{Y}^{\ast \text{ols}}\|_{F}^{2} + \|\hat{Y}^{\ast \text{ols}} - XB^{\ast}\|_{F}^{2},
+\end{align*}
+where we used the fact that the residuals are orthogonal to the column space of
+$X$ to remove the cross term. The first term does not involve $B^{\ast}$, so we
+can focus on minimizing the second. Consider the SVD $\hat{Y}^{\ast \text{ols}}
+= \dot{U}\dot{D}\dot{V}^{T}$. We know that the matrix $A$ of rank $K$ that
+minimizes $\|\hat{Y}^{\ast \text{ols}} - A\|_{F}^{2}$ is $A =
+\dot{U}_{K}\dot{D}_{K}\dot{V}_{K}^{T} = Y^{\ast
+  \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}$, the truncated SVD of $\hat{Y}^{\ast
+  \text{ols}}$, or alternatively its projection onto the top $K$ right
+eigenvectors.
+
+In particular, any matrix $B$ that satisfies
+\begin{align*}
+  XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
+\end{align*}
+solves the reduced rank regression problem, so we can choose
+\begin{align*}
+  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}, \label{eq:brr_coef}
+\end{align*}
+which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
+$V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
+$\hat{Y}^{\ast \text{ols}}$.
+
+There is an interesting connection between this fit and the response canonical
+directions of $\hat{Y}$. In particular, consider the eigendecomposition that
+follows from the earlier SVD,
+\begin{align}
+\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \\
+&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right) \\
+  &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
+\end{align}
+
+Recall that the response canonical directions $V$ are derived by taking the SVD
+of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
+\tilde{U}\tilde{D}\tilde{V}^{T}$ and setting $V =
+\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
+\ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
+which the CCA response directions are derived are equal to the eigenvectors of
+the cross-products of the OLS fits in the whitened space. In particular, we can
+write,
+\begin{align*}
+\hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y V_{K} \Sigma_{YY}^{\frac{1}{2}}V_{K}^{T} \\
+&= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
+\end{align*}
+
+Hence, the reduced-rank coefficients are just the projection of
+the original OLS coefficients onto the subspace spanned by the top $K$ response
+canonical directions.
+
 
 \end{document}
