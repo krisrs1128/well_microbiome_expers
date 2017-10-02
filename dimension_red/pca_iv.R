@@ -2,18 +2,18 @@
 
 ## File description -------------------------------------------------------------
 ##
-## Illustration of canonical correlation analysis on the body composition and
-## microbiome elements of the WELL-China data.
+## Illustration of PCA-IV on the body composition and microbiome elements of the
+## WELL-China data.
 ##
 ## author: sankaran.kris@gmail.com
-## date: 09/26/2017
+## date: 09/29/2017
 
 library("phyloseq")
 library("tidyverse")
 library("reshape2")
 library("ggrepel")
 library("viridis")
-library("vegan")
+library("ade4")
 source("prep_tables.R")
 source("plot.R")
 
@@ -38,57 +38,61 @@ theme_update(
 )
 
 ###############################################################################
-## read and prepare the data
+## Run PCA-IV
 ###############################################################################
 raw <- read_data()
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
 
-###############################################################################
-## Run and plot CCA on the two (scaled) tables
-###############################################################################
-bc_mat <- scale(processed$bc)
-x_seq <- scale(processed$x_seq)
-cca_res <- CCorA(bc_mat, x_seq)
+K <- 3
+pca_micro <- dudi.pca(
+  scale(processed$x_seq),
+  center = FALSE,
+  scale = FALSE,
+  scan = FALSE,
+  nf = 3
+)
+pcaiv_res <- pcaiv(
+  pca_micro, scale(processed$bc),
+  scan = FALSE,
+  nf = 3
+)
 
-## Plot the loadings
+###############################################################################
+## study equivalent of scores (projections of x and y onto principal axes)
+###############################################################################
+pcaiv_res
+summary(pcaiv_res)
+plot(pcaiv_res)
+
+## correlate columns from both data frames with the principal axes
 loadings <- prepare_loadings(
-  list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
-  c("body_comp", "seq")
+  list(0.001 * pcaiv_res$fa, pcaiv_res$c1),
+    c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
+plot_loadings(loadings, pcaiv_res$eig)
+ggsave("../chapter/figure/pca_iv/loadings.png", width = 4.56, height = 3)
 
-plot_loadings(loadings, cca_res$Eigenvalues) +
-  ylim(-0.5, 0.4) +
-  xlim(-0.9, 0.3)
-ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
-
-## Plot the scores
+## project the samples onto the principal axes
 scores <- prepare_scores(
-  list(cca_res$Cx, cca_res$Cy),
+  list(pcaiv_res$li, pcaiv_res$ls),
   c("body_comp", "seq")
 ) %>%
   left_join(raw$bc)
 
 mscores <- melt_scores(scores)
-plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
-  link_scores(mscores) +
-  scale_color_brewer(palette = "Set1")
-ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
-
-## color by weight
-plot_scores(scores, "Total_FM", "Total FM", cca_res$Eigenvalues) +
+plot_scores(scores, "Total_FM", "Total FM", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_total_fm.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca_iv/scores_total_fm.png", width = 3.56, height = 1.8)
 
-## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$Eigenvalues) +
+plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca_iv/scores_rl_ratio.png", width = 3.56, height = 1.8)
