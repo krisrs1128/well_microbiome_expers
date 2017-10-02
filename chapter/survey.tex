@@ -905,6 +905,35 @@ represented tables.
 \subsection{Statico and Costatis}
 \label{subsec:statico_and_costatis}
 
+In the multivariate ecology literature, it is common to have a pair of data
+cubes, giving species abundances and environmental variables over time,
+respectively. We write these are $Y \in \reals^{n \times p_{1} \times L}$ and $X
+\in \reals^{n \times p_{2} \times L}$. Costatis and Statico are two approaches
+for analyzing such data \cite{thioulouse2011simultaneous}. They are easiest to
+understand as divide-and-conquer approaches, where the general problem of
+analyzing a pair of data cubes is divided into two steps, one designed for analyzing
+individual cubes, and another for studying covariation across tables. In Statico, the paired
+aspect of the data is dealt with first and followed by a data cube analysis,
+while in Costatis, that order is reversed.
+
+Specifically, in Statico, an empirical cross-covariance matrix is constructed at
+each time point, $Z^{l} = \frac{1}{n_{l}}Y^{T}_{\cdot\cdot l}X_{\cdot \cdot l}$.
+For example, this is, the correlation between the environmental variables and
+species counts at a specific timepoint $l$. The $L$ matrices $Z^{(l)}$ are then
+input into a PTA, yielding a compromise table $Z_{c}$ which can then be studied
+with PCA.
+
+Alternatively, in Costatis, a compromise table is constructed for each of the
+data cubes $Y$ and $X$, using PTA. Call these $Y_{c}$ and $X_{c}$. These are now
+two matrices each with $n$ rows, and so can be analyzed by any two-table
+dimension reduction method. In Costatis, the standard is to apply CoIA to the
+pair $Y_{c}, X_{c}$.
+
+Hence, we see that the only difference between these methods is the order
+between the CoIA and the PTA. Indeed, this is reflected in the names of the
+methods: Statis is an abbreviation for a PTA, and Statico performs a CoIA before
+a Statis while Costatis reverses the order.
+
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
