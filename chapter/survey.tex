@@ -1130,19 +1130,19 @@ In particular, any matrix $B$ that satisfies
   XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
 \end{align*}
 solves the reduced rank regression problem, so we can choose
-\begin{align*}
+\begin{align}
   \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}, \label{eq:brr_coef}
-\end{align*}
+\end{align}
 which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
 $V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
 $\hat{Y}^{\ast \text{ols}}$.
 
-There is an interesting connection between this fit and the response canonical
-directions of $\hat{Y}$. In particular, consider the eigendecomposition that
-follows from the earlier SVD,
+There is a connection between this fit and the response canonical directions of
+$\hat{Y}$. In particular, consider the eigendecomposition that follows from the
+earlier SVD,
 \begin{align}
-\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \\
-&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right) \\
+\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \nonumber \\
+&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)\nonumber \\
   &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
 \end{align}
 
@@ -1152,8 +1152,7 @@ of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
 \Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
 \ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
 which the CCA response directions are derived are equal to the eigenvectors of
-the cross-products of the OLS fits in the whitened space. In particular, we can
-write,
+the cross-products of the OLS fits in the whitened space. Hence,
 \begin{align*}
 \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
 &= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
@@ -1162,9 +1161,9 @@ write,
 &= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
 \end{align*}
 
-Hence, the reduced-rank coefficients are just the projection of
-the original OLS coefficients onto the subspace spanned by the top $K$ response
-canonical directions.
+Therefore, the reduced-rank coefficients are just the projection of the original
+OLS coefficients onto the subspace spanned by the top $K$ response canonical
+directions.
 
 
 \end{document}
