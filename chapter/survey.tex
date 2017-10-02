@@ -60,7 +60,8 @@ for 16s sequencing and metabolomic analysis. To date, 16s sequencing data is
 available for 221 of these participants. Evidently, various interesting
 relational questions can be investigated using this data source.
 
-For the purpose of illustration, we focus on one relatively focused question
+For the purpose of illustration, we focus on one relatively focu
+sed question
 that can be addressed using this data: How is the distribution of lean and fat
 mass across the body related to patterns of microbial abundance? The measurement
 types most relevant in this analysis are (1) DEXA scans and (2) 16s sequencing.
@@ -809,10 +810,35 @@ span of the PCA-IV subspace, justifying geometric picture.
 \subsubsection{Example}
 \label{subsec:pcaiv_example}
 
+Continuing our tour of methods applied to the WELL-China data, we now illustrate
+results from PCA-IV. The idea of scores and loadings requires some
+clarification. By PCA-IV scores, we mean the coordinates of projections $z_{i}$
+of samples onto the subspace defined by $V$, and by loadings, we mean the
+correlation between columns\footnote{Geometrically, the angle between original
+  columns and the subspace, in the sense of Figure \ref{fig:pca_iv_geometry}.}
+of $X$ and $Y$ with the PCA-IV axes defining $V$.
+
+We find that the scores, displayed in Supplementary Figures
+\ref{fig:pca_iv_geometry} are similar to those that found by the combined-PCA of
+Section \ref{subsec:pca}. One possible explanation for this behavior is that the
+PCA-IV generalized SVD of $X$ is similar to an ordinary PCA of $X$, and that in
+the combined-PCA of $\left[Y, X\right]$, the fact that $X$ has many more columns
+than $Y$ means that the result is similar to a PCA on $X$ alone.
+
+The loadings are given in Figure \ref{fig:pca_iv_loadings}. Interpretation of
+the species loadings is simple, since species seem well separated by taxa.
+Interpretation of the body composition variables is less clear -- pairs of
+variables that would be expected to be near to one another are not, in many
+cases. Indeed, \texttt{Trunk\_FM} and \texttt{L\_Total\_FM} would be expected to
+have a small angle between one another, but they do not.
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
-  \caption{\label{fig:pca_iv_loadings} }
+  \caption{The loadings for PCA-IV can be interpreted like loadings from
+    previous methods. The relationship between variables seems more reasonable
+    than in CCA, but are only indirectly related to covariation across
+    tables. \label{fig:pca_iv_loadings} }
 \end{figure}
 
 \subsection{Partial Triadic Analysis}
@@ -876,6 +902,10 @@ direction $X^{(1)}$. In this sense, $X_{c}$ is different from the
 naive-average $\overline{X}$ -- it upweights more highly
 represented tables.
 
+\subsection{Statico and Costatis}
+\label{subsec:statico_and_costatis}
+
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
@@ -927,13 +957,18 @@ represented tables.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/scores_total_fm}
-  \caption{\label{fig:pca_iv_scores_total_fm} }
+  \caption{We can display the scores obtained by PCA-IV. The results are similar
+    to those from combined-PCA, which is not surprising, since they are related
+    to the PCA based only on microbial
+    abundances. \label{fig:pca_iv_scores_total_fm} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
-  \caption{\label{fig:pca_iv_scores_rl_ratio} }
+  \caption{This provides the same scores as Figure
+    \ref{fig:pca_iv_scores_total_fm}, but shaded by Ruminoccoccaceae vs.
+    Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
 \end{figure}
 
 \subsection{Derivation details for PCA-IV}

@@ -66,7 +66,7 @@ plot(pcaiv_res)
 
 ## correlate columns from both data frames with the principal axes
 loadings <- prepare_loadings(
-  list(0.005 * pcaiv_res$fa, pcaiv_res$c1),
+  list(0.001 * pcaiv_res$fa, pcaiv_res$c1),
     c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
