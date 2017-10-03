@@ -107,3 +107,16 @@ stan_data <- list(
 
 m <- stan_model("lda_cca.stan")
 stan_fit <- vb(m, data = stan_data)
+
+
+###############################################################################
+## Inspect results
+###############################################################################
+samples <- rstan::extract(stan_fit)
+xi_s_hat <- apply(samples$xi_s, c(2, 3), mean)
+Bx_hat <- apply(samples$Bx, c(2, 3), mean)
+
+## seems to work!!
+plot(xi_s_hat[, 1], theta$xi_s[, 1])
+plot(xi_s_hat[, 2], theta$xi_s[, 2])
+plot(Bx_hat[, 2], theta$Bx[, 2])
