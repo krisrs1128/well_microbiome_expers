@@ -25,12 +25,15 @@ matnorm <- function(n, p, mu = 0, sigma = 1) {
 }
 
 #' Simulate parameters used in LDA + CCA model
-simulate_parameters <- function(n = 100, N = 1000, p1 = 200, p2 = 30, K = 1,
-                                L1 = 2, L2 = 2) {
+simulate_parameters <- function(n = 100, N = 1000, p1 = 200, p2 = 30, K = 2,
+                                L1 = 3, L2 = 3) {
   list(
     "n" = n,
     "p1" = p1,
     "p2" = p2,
+    "K" = as.integer(K),
+    "L1" = as.integer(L1),
+    "L2" = as.integer(L2),
     "N" = 1000,
     "xi_s" = matnorm(n, K),
     "xi_x" = matnorm(n, L1),
@@ -81,3 +84,26 @@ heatmap(cormat)
 ###############################################################################
 ## use Rstan model
 ###############################################################################
+m <- stan_model("lda_cca.stan")
+
+stan_data <- list(
+  "n" = theta$n,
+  "p1" = theta$p1,
+  "p2" = theta$p2,
+  "K" = theta$K,
+  "L1" = theta$L1,
+  "L2" = theta$L1,
+  "sigma" = theta$sigma,
+  "tau" = 5,
+  "x" = sim$X,
+  "y" = sim$Y,
+  "id_y" = diag(theta$p2),
+  "id_k" = diag(theta$K),
+  "id_l1" = diag(theta$L1),
+  "id_l2" = diag(theta$L2),
+  "zeros_k" = rep(0, theta$K),
+  "zeros_l1" = rep(0, theta$L1),
+  "zeros_l2" = rep(0, theta$L2)
+)
+
+stan_fit <- vb(m, data = stan_data)
