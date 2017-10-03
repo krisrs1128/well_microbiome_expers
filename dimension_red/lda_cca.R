@@ -32,13 +32,13 @@ simulate_parameters <- function(n = 100, N = 1000, p1 = 200, p2 = 30, K = 1,
     "p1" = p1,
     "p2" = p2,
     "N" = 1000,
-    "z" = matnorm(n, K),
+    "xi_s" = matnorm(n, K),
     "xi_x" = matnorm(n, L1),
     "xi_y" = matnorm(n, L2),
-    "A" = matnorm(p1, K),
-    "B" = matnorm(p2, K),
-    "C" = matnorm(p1, L2),
-    "D" = matnorm(p2, L1),
+    "Bx" = matnorm(p1, K),
+    "By" = matnorm(p2, K),
+    "Wx" = matnorm(p1, L2),
+    "Wy" = matnorm(p2, L1),
     "sigma" = 0.2
   )
 }
@@ -50,8 +50,8 @@ softmax <- function(x) {
 
 #' Simulate from LDA + CCA model
 simulate_data <- function(theta) {
-  mu_x <- theta$z %*% t(theta$A) + theta$xi_x %*% t(theta$C)
-  mu_y <- theta$z %*% t(theta$B) + theta$xi_y %*% t(theta$D)
+  mu_x <- theta$xi_s %*% t(theta$Bx) + theta$xi_x %*% t(theta$Wx)
+  mu_y <- theta$xi_s %*% t(theta$By) + theta$xi_y %*% t(theta$Wy)
 
   X <- matrix(nrow = theta$n, ncol = theta$p1)
   Y <- matrix(nrow = theta$n, ncol = theta$p2)
@@ -77,3 +77,7 @@ sim <- simulate_data(theta)
 plot(sim$X[, 121], sim$Y[, 11])
 cormat <- cor(sim$X, sim$Y)
 heatmap(cormat)
+
+###############################################################################
+## use Rstan model
+###############################################################################
