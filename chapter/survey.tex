@@ -1237,4 +1237,127 @@ another that is an arbitrary linear combination of a table-specific
 latent variable. The shared feature $\xi^{s}$ is the object of
 interest, and is what PLS implictly estimates.
 
+\subsection{CCpnA}
+\label{subsec:canonical-correspondence}
+
+CCpnA is a method, originally developed in ecology, useful for joint analysis of
+count and continuous data. The canonical application has a site by species count
+matrix $Y \in \reals^{n \times p_{1}}$ and an environmental features matrix $X
+\in \reals^{n \times p_{2}}$ (e.g., historical rainfall and temperature
+measurements). The scientific goal might be to identify species that are more
+abundant in sites with more rainfall or higher temperature. If these
+environmental variables were uncorrelated, it would be enough to fit a separate
+regression to each; this however is rarely the case, motivating the development
+for CCpnA.
+
+CCpnA produces low-dimensional representations for both the rows and columns of
+$Y$ (the sites and species), along with latent subspaces on which these
+representations are defined. Algorithmically, CCpnA first constructs the
+following matrices, where $1_{r}$ denotes a column vector of $r$ ones,
+\begin{enumerate}
+  \item An overall frequency matrix,
+    \begin{align*}
+      F = \frac{1}{n_{\cdot\cdot}^{(1)}} Y,
+  \end{align*}
+  where $n_{\cdot\cdot}^{(1)}$ is the sum of all counts in matrix
+  $Y$.
+\item A diagonal matrix of row (site) proportions,
+  \begin{align*}
+    D_{r} &= diag\left(F 1_{p_{1}}\right) \in \reals^{n \times n}.
+  \end{align*}
+\item A diagonal matrix of column (species) proportions,
+  \begin{align*}
+    D_{c} &= diag\left(F^{T}1_{n}\right) \in \reals^{p_{1} \times p_{1}}.
+  \end{align*}
+\item A projection onto the columns of the environmental matrix
+  $X$, reweighting sites according to their species counts,
+  \begin{align*}
+    P_{X} &= D_{r}^{\frac{1}{2}}X\left(X^{T}D_{r}X\right)^{-1}X^{T}D_{r}^{\frac{1}{2}} \in
+  \reals^{n \times n}.
+\end{align*}
+\end{enumerate}
+
+With this notation, compute an SVD,
+\begin{align*}
+D_{r}^{-\frac{1}{2}}\left(F - F 1_{p}1_{p}^{T}F\right)D_{c}^{-\frac{1}{2}}P_{X}
+= UDV^{T},
+\end{align*}
+and define row and column scores $Z$ and $Q$ by
+\begin{align}
+  Z &= D_{r}^{-\frac{1}{2}} UD \\
+  Q &= D_{c}^{-\frac{1}{2}}V^{T}D.
+\end{align}
+
+There are several ways to interpret this procedure. CCpnA was originally
+proposed as the solution to a fixed-point iteration called reciprocal averaging
+\citep{ter1986canonical}l. Later, \citep{greenacre1987geometric,
+  greenacre1984theory}, provided a geometric view and \cite{zhu2005constrained}
+gave an exact probabilistic interpretation.
+
+The intuition for the reciprocal averaging procedure is simple: the
+scores for different sites should be a weighted average of the species
+scores, with larger weights for the species that are more common at
+those sites. That is,
+\begin{align}
+  z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\
+  q_{j} \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
+\end{align}
+or, in matrix form,
+\begin{align}
+Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\
+Q \propto \diag\left(F^{T} 1_{n}\right)^{-1} P.
+\end{align}
+This formulation suggests a method to obtain $Z$ and $Q$ -- arbitrarily
+initialize one and iterate these calculations until convergence.
+
+As is, this is not yet the setup that yields CCpnA\footnote{It in fact gives the
+  solution to the Correspondence Analysis problem (the similarity is the reason
+  for the name Canonical \textit{Correspondence Analysis}).} -- it doesn't use
+information in the environmental table $X$. To recover CCpnA, a projection step
+needs to be inserted before the calculation of row scores,
+\begin{enumerate}
+\item Arbitrarily initialize $Z$.
+\item While not converged,
+\begin{enumerate}
+\item Solve $Q^{\prime} \propto \diag\left(F^{T}1_{n}\right)^{-1}F^{T}Z$.
+\item Project $Q = P_{X^{(2)}}Q^{\prime}$.
+\item Solve $Z \propto \diag\left(Z 1_{p}\right)^{-1} F Q^{T}$.
+\end{enumerate}
+\end{enumerate}
+
+The fixed point of this iteration is the previously described CCpnA solution.
+
+A second interpretation, is due to \citep{zhu2005constrained}. Suppose first
+that we are only interested in a one-dimensional score for rows and columns. Let
+$\alpha$ be a latent environmental gradient, for example, between warm-dry and
+cold-wet sites. For each of the $p_{1}$ species, define a normal density over
+the environmental variables, $f_{j}\left(x_{i}\right) =
+\Gsn_{p^{(2)}}\left(\mu_{j}, \Sigma_{j}\right)$. The mode of this density
+represents the preferred environmental conditions for species $j$. Next, project
+these densities onto the environmental gradient, giving a univariate
+$f_{j}^{\alpha}\left(z_{i}\right) = \Gsn\left(\alpha^{T}\mu_{j}, \alpha^{T}
+\Sigma_{j}\alpha\right)$ for each species. The $z_{i}$'s represent the scores
+for species $i$ along the environmental gradient $\alpha$.
+
+The generative model views species-site pairs one at a time. For each pair
+involving site $i$ and species $j$, draw a score according to
+$f_{j}^{\alpha}\left(z_{i}\right)$. That is, for each site $i$, draw a species
+according to a $p_{1}$-class LDA model.
+
+To use this idea to compute scores, we need to estimate the environmental
+gradient $\alpha$, which is also of interest in its own right. This is done by
+supposing equal covariances across species, $\Sigma_{j} = \Sigma$ for all $j$,
+and finding the $\hat{\alpha}$ maximizing the between vs. total variance across
+species,
+\begin{align*}
+  \frac{\alpha^{T} \Sigma_{B} \alpha}{\alpha^{T} \Sigma \alpha},
+\end{align*}
+where
+\begin{align*}
+  \Sigma_{B} = \sum_{j = 1}^{p_{1}} f_{\cdot j}\left(\mu_{j} -
+    \bar{\mu}\right)\left(\mu_{j} - \bar{\mu}\right)^{T}.
+\end{align*}
+Estimating $\hat{\alpha}$ in this way and writing $z_{i} =
+\hat{\alpha}^{T}x_{i}$ gives the original site scores from CCpnA.
+
 \end{document}
