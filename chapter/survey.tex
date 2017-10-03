@@ -1165,5 +1165,76 @@ Therefore, the reduced-rank coefficients are just the projection of the original
 OLS coefficients onto the subspace spanned by the top $K$ response canonical
 directions.
 
+\section{Modern multivariate methods}
+
+Compared to classical approaches, modern multivariate methods are typically
+designed for more the high-dimensional, heterogeneous settings. The two methods
+reviewed in this section are examples of this trend: Partial Least Squares (PLS)
+is well-suited for high-dimensional response matrices, while Canonical
+Correspondence Analysis (CCpnA) was facilitates joint analysis of the
+heterogeneous continuous / count data necessary to answer questions in ecology.
+Unlike traditional statistical methods, neither approach is explicitly
+model-based, and both are iterative, requiring more extensive computation than
+earlier techniques.
+
+\subsection{PLS}
+\label{sec:PLS}
+
+PLS sequentially derives a set of mutually orthogonal features
+$\left(z_{k}\right)_{k = 1}^{K}$ that characterizes the relationship between two
+tables, $Y$ and $X$ \citep{wold1985partial}. To obtain the first PLS direction,
+$z_{1}$, compute the first left singular vector $u_{1}$ of the cross-covariance
+matrix between the two tables, $\hat{\Sigma}_{YX} = \frac{1}{n}Y^{T}X$. Then,
+for each of the $p_{2}$ columns of $X$, compute the univariate (i.e., partial)
+regression coefficient $\hat{\varphi}_{j}$ from the model $u_{1i} = \alpha_{0j}
++ \varphi_{j}x_{ij}$, for $i = 1, \dots, j_{1}$. The first PLS direction is
+defined as $z_{1} = X\hat{\varphi}_{1}$. To generate subsequent directions,
+orthogonalize both $Y$ and $X$ with respect to the current directions, and
+repeat the process.
+
+This procedure is appealing because, like PCA, it reduces a potentially
+high-dimensional matrix $X$ with many correlated columns into a
+smaller set of orthogonal directions. Moreover, it achieves this
+reduction in a way that accounts for correlation with columns in
+$Y$: columns of $X$ that are uncorrelated with $Y$
+will have no contribution to the PLS directions, even if they account
+for a large proportion of variation in $X$.
+
+We have stated the procedure in the form it was originally proposed, but this
+algorithmic description is difficult to understand geometrically or
+probabilistically. However, statistical interpretations have since been
+developed. \citep{frank1993statistical} and \citep{stone1990continuum} studied
+the case where $p_{1} = 1$, so $y$ is a single column vector. By assuming that
+the rows of $y$ and $X$ are drawn i.i.d. from distributions $\P^{y}$ and
+$\P^{X}$, they found that the $k^{th}$ PLS direction $z_{k}$ is the $z$ that
+solves the optimization
+\begin{align*}
+\maximize_{z} & \Corrsubarg{\P^{X} \times \P^{y}}{x_{i}^{T}z_{k},
+y_{i}}\Varsubarg{\P^{X}}{z^{T}x_i} \\
+\text{such that }&z^{T}y^{T}y z_{j} = 0 \text{ for all }j
+\leq k - 1 \text{ and }
+\|z\| = 1.
+\end{align*}
+If the covariance term is omitted, the optimization is identical to the maximum
+variance problem that gives the principal component directions based on $X$.
+This formulation makes precise the idea that PLS is a version of principal
+components that accounts for correlation with $Y$.
+
+An alternative interptetation, due to \citep{gustafsson2001probabilistic}, is
+that PLS fits a particular latent variable model. Suppose $\xi_{i} =
+\left(\xi_{i}^{s}, \xi_{i}^{X}\right)$ are drawn i.i.d. from a $K_{1} + K_{2} =
+K$ dimensional spherical normal. PLS assumes the observed tables $Y$ and $X$
+have rows drawn i.i.d. from
+\begin{align*}
+y_{i} \mid \xi_{i} \sim \Gsn\left(W_{Y}\xi_{i}^{s} +
+\mu_{Y}, \sigma^{2}I_{p_{1}}\right) \\
+x_{i} \mid \xi_{i} \sim \Gsn\left(W_{X} \xi_{i}^{s} + B_{X}\xi_{i}^{X} +
+\mu_{X}, \sigma^{2}I_{p_{2}}\right).
+\end{align*}
+That is, each table is the sum of two components, one that is a
+table-specific linear combination is a shared latent variable, and
+another that is an arbitrary linear combination of a table-specific
+latent variable. The shared feature $\xi^{s}$ is the object of
+interest, and is what PLS implictly estimates.
 
 \end{document}
