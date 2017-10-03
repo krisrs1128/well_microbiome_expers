@@ -84,7 +84,6 @@ heatmap(cormat)
 ###############################################################################
 ## use Rstan model
 ###############################################################################
-m <- stan_model("lda_cca.stan")
 
 stan_data <- list(
   "n" = theta$n,
@@ -106,4 +105,5 @@ stan_data <- list(
   "zeros_l2" = rep(0, theta$L2)
 )
 
+m <- stan_model("lda_cca.stan")
 stan_fit <- vb(m, data = stan_data)

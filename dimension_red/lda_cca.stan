@@ -29,10 +29,10 @@ data {
 
 parameters {
   matrix[n, K] xi_s;
-  matrix[n, K] xi_x;
-  matrix[n, K] xi_y;
-  matrix[p1, K] Wx;
-  matrix[p2, K] Wy;
+  matrix[n, L1] xi_x;
+  matrix[n, L2] xi_y;
+  matrix[p1, L1] Wx;
+  matrix[p2, L2] Wy;
   matrix[p1, K] Bx;
   matrix[p2, K] By;
 }
