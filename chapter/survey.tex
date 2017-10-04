@@ -413,10 +413,10 @@ $\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
 optimization \label{eq:cancor_emp} can now be expressed as
 \begin{align}
   \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
-    \reals^{p_{2}}}
+    \reals^{p_{2}} 
   &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
-\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \\
-&\|\tilde{v}\|_{2}^{2} = 1.
+\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber \\
+&\|\tilde{v}\|_{2}^{2} = 1. \nonumber
 \end{align}
 The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
 well known -- they're exactly the first left and right eigenvectors of
@@ -643,7 +643,7 @@ between CoIA and CCA is responsible for this difference.
 \label{subsec:mfa}
 
 MFA gives an alternative approach to producing scores and relating features
-across multiple tables\citep{pages2014multiple}. It can be understood as a
+across multiple tables \citep{pages2014multiple}. It can be understood as a
 reed version of the concatenated PCA described in Section \ref{subsec:pca}
 that res tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
@@ -660,7 +660,7 @@ way as those from PCA -- the MFA directions still specify the
 relationship between measured features, and the position of each
 sample's projection describes the relative  of each feature for
 that sample. Moreover, MFA gives a way of comparing full tables to
-each other, called a ``canonical analysis'' \cite{pages2004multiple}. A
+each other, called a ``canonical analysis'' \citep{pages2004multiple}. A
 $K$-dimensional representation of the $l^{th}$ group is given by
 \begin{align*}
 \left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots,
@@ -688,8 +688,8 @@ regression setting \citep{rao1964use}. It can also be viewed as a version of PCA
 that chooses a dimension reduction of $X$ depending on its ability to predict
 $Y$. In this sense, it anticipates methods like Partial Least Squares (PLS),
 Canonical Correspondence Analysis (CCpnA), the Curds \& Whey procedure, and
-various approaches to multitask learning, which are described in Sections
-\ref{subsec:PLS}, \ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
+multitask learning, which are described in Sections \ref{subsec:PLS},
+\ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
 \ref{subsec:multitask}, respectively.
 
 Formally, suppose we are predicting $y_{i} \in \reals^{p_{1}}$ from $x_{i} \in
@@ -953,7 +953,7 @@ The simplest approach to this problem is to fit a coefficient matrix $B \in
 response coordinates by minimizing $\|Y - XB\|_{F}^{2}$. A slight modification
 supposes that the responses might be correlated, and instead optimizes a
 whitened version of the problem\footnote{This can also be viewed as using a
-  Mahalanobis metric.}, $\|\left(Y -
+  Mahalanobis distance.}, $\|\left(Y -
 XB\right)\hat{\Sigma}_{YY}^{-\frac{1}{2}}\|_{F}^{2}$
 
 The optimal $B$ for these two approaches are $\left(X^{T}X\right)^{-1}X^{T}Y$
@@ -970,7 +970,7 @@ constraint on the rank of $B$, defined by an estimate $\hat{B}^{\text{rr}}$ by
 the optimal value of
 \begin{align}
 \text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} &\|\left(Y - XB\right)\Sigma_{YY}^{-\frac{1}{2}}\|_{F}^{2} \label{eq:rr_obj}\\
-\text{such that } &\text{ rank}\left(B\right) \leq K,
+\text{such that } &\text{ rank}\left(B\right) \leq K, \nonumber
 \end{align}
 for some $K < p_{1}\wedge p_{2}$.
 
@@ -999,7 +999,7 @@ model-based, and both are iterative, requiring more extensive computation than
 earlier techniques.
 
 \subsection{PLS}
-\label{sec:PLS}
+\label{subsec:PLS}
 
 PLS sequentially derives a set of mutually orthogonal features
 $\left(z_{k}\right)_{k = 1}^{K}$ that characterizes the relationship between two
@@ -1084,11 +1084,11 @@ following matrices, where $1_{r}$ denotes a column vector of $r$ ones,
   $Y$.
 \item A diagonal matrix of row (site) proportions,
   \begin{align*}
-    D_{r} &= diag\left(F 1_{p_{1}}\right) \in \reals^{n \times n}.
+    D_{r} &= \diag\left(F 1_{p_{1}}\right) \in \reals^{n \times n}.
   \end{align*}
 \item A diagonal matrix of column (species) proportions,
   \begin{align*}
-    D_{c} &= diag\left(F^{T}1_{n}\right) \in \reals^{p_{1} \times p_{1}}.
+    D_{c} &= \diag\left(F^{T}1_{n}\right) \in \reals^{p_{1} \times p_{1}}.
   \end{align*}
 \item A projection onto the columns of the environmental matrix
   $X$, reweighting sites according to their species counts,
@@ -1104,10 +1104,10 @@ D_{r}^{-\frac{1}{2}}\left(F - F 1_{p}1_{p}^{T}F\right)D_{c}^{-\frac{1}{2}}P_{X}
 = UDV^{T},
 \end{align*}
 and define row and column scores $Z$ and $Q$ by
-\begin{align}
+\begin{align*}
   Z &= D_{r}^{-\frac{1}{2}} UD \\
   Q &= D_{c}^{-\frac{1}{2}}V^{T}D.
-\end{align}
+\end{align*}
 
 There are several ways to interpret this procedure. CCpnA was originally
 proposed as the solution to a fixed-point iteration called reciprocal averaging
@@ -1119,15 +1119,15 @@ The intuition for the reciprocal averaging procedure is simple: the
 scores for different sites should be a weighted average of the species
 scores, with larger weights for the species that are more common at
 those sites. That is,
-\begin{align}
+\begin{align*}
   z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\
   q_{j} \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
-\end{align}
+\end{align*}
 or, in matrix form,
-\begin{align}
+\begin{align*}
 Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\
 Q \propto \diag\left(F^{T} 1_{n}\right)^{-1} P.
-\end{align}
+\end{align*}
 This formulation suggests a method to obtain $Z$ and $Q$ -- arbitrarily
 initialize one and iterate these calculations until convergence.
 
@@ -1184,7 +1184,6 @@ Estimating $\hat{\alpha}$ in this way and writing $z_{i} =
 \subsection{Kernel CCA}
 \label{subsec:kernel_cca}
 
-
 Since CCA is based on correlation, it can only summarize linear relationships
 across tables -- KCCA is a modification that is sensitive to nonlinear
 associations \citep{akaho2006kernel, bach2003kernel, lanckriet2004statistical}.
@@ -1210,21 +1209,20 @@ products, $z_{i}\left(u\right) = \left<u, x_{i}\right>$ and $z_{i}\left(v\right)
 = \left<v, y_{i}\right>$,
 \begin{align}
   \argmax_{u \in H^{X}, v \in H^{Y}}
-  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} \\
-\text{subject to } &\Varsubarg{P^{X}}{z_{i}\left(u\right)} &=
-\Varsubarg{P^{Y}}{z_{i}\left(v\right)} = 1. \label{eq:optim_kcca}
+  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} \label{eq:optim_kcca}\\
+\text{subject to } &\Varsubarg{P^{X}}{z_{i}\left(u\right)} = \Varsubarg{P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
 \end{align}
 
-As is, the problem is not well-posed, and it is necessarily to
-regularize. The regularized Lagrangian associated with the
-optimization \ref{eq:optim_kcca} is
-\begin{align*}
-  \Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
+As is, the problem is not well-posed, and it is necessarily to regularize. The
+regularized Lagrangian associated with the optimization \ref{eq:optim_kcca} is
+\begin{align}
+  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
   \frac{\rho^{X}}{2}\Varsubarg{P^{X}}{z_{i}\left(u\right)} -
-  \frac{\rho^{Y}}{2}\Varsubarg{P^{Y}}{z_{i}\left(v\right)} +
-  \frac{\lambda^{X}}{2}Pen\left(u\right) +
-  \frac{\lambda^{(Y)}}{2}Pen\left(v\right) \label{eq:lagrangian_kcca}
-\end{align*}
+  \frac{\rho^{Y}}{2}\Varsubarg{P^{Y}}{z_{i}\left(v\right)} + \label{eq:lagrangian_kcca}\\
+  &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right) + \frac{\lambda^{(Y)}}{2}\text{Pen}\left(v\right), \nonumber
+\end{align}
+where $\text{Pen}\left(x\right)$ is some regularizer, the $\ell^{1}$ or
+$\ell^{2}$ norm, for example.
 
 The optimal $u$ and $v$ must lie in the spans of
 $\left(\varphi^{X}\left(x_{i}\right)\right)_{i =1 }^{n}$ and
@@ -1235,11 +1233,12 @@ objective. Therefore,
 u &= \Phi^{X} \alpha^{X} \\
 v &= \Phi^{Y} \alpha^{Y},
 \end{align*}
-where $\Phi^{X} \in \reals^{n \times \text{dim}\left(H^{X}\right)}$ has $i^{th}$
-row $\varphi^{Y}\left(x_{i}\right)$ and $\Phi^{Y}$ is defined similarly.
+for some $\alpha^{X}, \alpha^{Y}$, where $\Phi^{X} \in \reals^{n \times
+  \text{dim}\left(H^{X}\right)}$ has $i^{th}$ row
+$\varphi^{Y}\left(x_{i}\right)$ and $\Phi^{Y}$ is defined similarly.
 
 Substituting this into the Lagrangian \ref{eq:lagrangian_kcca}, it becomes clear
-that only the cross-products $\Phi^{X T}\Phi^{X}$, and $\Phi^{Y T}\Phi^{Y}$
+that only the cross-products $\Phi^{X T}\Phi^{X}$ and $\Phi^{Y T}\Phi^{Y}$
 appear. Since these inner products can be written as kernel matrices -- call
 them $K^{X}$ and $K^{Y}$ -- the optimization can be fully expressed in terms of
 kernels, without reference to the original $X$ or $Y$. It can then be shown that
@@ -1264,62 +1263,13 @@ eigenvalue problem,
   \alpha^{(2)}
 \end{pmatrix}.
 \end{align*}
-
-The contribution of \cite{yamanishi2003extraction} was to extend this
-procedure to more than 2 tables. The approach is similar to the idea
-of average pairwise covariance, discussed at the end of Section
-\ref{sec:cca}. Formally, we let $z_{i1}^{(l)} = \left<c^{l},
-x_{i}^{(l)}\right>$ and try to optimize
-
-\begin{align}
-&\sum_{l, l^{\prime} = 1}^{L}\Covsubarg{\P^{(l)} \times \P^{(l^{\prime})}}{z_{i1}^{(l)}, z_{i1}^{(l^{\prime})}} -
-\sum_{l = 1}^{L}\frac{\rho^{(l)}}{2}\Varsubarg{P^{(l)}}{z_{i1}^{(l)}} -
- \sum_{l = 1}^{L} \frac{\lambda^{(1)}}{2}Pen\left(c^{l}\right) \label{eq:lagrangian_mkcca},
-\end{align}
-over different values for the $c^{l}$.
-
-Replacing the inner products $\Phi^{(l)}\Phi^{(l)}$ as before leads to
-an analogous generalized eigenvalue problem,
-\begin{align}
-\begin{pmatrix}
-0 & \dots & K^{(1)}K^{(L)} \\
-\vdots & \ddots & \vdots \\
-K^{(L)}K^{(1)} & \dots  & 0
-\end{pmatrix}
-\begin{pmatrix}
-  \alpha_{1} \\
-  \vdots \\
-  \alpha_{L}
-\end{pmatrix} &=
-\rho \begin{pmatrix}
-  \left(K^{(1)} + \lambda_{1}I_{p_{1}}\right)^{2} & \dots & 0 \\
-  \vdots & \ddots & \vdots \\
-  0 & \dots & \left(K^{(L)} + \lambda_{L}I_{p_{L}}\right)^{2}
-\end{pmatrix}
-\begin{pmatrix}
-  \alpha_{1} \\
-  \vdots \\
-  \alpha_{L}
-\end{pmatrix}
-\end{align}
-whose solution \cite{yamanishi2003extraction}calls ``multiple kernel
-canonical correlation analysis''.
-
 A geometric interpretation of Kernel CCA was described in
-\cite{kuss2003geometry}. The core idea is to translate the Euclidean
-picture associated with CCA to the more general RKHS setting. Often,
-however, KCCA results can be difficult to study, because the only
-output are the scores relating samples (eigenvectors are never
-computed in the Hilbert spaces $H^{X}$ and $H^{Y}$, so it's
-impossible to make a biplot). However, the KCCA scores can be
-interpreted using supplementary features, as in any other
-dimensionality reduction method.
-
-For the record, we note that \cite{lanckriet2004statistical} developed
-a complementary formulation of Kernel CCA.
-
-
-
+\citep{kuss2003geometry}. The core idea is to translate the Euclidean picture
+associated with CCA to the more general RKHS setting. Often, however, KCCA
+results can be difficult to study, because only sample scores are provided.
+Eigenvectors are never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not
+possible to make a biplot. Consequently, KCCA scores are typically interpreted
+using supplementary characteristics of the samples.
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
