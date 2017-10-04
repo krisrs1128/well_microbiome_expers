@@ -61,7 +61,7 @@ perc_label <- function(eigs, i) {
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
 }
 
-plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
+plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
   ggplot(loadings) +
     geom_hline(yintercept = 0, size = 0.5) +
     geom_vline(xintercept = 0, size = 0.5) +
@@ -69,14 +69,15 @@ plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
       data = loadings %>%
         filter(type == "seq"),
       aes(x = Axis.1, y = Axis.2, size = Axis.3, col = family),
-      alpha = 1
+      alpha = a
     ) +
     geom_text_repel(
       data = loadings %>%
         filter(type == "body_comp"),
       aes(x = Axis.1, y = Axis.2, label = variable, size = Axis.3),
       segment.size = 0.3,
-      segment.alpha = 0.5
+      segment.alpha = 0.5,
+      force = 0.05
     ) +
     labs(
       "x" = perc_label(eigs, 1),

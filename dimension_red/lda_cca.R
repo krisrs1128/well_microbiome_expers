@@ -55,9 +55,9 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 bc_mat <- scale(processed$bc)
 
-K <- 3
-L1 <- 3
-L2 <- 3
+K <- 2
+L1 <- 4
+L2 <- 2
 
 stan_data <- list(
   "n" = nrow(bc_mat),
@@ -84,31 +84,40 @@ vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
 pmeans <- parameter_means(posterior)
+for (i in seq_along(pmeans)) {
+  pmeans[[i]] <- cbind(pmeans[[i]], 1) # in case only used 2 dimensions
+}
 
 ###############################################################################
 ## Plot the results
 ###############################################################################
-scv <- scale_color_viridis(guide = guide_colorbar(barwidth = 0.15, ticks = FALSE))
-
+scv <- scale_color_viridis(
+  guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+)
 seq_families <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
 
-## Plot some of the shared scores
+## Plot some of the shared scores and loadings
 plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+
 rownames(pmeans$By) <- colnames(processed$bc)
 rownames(pmeans$Bx) <- colnames(processed$x_seq)
 loadings <- prepare_loadings(
-  list(100 * pmeans$By, pmeans$Bx),
+  list(pmeans$By, pmeans$Bx),
   c("body_comp", "seq")
 ) %>%
   left_join(seq_families)
-loadings[loadings$type == "body_comp", "family"] <- "Body Comp."
 
-plot_loadings(loadings, c(1, 1)) +
+plot_loadings(
+  loadings %>% filter(type == "seq", !is.na(family)),
+  c(1, 1),
+  a = 0.4
+) +
   facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  scale_color_brewer(guide = FALSE) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
+plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
 
 ## now plot unshared scores (species abundances first)
 plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
@@ -117,8 +126,11 @@ plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
 ## Now plot unshared loadings
 rownames(pmeans$Wx) <- colnames(processed$x_seq)
 loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
-  left_join(seq_families)
-plot_loadings(loadings_x, c(1, 1)) +
+  left_join(seq_families) %>%
+  filter(!is.na(family))
+plot_loadings(loadings_x, c(1, 1), a = 0.4) +
+  facet_wrap(~family, ncol = 4) +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
