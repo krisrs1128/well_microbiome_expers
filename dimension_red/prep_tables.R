@@ -22,7 +22,8 @@ merge_default_opts <- function(opts = list()) {
     gender = "Male",
     sf_quantile = 0.95,
     filt_k = 0.5,
-    filt_a = 0
+    filt_a = 0,
+    rlog = TRUE
   )
   modifyList(default_opts, opts)
 }
@@ -47,9 +48,12 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
     left_join(bc) %>%
     left_join(taxa)
 
-  ## normalize with DESeq2
+  ## filter counts
+  seqtab <- seqtab[bc$Number, ]
+  seqtab <- seqtab[bc$gender == opts$gender, ]
   seqtab <- seqtab %>%
     filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
+
   dds <- DESeqDataSetFromMatrix(
     countData = t(get_taxa(seqtab)),
     colData = data.frame("unused" = rep(1, nrow(seqtab))),
@@ -60,15 +64,20 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   ## so, give it a large size factor). Basically related to sequencing depth.
   ##
   ## code copied from here: https://support.bioconductor.org/p/76548/
-  qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
-  sizeFactors(dds) <- qs / exp(mean(log(qs)))
+  if (opts$rlog) {
+    fname <- paste0(c("rlog_data_", opts, ".rda"), collapse = "")
+    fpath <- file.path("..", "data", fname)
+    if (file.exists(fpath)) {
+      dds <- get(load(fpath))
+    } else {
+      qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
+      sizeFactors(dds) <- qs / exp(mean(log(qs)))
+      dds <- rlog(dds, fitType = "local", betaPriorVar = 0.5)
+      save(dds, file = fpath)
+    }
+  }
 
-  ## and the regularized data
-  vsd <- varianceStabilizingTransformation(dds, fitType = "local")
-  x_seq <- t(assay(vsd))
-  x_seq <- x_seq[bc$Number, ]
-  x_seq <- x_seq[bc$gender == opts$gender, ]
-
+  x_seq <- t(assay(dds))
   bc_mat <- data.frame(bc) %>%
     filter(gender == opts$gender) %>%
     select(-id, -gender)
