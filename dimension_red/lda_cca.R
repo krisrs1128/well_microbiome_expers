@@ -17,7 +17,6 @@ library("tidyverse")
 library("reshape2")
 library("ggrepel")
 library("viridis")
-library("vegan")
 source("prep_tables.R")
 source("plot.R")
 
@@ -91,6 +90,10 @@ pmeans <- parameter_means(posterior)
 ###############################################################################
 scv <- scale_color_viridis(guide = guide_colorbar(barwidth = 0.15, ticks = FALSE))
 
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
 ## Plot some of the shared scores
 plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
 rownames(pmeans$By) <- colnames(processed$bc)
@@ -99,11 +102,7 @@ loadings <- prepare_loadings(
   list(100 * pmeans$By, pmeans$Bx),
   c("body_comp", "seq")
 ) %>%
-  left_join(
-    processed$mseqtab %>%
-    select(seq_num, family) %>%
-    unique()
-  )
+  left_join(seq_families)
 loadings[loadings$type == "body_comp", "family"] <- "Body Comp."
 
 plot_loadings(loadings, c(1, 1)) +
@@ -118,21 +117,13 @@ plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
 ## Now plot unshared loadings
 rownames(pmeans$Wx) <- colnames(processed$x_seq)
 loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
-  left_join(
-    processed$mseqtab %>%
-    select(seq_num, family) %>%
-    unique()
-  )
+  left_join(seq_families)
 plot_loadings(loadings_x, c(1, 1)) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
 loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   mutate(seq_num = "NA") %>%
-  left_join(
-    processed$mseqtab %>%
-    select(seq_num, family) %>%
-    unique()
-  )
+  left_join(seq_families)
 plot_loadings(loadings_y, c(1, 1)) +
   scale_size_continuous(range = c(1, 4), guide = FALSE)
