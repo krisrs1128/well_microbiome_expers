@@ -39,10 +39,11 @@ theme_update(
 ###############################################################################
 ## Real data application
 ###############################################################################
-## read and prepare data
+## read and prepare data. Note that it would be possible to use more taxa
+## (unlike in ordinary CCA), but this gets much slower. A faster alternative
+## that does use all the species is in lda_cca.R
 raw <- read_data()
-opts <- list("filt_k" = 0.02)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
 
 K <- 2
 L1 <- 3
