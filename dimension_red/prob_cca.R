@@ -98,17 +98,17 @@ seq_families <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
 
-loadings <- prepare_loadings(
+loadings_within <- prepare_loadings(
   list(pmean$Wx, pmean$Wy),
   c("body_comp", "seq")
 ) %>%
   left_join(seq_families)
-plot_loadings(loadings, c(1, 1))
+plot_loadings(loadings_within, c(1, 1))
 
-loadings_distinct <- prepare_loadings(
+loadings_between <- prepare_loadings(
   list(cbind(pmean$Bx, 1), cbind(pmean$By, 1)),
   c("body_comp", "seq"),
 ) %>%
   left_join(seq_families)
-plot_loadings(loadings_distinct, c(1, 1)) +
+plot_loadings(loadings_between, c(1, 1)) +
   scale_size(range = c(0, 4), guide = FALSE)
