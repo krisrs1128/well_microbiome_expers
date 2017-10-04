@@ -7,6 +7,8 @@
 
 data {
   int<lower=1> K;
+  int<lower=1> L1;
+  int<lower=1> L2;
   int<lower=1> p1;
   int<lower=1> p2;
   int<lower=1> n;
@@ -24,12 +26,12 @@ parameters {
   real<lower=0> sigma_x;
   real<lower=0> sigma_y;
   matrix[n, K] xi_s;
-  matrix[n, K] xi_x;
-  matrix[n, K] xi_y;
-  matrix[p1, K] Wx;
-  matrix[p2, K] Wy;
+  matrix[n, L1] xi_x;
+  matrix[n, L2] xi_y;
   matrix[p1, K] Bx;
   matrix[p2, K] By;
+  matrix[p1, L1] Wx;
+  matrix[p2, L2] Wy;
 }
 
 transformed parameters {
@@ -49,7 +51,7 @@ model {
 
   // likelihood
   for (i in 1:n) {
-    x[i] ~ multi_normal(Wx * xi_s[i]' + Bx * xi_x[i]', cov_x);
-    y[i] ~ multi_normal(Wy * xi_s[i]' + By * xi_y[i]', cov_y);
+    x[i] ~ multi_normal(Bx * xi_s[i]' + Wx * xi_x[i]', cov_x);
+    y[i] ~ multi_normal(By * xi_s[i]' + Wy * xi_y[i]', cov_y);
   }
 }
