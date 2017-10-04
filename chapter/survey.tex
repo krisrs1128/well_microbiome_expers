@@ -986,185 +986,6 @@ directions, and then projecting these pooled $Y$ onto the span of $X$. If the
 $Y$ had not been pooled, then the projection onto the span of the $X$'s is
 exactly the independent linear regressions approach described above.
 
-\bibliographystyle{plainnat}
-\bibliography{refs.bib}
-
-\section{Appendix}
-
-\subsection{Additional figures}
-
-\begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
-  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
-    PCA is run on all body composition variables, rather than just  and
-    Fatmass. That is, we project the original values for these two features
-    onto the top two PCs obtained from a PCA on all body composition variables.
-    Since the PCA is working in a large space, the projected points are
-    generally not too far from their original positions. However, note that one
-    outlier on the far right is projected into the bulk of points in the center
-    -- the variation coming from this one point is too specific to be preserved
-    by PCA.
-  \label{fig:pca-approx-2}}
-\end{figure}
-
-\begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_3}
-  \caption{Here we perform the same procedure as in Figure
-    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
-    we project onto only the top PC. The main point is that, while in two
-    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
-    easy to understand in terms of orthogonal errors, the corresponding
-    orthogonal projection in higher dimensions is more complex.
-  \label{fig:pca-approx-3}}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
-  \caption{These are the loadings obtained from CoIA, which are analogous to
-    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
-    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_total_fm},
-    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
-    \ref{fig:scores_rl_ratio} and
-    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_total_fm}
-  \caption{We can display the scores obtained by PCA-IV. The results are similar
-    to those from combined-PCA, which is not surprising, since they are related
-    to the PCA based only on microbial
-    abundances. \label{fig:pca_iv_scores_total_fm} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
-  \caption{This provides the same scores as Figure
-    \ref{fig:pca_iv_scores_total_fm}, but shaded by Ruminoccoccaceae vs.
-    Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
-\end{figure}
-
-\subsection{Derivation details for PCA-IV}
-\label{subsec:pca_iv_derivation}
-
-In this section, we provide the argument for why the generalized
-eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
-\hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
-
-First consider $k = 1$. Then, for any $\tilde{v}$, the objective
-\ref{eq:pca_iv_obj_2} has the form
-\begin{align}
-  \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
-  \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
-  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \label{eq:gev_opt_1}\\
-  &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
-\end{align}
-where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
-to maximize \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
-eigenvector of
-$\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
-which implies that $\tilde{v}$ is the top generalized eigenvector of
-$\Sigma_{XY}\Sigma_{YX}$ with respect to $\Sigma_{XX}$. Indeed, in this case,
-\begin{align*}
-  \Sigma_{XY}\Sigma_{YX}\tilde{v}
-  &=\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w} \\
-  &= \Sigma_{XX}^{\frac{1}{2}} \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX} \Sigma_{XX}^{-\frac{1}{2}}\tilde{w}\\
-  &= \Sigma_{XX}^{\frac{1}{2}}\lambda_{1}\tilde{w} \\
-  &= \lambda_{1}\Sigma_{XX}\tilde{v}.
-\end{align*}
-
-Hence, in the case $K = 1$, the criterion is maximized by the top generalized
-eigenvector. For larger $K$, recall that the problem of maximizing
-$\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
-- 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
-applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
-result for general $K$.
-
-\subsection{Derivation of PTA $\alpha$}
-\label{subsec:pta_alpha_derivation}
-
- The Lagrangian of the optimization defined by PTA is
-\begin{align*}
-\mathcal{L}\left(\alpha, \lambda\right) &= \sum_{l = 1}^{L}
-\alpha_{l}\left<\overline{X}, X_{\cdot\cdot l}\right> +
-\lambda\left(\|\alpha\|^{2}_{2} - 1\right),
-\end{align*}
-which when differentiated with respect to $\alpha$ yields $\alpha_{l} =
--\frac{1}{2\lambda} \left<\overline{X}, X_{\cdot\cdot l}\right>$ for all $l$.
-The constraint that $\|\alpha\|_{2}^{2} = 1$ implies that
-$\frac{1}{4\lambda^{2}} \sum_{l^{\prime} = 1}^{L} \left<\overline{X},
-X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
-\sqrt{\sum_{l^{\prime} =1 }^{L} \left<\overline{X}, X_{\cdot\cdot
-    l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
-  X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
-    X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
-
-\subsection{Derivation of Reduced Rank Solution}
-\label{subsec:reduced_rank_derivation}
-
-Consider the data and parameters in the whitened space, $Y^{\ast} =
-Y\hat{\Sigma}_{YY}^{-\frac{1}{2}}$ and $B^{\ast} =
-B\hat{\Sigma}_{YY}^{-\frac{1}{2}}$, and rewrite the objective \ref{eq:rr_obj} as
-\begin{align*}
-\|Y^{\ast} - XB^{\ast}\|_{F}^{2} &= \|Y^{\ast} - \hat{Y}^{\ast \text{ols}}\|_{F}^{2} + \|\hat{Y}^{\ast \text{ols}} - XB^{\ast}\|_{F}^{2},
-\end{align*}
-where we used the fact that the residuals are orthogonal to the column space of
-$X$ to remove the cross term. The first term does not involve $B^{\ast}$, so we
-can focus on minimizing the second. Consider the SVD $\hat{Y}^{\ast \text{ols}}
-= \dot{U}\dot{D}\dot{V}^{T}$. We know that the matrix $A$ of rank $K$ that
-minimizes $\|\hat{Y}^{\ast \text{ols}} - A\|_{F}^{2}$ is $A =
-\dot{U}_{K}\dot{D}_{K}\dot{V}_{K}^{T} = Y^{\ast
-  \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}$, the truncated SVD of $\hat{Y}^{\ast
-  \text{ols}}$, or alternatively its projection onto the top $K$ right
-eigenvectors.
-
-In particular, any matrix $B$ that satisfies
-\begin{align*}
-  XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
-\end{align*}
-solves the reduced rank regression problem, so we can choose
-\begin{align}
-  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}, \label{eq:brr_coef}
-\end{align}
-which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
-$V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
-$\hat{Y}^{\ast \text{ols}}$.
-
-There is a connection between this fit and the response canonical directions of
-$\hat{Y}$. In particular, consider the eigendecomposition that follows from the
-earlier SVD,
-\begin{align}
-\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \nonumber \\
-&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)\nonumber \\
-  &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
-\end{align}
-
-Recall that the response canonical directions $V$ are derived by taking the SVD
-of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
-\tilde{U}\tilde{D}\tilde{V}^{T}$ and setting $V =
-\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
-\ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
-which the CCA response directions are derived are equal to the eigenvectors of
-the cross-products of the OLS fits in the whitened space. Hence,
-\begin{align*}
-\hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y V_{K} \Sigma_{YY}^{\frac{1}{2}}V_{K}^{T} \\
-&= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
-\end{align*}
-
-Therefore, the reduced-rank coefficients are just the projection of the original
-OLS coefficients onto the subspace spanned by the top $K$ response canonical
-directions.
-
 \section{Modern multivariate methods}
 
 Compared to classical approaches, modern multivariate methods are typically
@@ -1359,5 +1180,325 @@ where
 \end{align*}
 Estimating $\hat{\alpha}$ in this way and writing $z_{i} =
 \hat{\alpha}^{T}x_{i}$ gives the original site scores from CCpnA.
+
+\subsection{Kernel CCA}
+\label{subsec:kernel_cca}
+
+
+Since CCA is based on correlation, it can only summarize linear relationships
+across tables -- KCCA is a modification that is sensitive to nonlinear
+associations \citep{akaho2006kernel, bach2003kernel, lanckriet2004statistical}.
+It does this by implicitly lifting the original data to a richer feature space,
+with the hope that nonlinear associations in the original data become linear
+associations in the richer space -- this is often called the ``kernel trick''
+\citep{scholkopf2001kernel}. Informaly, KCCA is the algorithm that emerges after
+applying the kernel trick to CCA.
+
+More precisely, let $\varphi^{Y}: \reals^{p_{1}} \to H^{Y}$ and $\varphi^{X}:
+\reals^{p_{2}} \to H^{X}$ be mappings from the features directly measured by $X$
+and $Y$ into richer spaces $H^{Y}$ and $H^{X}$. For example, the $\varphi$'s
+might map vectors into an expansion of all polynomial products of original
+feature values, up to some fixed degree (this is mapping is called the
+polynomial kernel). As in CCA, let $\P^{X}$ and $\P^{Y}$ denote the sampling
+distributions associated with the two tables, and write $x_{i}$ and $y_{i}$ for
+generic draws from these distribution.
+
+In the same way that the first CCA direction maximizes the covariance between
+linear combinations $u^{T}x_{i}$ and $v^{T}y_{i}$ (subject to a variance
+constraint), KCCA maximizes the correlation between the more general inner
+products, $z_{i}\left(u\right) = \left<u, x_{i}\right>$ and $z_{i}\left(v\right)
+= \left<v, y_{i}\right>$,
+\begin{align}
+  \argmax_{u \in H^{X}, v \in H^{Y}}
+  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} \\
+\text{subject to } &\Varsubarg{P^{X}}{z_{i}\left(u\right)} &=
+\Varsubarg{P^{Y}}{z_{i}\left(v\right)} = 1. \label{eq:optim_kcca}
+\end{align}
+
+As is, the problem is not well-posed, and it is necessarily to
+regularize. The regularized Lagrangian associated with the
+optimization \ref{eq:optim_kcca} is
+\begin{align*}
+  \Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
+  \frac{\rho^{X}}{2}\Varsubarg{P^{X}}{z_{i}\left(u\right)} -
+  \frac{\rho^{Y}}{2}\Varsubarg{P^{Y}}{z_{i}\left(v\right)} +
+  \frac{\lambda^{X}}{2}Pen\left(u\right) +
+  \frac{\lambda^{(Y)}}{2}Pen\left(v\right) \label{eq:lagrangian_kcca}
+\end{align*}
+
+The optimal $u$ and $v$ must lie in the spans of
+$\left(\varphi^{X}\left(x_{i}\right)\right)_{i =1 }^{n}$ and
+$\left(\varphi^{Y}\left(y_{i}\right)\right)_{i =1 }^{n}$, respectively, since
+directions orthogonal to these subspaces cannot improve the correlation in the
+objective. Therefore,
+\begin{align*}
+u &= \Phi^{X} \alpha^{X} \\
+v &= \Phi^{Y} \alpha^{Y},
+\end{align*}
+where $\Phi^{X} \in \reals^{n \times \text{dim}\left(H^{X}\right)}$ has $i^{th}$
+row $\varphi^{Y}\left(x_{i}\right)$ and $\Phi^{Y}$ is defined similarly.
+
+Substituting this into the Lagrangian \ref{eq:lagrangian_kcca}, it becomes clear
+that only the cross-products $\Phi^{X T}\Phi^{X}$, and $\Phi^{Y T}\Phi^{Y}$
+appear. Since these inner products can be written as kernel matrices -- call
+them $K^{X}$ and $K^{Y}$ -- the optimization can be fully expressed in terms of
+kernels, without reference to the original $X$ or $Y$. It can then be shown that
+the optimal $\alpha^{X}$ and $\alpha^{Y}$ are the solutions to the generalized
+eigenvalue problem,
+\begin{align*}
+  \begin{pmatrix}
+    0 & K^{X}K^{Y} \\
+    K^{Y}K^{X} & 0
+  \end{pmatrix}
+  \begin{pmatrix}
+    \alpha^{X} \\
+    \alpha^{Y}
+  \end{pmatrix}
+&= \rho
+\begin{pmatrix}
+  \left(K^{X} + \lambda^{X}I_{p_{1}}\right)^{2} & 0 \\
+  0 & \left(K^{Y} + \lambda^{Y}I_{p_{2}}\right)^{2}
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha^{(1)} \\
+  \alpha^{(2)}
+\end{pmatrix}.
+\end{align*}
+
+The contribution of \cite{yamanishi2003extraction} was to extend this
+procedure to more than 2 tables. The approach is similar to the idea
+of average pairwise covariance, discussed at the end of Section
+\ref{sec:cca}. Formally, we let $z_{i1}^{(l)} = \left<c^{l},
+x_{i}^{(l)}\right>$ and try to optimize
+
+\begin{align}
+&\sum_{l, l^{\prime} = 1}^{L}\Covsubarg{\P^{(l)} \times \P^{(l^{\prime})}}{z_{i1}^{(l)}, z_{i1}^{(l^{\prime})}} -
+\sum_{l = 1}^{L}\frac{\rho^{(l)}}{2}\Varsubarg{P^{(l)}}{z_{i1}^{(l)}} -
+ \sum_{l = 1}^{L} \frac{\lambda^{(1)}}{2}Pen\left(c^{l}\right) \label{eq:lagrangian_mkcca},
+\end{align}
+over different values for the $c^{l}$.
+
+Replacing the inner products $\Phi^{(l)}\Phi^{(l)}$ as before leads to
+an analogous generalized eigenvalue problem,
+\begin{align}
+\begin{pmatrix}
+0 & \dots & K^{(1)}K^{(L)} \\
+\vdots & \ddots & \vdots \\
+K^{(L)}K^{(1)} & \dots  & 0
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha_{1} \\
+  \vdots \\
+  \alpha_{L}
+\end{pmatrix} &=
+\rho \begin{pmatrix}
+  \left(K^{(1)} + \lambda_{1}I_{p_{1}}\right)^{2} & \dots & 0 \\
+  \vdots & \ddots & \vdots \\
+  0 & \dots & \left(K^{(L)} + \lambda_{L}I_{p_{L}}\right)^{2}
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha_{1} \\
+  \vdots \\
+  \alpha_{L}
+\end{pmatrix}
+\end{align}
+whose solution \cite{yamanishi2003extraction}calls ``multiple kernel
+canonical correlation analysis''.
+
+A geometric interpretation of Kernel CCA was described in
+\cite{kuss2003geometry}. The core idea is to translate the Euclidean
+picture associated with CCA to the more general RKHS setting. Often,
+however, KCCA results can be difficult to study, because the only
+output are the scores relating samples (eigenvectors are never
+computed in the Hilbert spaces $H^{X}$ and $H^{Y}$, so it's
+impossible to make a biplot). However, the KCCA scores can be
+interpreted using supplementary features, as in any other
+dimensionality reduction method.
+
+For the record, we note that \cite{lanckriet2004statistical} developed
+a complementary formulation of Kernel CCA.
+
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+
+\section{Appendix}
+
+\subsection{Additional figures}
+
+\begin{figure}
+  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
+  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
+    PCA is run on all body composition variables, rather than just  and
+    Fatmass. That is, we project the original values for these two features
+    onto the top two PCs obtained from a PCA on all body composition variables.
+    Since the PCA is working in a large space, the projected points are
+    generally not too far from their original positions. However, note that one
+    outlier on the far right is projected into the bulk of points in the center
+    -- the variation coming from this one point is too specific to be preserved
+    by PCA.
+  \label{fig:pca-approx-2}}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_3}
+  \caption{Here we perform the same procedure as in Figure
+    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
+    we project onto only the top PC. The main point is that, while in two
+    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
+    easy to understand in terms of orthogonal errors, the corresponding
+    orthogonal projection in higher dimensions is more complex.
+  \label{fig:pca-approx-3}}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
+  \caption{These are the loadings obtained from CoIA, which are analogous to
+    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
+    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_total_fm},
+    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
+    \ref{fig:scores_rl_ratio} and
+    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca_iv/scores_total_fm}
+  \caption{We can display the scores obtained by PCA-IV. The results are similar
+    to those from combined-PCA, which is not surprising, since they are related
+    to the PCA based only on microbial
+    abundances. \label{fig:pca_iv_scores_total_fm} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
+  \caption{This provides the same scores as Figure
+    \ref{fig:pca_iv_scores_total_fm}, but shaded by Ruminoccoccaceae vs.
+    Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
+\end{figure}
+
+\subsection{Derivation details for PCA-IV}
+\label{subsec:pca_iv_derivation}
+
+In this section, we provide the argument for why the generalized
+eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
+\hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
+
+First consider $k = 1$. Then, for any $\tilde{v}$, the objective
+\ref{eq:pca_iv_obj_2} has the form
+\begin{align}
+  \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
+  \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
+  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \label{eq:gev_opt_1}\\
+  &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
+\end{align}
+where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
+to maximize \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
+eigenvector of
+$\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
+which implies that $\tilde{v}$ is the top generalized eigenvector of
+$\Sigma_{XY}\Sigma_{YX}$ with respect to $\Sigma_{XX}$. Indeed, in this case,
+\begin{align*}
+  \Sigma_{XY}\Sigma_{YX}\tilde{v}
+  &=\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w} \\
+  &= \Sigma_{XX}^{\frac{1}{2}} \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX} \Sigma_{XX}^{-\frac{1}{2}}\tilde{w}\\
+  &= \Sigma_{XX}^{\frac{1}{2}}\lambda_{1}\tilde{w} \\
+  &= \lambda_{1}\Sigma_{XX}\tilde{v}.
+\end{align*}
+
+Hence, in the case $K = 1$, the criterion is maximized by the top generalized
+eigenvector. For larger $K$, recall that the problem of maximizing
+$\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
+- 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
+applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
+result for general $K$.
+
+\subsection{Derivation of PTA $\alpha$}
+\label{subsec:pta_alpha_derivation}
+
+ The Lagrangian of the optimization defined by PTA is
+\begin{align*}
+\mathcal{L}\left(\alpha, \lambda\right) &= \sum_{l = 1}^{L}
+\alpha_{l}\left<\overline{X}, X_{\cdot\cdot l}\right> +
+\lambda\left(\|\alpha\|^{2}_{2} - 1\right),
+\end{align*}
+which when differentiated with respect to $\alpha$ yields $\alpha_{l} =
+-\frac{1}{2\lambda} \left<\overline{X}, X_{\cdot\cdot l}\right>$ for all $l$.
+The constraint that $\|\alpha\|_{2}^{2} = 1$ implies that
+$\frac{1}{4\lambda^{2}} \sum_{l^{\prime} = 1}^{L} \left<\overline{X},
+X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
+\sqrt{\sum_{l^{\prime} =1 }^{L} \left<\overline{X}, X_{\cdot\cdot
+    l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
+  X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
+    X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
+
+\subsection{Derivation of Reduced Rank Solution}
+\label{subsec:reduced_rank_derivation}
+
+Consider the data and parameters in the whitened space, $Y^{\ast} =
+Y\hat{\Sigma}_{YY}^{-\frac{1}{2}}$ and $B^{\ast} =
+B\hat{\Sigma}_{YY}^{-\frac{1}{2}}$, and rewrite the objective \ref{eq:rr_obj} as
+\begin{align*}
+\|Y^{\ast} - XB^{\ast}\|_{F}^{2} &= \|Y^{\ast} - \hat{Y}^{\ast \text{ols}}\|_{F}^{2} + \|\hat{Y}^{\ast \text{ols}} - XB^{\ast}\|_{F}^{2},
+\end{align*}
+where we used the fact that the residuals are orthogonal to the column space of
+$X$ to remove the cross term. The first term does not involve $B^{\ast}$, so we
+can focus on minimizing the second. Consider the SVD $\hat{Y}^{\ast \text{ols}}
+= \dot{U}\dot{D}\dot{V}^{T}$. We know that the matrix $A$ of rank $K$ that
+minimizes $\|\hat{Y}^{\ast \text{ols}} - A\|_{F}^{2}$ is $A =
+\dot{U}_{K}\dot{D}_{K}\dot{V}_{K}^{T} = Y^{\ast
+  \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}$, the truncated SVD of $\hat{Y}^{\ast
+  \text{ols}}$, or alternatively its projection onto the top $K$ right
+eigenvectors.
+
+In particular, any matrix $B$ that satisfies
+\begin{align*}
+  XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
+\end{align*}
+solves the reduced rank regression problem, so we can choose
+\begin{align}
+  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}, \label{eq:brr_coef}
+\end{align}
+which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
+$V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
+$\hat{Y}^{\ast \text{ols}}$.
+
+There is a connection between this fit and the response canonical directions of
+$\hat{Y}$. In particular, consider the eigendecomposition that follows from the
+earlier SVD,
+\begin{align}
+\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \nonumber \\
+&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)\nonumber \\
+  &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
+\end{align}
+
+Recall that the response canonical directions $V$ are derived by taking the SVD
+of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
+\tilde{U}\tilde{D}\tilde{V}^{T}$ and setting $V =
+\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
+\ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
+which the CCA response directions are derived are equal to the eigenvectors of
+the cross-products of the OLS fits in the whitened space. Hence,
+\begin{align*}
+\hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y V_{K} \Sigma_{YY}^{\frac{1}{2}}V_{K}^{T} \\
+&= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
+\end{align*}
+
+Therefore, the reduced-rank coefficients are just the projection of the original
+OLS coefficients onto the subspace spanned by the top $K$ response canonical
+directions.
+
 
 \end{document}
