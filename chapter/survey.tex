@@ -1271,6 +1271,34 @@ Eigenvectors are never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not
 possible to make a biplot. Consequently, KCCA scores are typically interpreted
 using supplementary characteristics of the samples.
 
+\subsection{Curds \& Whey}
+\label{subsec:cw}
+
+The Curds \& Whey (C\&W) procedure is a ``soft'' version of reduced-rank
+regression, differentially shrinking the OLS fits with respect to the response
+canonical correlation directions \citep{breiman1997predicting}. This is in
+contrast to reduced-rank regression, whose projection onto the first $K$
+response canonical correlation directions is the hard-thresholding analog. In
+this light, C\&W is to reduced-rank regression what ridge regression is to
+principal component regression.
+
+More precisely, the C\&W algorithm fits a table $Y$ according to
+\begin{align}
+  \hat{Y} &= P_{X}YV\Lambda V^{-1}, \label{eq:cw_yhat}
+\end{align}
+where again $V \in \reals^{p_{1} \times p_{1}}$ are the CCA directions
+associated with the response $Y$ and $P_{X}$ is the projection operator onto the
+column space of $X$. $\Lambda$ is defined to be a diagonal matrix the determines
+the degree of shrinkage for the different canonical directions.
+
+The main difficulty in C\&W is the choice of $\Lambda$, and
+\citep{breiman1997predicting} provide several options. One nice choice can be
+derived from a generalized cross-validation point of view. It turns out that
+shrinkage towards the response canonical correlation directions emerges
+automatically, without assuming the form \ref{eq:cw_yhat} a priori. This
+derivation is provided in Supplementary Section
+\ref{subsec:derivation_curds_and_whey}.
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
@@ -1448,6 +1476,172 @@ the cross-products of the OLS fits in the whitened space. Hence,
 
 Therefore, the reduced-rank coefficients are just the projection of the original
 OLS coefficients onto the subspace spanned by the top $K$ response canonical
+directions.
+
+\subsection{Derivation of Curds \& Whey Shrinkage}
+\label{subsec:derivation_curds_and_whey}
+
+One way to pool information across the response dimensions is to
+define new fitted values from a linear combination of independent
+OLS fits. That is, to predict any the response $y_{i} \in
+\reals^{p_{1}}$ for any particular sample, we can set
+$\hat{y}^{\text{cw}}_{i} = B\hat{y}^{\text{ols}}_{i}$ for some square
+matrix $B \in \reals^{p_{1} \times
+  p_{1}}$. But how to choose $B$? One reasonable idea is to choose a
+$B$ that has the best performance in a full leave-one-out
+cross-validation (LOOCV),
+\begin{align}
+  \hat{B}^{\text{cw}} := \arg\min_{B} \sum_{i = 1}^{n} \|y_{i} - B
+  \hat{y}_{-i}\|_{2}^{2}. \label{eq:cv_looc}
+\end{align}
+
+Here, $\hat{y}_{-i}$ is the OLS fitted value for $y_{i}$ when training
+on all samples but the $i^{th}$. For ease of notation, we write
+$\hat{y}$ instead of $\hat{y}^{\text{ols}}$, referring explicitly to
+$\hat{y}^{\text{c\&w}}$ when needed.
+
+It is well known that $\hat{y}_{-i}$ can be decomposed as
+\begin{align}
+  \hat{y}_{-i} &= \left(1 - g_{i}\right)y_{i} + g_{i} \hat{y}_{i}, \label{eq:cv_looc_trick}
+\end{align}
+where $g_{i} = \frac{1}{1 - h_{ii}}$ and $h_{ii}$ are the diagonal
+elements of the projection matrix $P_{X}$ and $\hat{y}_{i}$ is
+the fitted value on the $i^{th}$ sample, both computed using all the
+data.
+
+The advantage of the representation \ref{eq:cv_looc_trick} is that it
+makes it possible to perform a full LOOCV without actually computing
+$n$ regression models: only a single full regression using all the
+data needs to be computed, and all the LOOCV fits $\hat{y}_{-i}$ can
+be deduced directly. This can dramatically speed up computation of the
+sum in \ref{eq:cv_looc}. While this does not resolve the question of how to
+manage the search over possible $B$, concrete proposals are discussed
+in \cite{breiman1997predicting}.
+
+An alternative is to use generalized cross-validation (GCV). This
+approach suggests a form for $B$ based on the response canonical
+correlation directions. The GCV approximation is that the $h_{ii}$ can
+be approximated by their average across all diagonal elements of $H$:
+$h_{ii} \approx h := \frac{1}{n}\tr\left(H\right)$ for all $i$. In
+this spirit, define $g = \frac{1}{1 - h}$, and approximate
+\begin{align}
+  \hat{y}_{-i} \approx \left(1 - g\right)y_{i} + g\hat{y}_{i}.
+\end{align}
+
+Then, the LOOCV error optimized in \ref{eq:cv_looc} can be
+simplified to
+\begin{align}
+  \sum_{i = 1}^{n}\|y_{i} - B\hat{y}_{-i}\|_{2}^{2} &= \sum_{i =
+    1}^{n} \|y_{i} - B\left(\left(1 - g\right)y_{i} +
+    g\hat{y}_{-i}\right)\|_{2}^{2},
+\end{align}
+and differentiating with respect to $B$, we find that the optimal
+$\hat{B}^{\text{cw}}$ in this GCV framework must satisfy
+\begin{align}
+\sum_{i = 1}^{n}\left(y_{i} - B\left(\left(1 - g\right)y_{i} +
+    g\hat{y}_{-i}\right)\right)\left(\left(1 - g\right)y_{i} +
+  g\hat{y}_{-i}\right)^{T},
+\end{align}
+or equivalently
+\begin{align}
+\sum_{i = 1}^{n} y_{i}\left(\left(1 - g\right)y_{i} +
+  g\hat{y}_{-i}\right)^{T} &=  \sum_{i = 1}^{n}B\left(\left(1 -
+    g\right)y_{i} + g\hat{y}_{-i}\right)\left(\left(1 - g\right)y_{i}
+  +  g\hat{y}_{-i}\right)^{T},
+\end{align}
+which in matrix form is
+\begin{align}
+\left(1 - g\right)Y^{T}Y + g\hat{Y}^{T}Y = B\left(\left(1 - g\right)Y
+  + g \hat{Y}\right)^{T}\left(\left(1 - g\right)Y + g \hat{Y}\right), \label{eq:gcv_mat_form}
+\end{align}
+where $\hat{Y} \in \reals^{n \times p_{1}}$ has $i^{th}$ row
+$\hat{y}_{-i}$.
+
+Now, we can represent these cross-products in a way that is suggestive
+of CCA,
+\begin{align}
+  Y^{T}Y &= n \hat{\Sigma}_{YY} \\
+  \hat{Y}^{T}Y &= Y^{T}HY = Y^{T}X\left(X^{T}X\right)^{-1}X^{T}Y =
+  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY} \\
+  \hat{Y}^{T}\hat{Y} &= Y^{T}P_{X}^2 Y = Y^{T}P_{X}Y=
+  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY},
+\end{align}
+Substituting this notation into \ref{eq:gcv_mat_form} and
+ignoring the scaling $n$ yields
+\begin{align}
+\left(1 - g\right)\hat{\Sigma}_{YY} + g
+\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY} &=
+B\left[\left(1 - g\right)\hat{\Sigma}_{YY} + \left(2g -
+    g^{2}\right)\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}\right].
+\end{align}
+Postmultiplying by $\hat{\Sigma}_{YY}$ gives
+\begin{align}
+  \left(1 - g\right)I_{p_{1}} + g\hat{Q}^{T} &= B\left[\left(1 -
+      g\right)I_{p_{1}} + \left(2g -
+      g^{2}\right)\hat{Q}^{T}\right], \label{eq:cca_gcv_id}
+\end{align}
+where,
+\begin{align}
+\hat{Q} :=
+\hat{\Sigma}_{YY}^{-1}\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}
+\in \reals^{p_{1}\times p_{1}}.
+\end{align}
+Now, we claim that we can decompose $\hat{Q} = VD^{2}V^{-1}$, where $V
+\in \reals^{p_{1} \times p_{1}}$ is the full matrix of CCA response
+directions and  $D$ is diagonal with the canonical correlations. Indeed,
+the usual CCA response directions $V$ can be recovered by setting $V =
+\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{V}$, where $\tilde{V}$ comes
+from the SVD of $A :=
+\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{XX}^{-\frac{1}{2}} =
+\tilde{U}D\tilde{V}^{T}$. We then note that
+\begin{align}
+  Q &= \Sigma_{YY}^{-\frac{1}{2}}A^{T}A\Sigma_{YY}^{\frac{1}{2}} \\
+  &=
+  \Sigma_{YY}^{-\frac{1}{2}}\tilde{V}^{2}D^{2}\tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}\\
+  &= VD^{2}V^{-1},
+\end{align}
+where we are able to write $V^{-1} =
+\tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}$ because $\tilde{V}$ is the
+full (untruncated) matrix of eigenvectors, so $\tilde{V}\tilde{V}^{T}
+= I$ in addition to the usual $\tilde{V}^{T}\tilde{V} =I$, which holds
+even for the truncated SVD.
+
+Therefore, \ref{eq:cca_gcv_id} can be expressed as
+\begin{align}
+  V^{-T}\left[\left(1 - g\right)I_{p_{1}} + gD^{2}\right]V^{T} &=
+  BV^{-T}\left[\left(1 - g\right)I_{p_{1}} + \left(2g -
+      g^2\right)D^{2}\right]V^{T}
+\end{align}
+so, the $B$ satisfying the normal equations has the form
+\begin{align}
+\hat{B}^{\text{cw}} &= V^{-T}\Lambda V^{T},
+\end{align}
+where $\Lambda$ is a diagonal matrix with entries
+\begin{align}
+\lambda_{jj} = \frac{1 - g + d_{jj}^{2}g}{1 - g + \left(2g -
+    g^{2}\right)d_{jj}^{2}}.
+\end{align}
+Notice that when $n$ is large, $\frac{1}{n}\tr P_{X}$ will be small,
+so $g \approx 0$ and less shrinkage will be applied.
+
+Recall that $\hat{B}^{\text{cw}}$ is used to pool across OLS fits,
+$\hat{y}_{i}^{\text{cw}} = \hat{B}^{\text{cw}}\hat{y}_{i}^{\text{ols}}$. That is,
+\begin{align}
+\hat{Y}^{\text{cw}} &= \hat{Y}^{\text{ols}}B^{T} =
+\hat{Y}^{\text{ols}}V\Lambda V^{-1}
+\end{align}
+which we can also view as $\hat{Y}^{\text{cw}}V =
+\left(\hat{Y}^{\text{ols}}V\right)\Lambda$. This means that the
+C\&W coordinates along the canonical directions $V$ are set as the OLS
+fits $\hat{Y}^{\text{ols}}$ along the canonical directions $V$, with
+weights defined by $\Lambda$. The actual $\hat{Y}^{\text{cw}}$ are
+recovered by transforming back to the original coordinate system. A
+similar way to view the C\&W fits is $\hat{Y}^{\text{cw}}V =
+P_{X}\left(YV\right)\Lambda$. From this point of view, we shrink the
+original data $Y$ according to the canonical directions, and then
+project the shrunk data onto the subspace defined by the columns of
+$X$. In any case, we see that C\&W pools across regression problems
+through a soft shrinkage weighted along canonical response
 directions.
 
 
