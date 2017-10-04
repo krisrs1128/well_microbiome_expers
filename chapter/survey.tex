@@ -413,10 +413,10 @@ $\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
 optimization \label{eq:cancor_emp} can now be expressed as
 \begin{align}
   \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
-    \reals^{p_{2}}}
+    \reals^{p_{2}} 
   &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
-\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \\
-&\|\tilde{v}\|_{2}^{2} = 1.
+\text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber \\
+&\|\tilde{v}\|_{2}^{2} = 1. \nonumber
 \end{align}
 The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
 well known -- they're exactly the first left and right eigenvectors of
@@ -643,7 +643,7 @@ between CoIA and CCA is responsible for this difference.
 \label{subsec:mfa}
 
 MFA gives an alternative approach to producing scores and relating features
-across multiple tables\citep{pages2014multiple}. It can be understood as a
+across multiple tables \citep{pages2014multiple}. It can be understood as a
 reed version of the concatenated PCA described in Section \ref{subsec:pca}
 that res tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
@@ -660,7 +660,7 @@ way as those from PCA -- the MFA directions still specify the
 relationship between measured features, and the position of each
 sample's projection describes the relative  of each feature for
 that sample. Moreover, MFA gives a way of comparing full tables to
-each other, called a ``canonical analysis'' \cite{pages2004multiple}. A
+each other, called a ``canonical analysis'' \citep{pages2004multiple}. A
 $K$-dimensional representation of the $l^{th}$ group is given by
 \begin{align*}
 \left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots,
@@ -688,8 +688,8 @@ regression setting \citep{rao1964use}. It can also be viewed as a version of PCA
 that chooses a dimension reduction of $X$ depending on its ability to predict
 $Y$. In this sense, it anticipates methods like Partial Least Squares (PLS),
 Canonical Correspondence Analysis (CCpnA), the Curds \& Whey procedure, and
-various approaches to multitask learning, which are described in Sections
-\ref{subsec:PLS}, \ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
+multitask learning, which are described in Sections \ref{subsec:PLS},
+\ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
 \ref{subsec:multitask}, respectively.
 
 Formally, suppose we are predicting $y_{i} \in \reals^{p_{1}}$ from $x_{i} \in
@@ -953,7 +953,7 @@ The simplest approach to this problem is to fit a coefficient matrix $B \in
 response coordinates by minimizing $\|Y - XB\|_{F}^{2}$. A slight modification
 supposes that the responses might be correlated, and instead optimizes a
 whitened version of the problem\footnote{This can also be viewed as using a
-  Mahalanobis metric.}, $\|\left(Y -
+  Mahalanobis distance.}, $\|\left(Y -
 XB\right)\hat{\Sigma}_{YY}^{-\frac{1}{2}}\|_{F}^{2}$
 
 The optimal $B$ for these two approaches are $\left(X^{T}X\right)^{-1}X^{T}Y$
@@ -970,7 +970,7 @@ constraint on the rank of $B$, defined by an estimate $\hat{B}^{\text{rr}}$ by
 the optimal value of
 \begin{align}
 \text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} &\|\left(Y - XB\right)\Sigma_{YY}^{-\frac{1}{2}}\|_{F}^{2} \label{eq:rr_obj}\\
-\text{such that } &\text{ rank}\left(B\right) \leq K,
+\text{such that } &\text{ rank}\left(B\right) \leq K, \nonumber
 \end{align}
 for some $K < p_{1}\wedge p_{2}$.
 
@@ -985,6 +985,291 @@ first projecting the data columns of $Y$ onto the top $K$ response canonical
 directions, and then projecting these pooled $Y$ onto the span of $X$. If the
 $Y$ had not been pooled, then the projection onto the span of the $X$'s is
 exactly the independent linear regressions approach described above.
+
+\section{Modern multivariate methods}
+
+Compared to classical approaches, modern multivariate methods are typically
+designed for more the high-dimensional, heterogeneous settings. The two methods
+reviewed in this section are examples of this trend: Partial Least Squares (PLS)
+is well-suited for high-dimensional response matrices, while Canonical
+Correspondence Analysis (CCpnA) was facilitates joint analysis of the
+heterogeneous continuous / count data necessary to answer questions in ecology.
+Unlike traditional statistical methods, neither approach is explicitly
+model-based, and both are iterative, requiring more extensive computation than
+earlier techniques.
+
+\subsection{PLS}
+\label{subsec:PLS}
+
+PLS sequentially derives a set of mutually orthogonal features
+$\left(z_{k}\right)_{k = 1}^{K}$ that characterizes the relationship between two
+tables, $Y$ and $X$ \citep{wold1985partial}. To obtain the first PLS direction,
+$z_{1}$, compute the first left singular vector $u_{1}$ of the cross-covariance
+matrix between the two tables, $\hat{\Sigma}_{YX} = \frac{1}{n}Y^{T}X$. Then,
+for each of the $p_{2}$ columns of $X$, compute the univariate (i.e., partial)
+regression coefficient $\hat{\varphi}_{j}$ from the model $u_{1i} = \alpha_{0j}
++ \varphi_{j}x_{ij}$, for $i = 1, \dots, j_{1}$. The first PLS direction is
+defined as $z_{1} = X\hat{\varphi}_{1}$. To generate subsequent directions,
+orthogonalize both $Y$ and $X$ with respect to the current directions, and
+repeat the process.
+
+This procedure is appealing because, like PCA, it reduces a potentially
+high-dimensional matrix $X$ with many correlated columns into a
+smaller set of orthogonal directions. Moreover, it achieves this
+reduction in a way that accounts for correlation with columns in
+$Y$: columns of $X$ that are uncorrelated with $Y$
+will have no contribution to the PLS directions, even if they account
+for a large proportion of variation in $X$.
+
+We have stated the procedure in the form it was originally proposed, but this
+algorithmic description is difficult to understand geometrically or
+probabilistically. However, statistical interpretations have since been
+developed. \citep{frank1993statistical} and \citep{stone1990continuum} studied
+the case where $p_{1} = 1$, so $y$ is a single column vector. By assuming that
+the rows of $y$ and $X$ are drawn i.i.d. from distributions $\P^{y}$ and
+$\P^{X}$, they found that the $k^{th}$ PLS direction $z_{k}$ is the $z$ that
+solves the optimization
+\begin{align*}
+\maximize_{z} & \Corrsubarg{\P^{X} \times \P^{y}}{x_{i}^{T}z_{k},
+y_{i}}\Varsubarg{\P^{X}}{z^{T}x_i} \\
+\text{such that }&z^{T}y^{T}y z_{j} = 0 \text{ for all }j
+\leq k - 1 \text{ and }
+\|z\| = 1.
+\end{align*}
+If the covariance term is omitted, the optimization is identical to the maximum
+variance problem that gives the principal component directions based on $X$.
+This formulation makes precise the idea that PLS is a version of principal
+components that accounts for correlation with $Y$.
+
+An alternative interptetation, due to \citep{gustafsson2001probabilistic}, is
+that PLS fits a particular latent variable model. Suppose $\xi_{i} =
+\left(\xi_{i}^{s}, \xi_{i}^{X}\right)$ are drawn i.i.d. from a $K_{1} + K_{2} =
+K$ dimensional spherical normal. PLS assumes the observed tables $Y$ and $X$
+have rows drawn i.i.d. from
+\begin{align*}
+y_{i} \mid \xi_{i} \sim \Gsn\left(W_{Y}\xi_{i}^{s} +
+\mu_{Y}, \sigma^{2}I_{p_{1}}\right) \\
+x_{i} \mid \xi_{i} \sim \Gsn\left(W_{X} \xi_{i}^{s} + B_{X}\xi_{i}^{X} +
+\mu_{X}, \sigma^{2}I_{p_{2}}\right).
+\end{align*}
+That is, each table is the sum of two components, one that is a
+table-specific linear combination is a shared latent variable, and
+another that is an arbitrary linear combination of a table-specific
+latent variable. The shared feature $\xi^{s}$ is the object of
+interest, and is what PLS implictly estimates.
+
+\subsection{CCpnA}
+\label{subsec:canonical-correspondence}
+
+CCpnA is a method, originally developed in ecology, useful for joint analysis of
+count and continuous data. The canonical application has a site by species count
+matrix $Y \in \reals^{n \times p_{1}}$ and an environmental features matrix $X
+\in \reals^{n \times p_{2}}$ (e.g., historical rainfall and temperature
+measurements). The scientific goal might be to identify species that are more
+abundant in sites with more rainfall or higher temperature. If these
+environmental variables were uncorrelated, it would be enough to fit a separate
+regression to each; this however is rarely the case, motivating the development
+for CCpnA.
+
+CCpnA produces low-dimensional representations for both the rows and columns of
+$Y$ (the sites and species), along with latent subspaces on which these
+representations are defined. Algorithmically, CCpnA first constructs the
+following matrices, where $1_{r}$ denotes a column vector of $r$ ones,
+\begin{enumerate}
+  \item An overall frequency matrix,
+    \begin{align*}
+      F = \frac{1}{n_{\cdot\cdot}^{(1)}} Y,
+  \end{align*}
+  where $n_{\cdot\cdot}^{(1)}$ is the sum of all counts in matrix
+  $Y$.
+\item A diagonal matrix of row (site) proportions,
+  \begin{align*}
+    D_{r} &= \diag\left(F 1_{p_{1}}\right) \in \reals^{n \times n}.
+  \end{align*}
+\item A diagonal matrix of column (species) proportions,
+  \begin{align*}
+    D_{c} &= \diag\left(F^{T}1_{n}\right) \in \reals^{p_{1} \times p_{1}}.
+  \end{align*}
+\item A projection onto the columns of the environmental matrix
+  $X$, reweighting sites according to their species counts,
+  \begin{align*}
+    P_{X} &= D_{r}^{\frac{1}{2}}X\left(X^{T}D_{r}X\right)^{-1}X^{T}D_{r}^{\frac{1}{2}} \in
+  \reals^{n \times n}.
+\end{align*}
+\end{enumerate}
+
+With this notation, compute an SVD,
+\begin{align*}
+D_{r}^{-\frac{1}{2}}\left(F - F 1_{p}1_{p}^{T}F\right)D_{c}^{-\frac{1}{2}}P_{X}
+= UDV^{T},
+\end{align*}
+and define row and column scores $Z$ and $Q$ by
+\begin{align*}
+  Z &= D_{r}^{-\frac{1}{2}} UD \\
+  Q &= D_{c}^{-\frac{1}{2}}V^{T}D.
+\end{align*}
+
+There are several ways to interpret this procedure. CCpnA was originally
+proposed as the solution to a fixed-point iteration called reciprocal averaging
+\citep{ter1986canonical}l. Later, \citep{greenacre1987geometric,
+  greenacre1984theory}, provided a geometric view and \cite{zhu2005constrained}
+gave an exact probabilistic interpretation.
+
+The intuition for the reciprocal averaging procedure is simple: the
+scores for different sites should be a weighted average of the species
+scores, with larger weights for the species that are more common at
+those sites. That is,
+\begin{align*}
+  z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\
+  q_{j} \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
+\end{align*}
+or, in matrix form,
+\begin{align*}
+Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\
+Q \propto \diag\left(F^{T} 1_{n}\right)^{-1} P.
+\end{align*}
+This formulation suggests a method to obtain $Z$ and $Q$ -- arbitrarily
+initialize one and iterate these calculations until convergence.
+
+As is, this is not yet the setup that yields CCpnA\footnote{It in fact gives the
+  solution to the Correspondence Analysis problem (the similarity is the reason
+  for the name Canonical \textit{Correspondence Analysis}).} -- it doesn't use
+information in the environmental table $X$. To recover CCpnA, a projection step
+needs to be inserted before the calculation of row scores,
+\begin{enumerate}
+\item Arbitrarily initialize $Z$.
+\item While not converged,
+\begin{enumerate}
+\item Solve $Q^{\prime} \propto \diag\left(F^{T}1_{n}\right)^{-1}F^{T}Z$.
+\item Project $Q = P_{X^{(2)}}Q^{\prime}$.
+\item Solve $Z \propto \diag\left(Z 1_{p}\right)^{-1} F Q^{T}$.
+\end{enumerate}
+\end{enumerate}
+
+The fixed point of this iteration is the previously described CCpnA solution.
+
+A second interpretation, is due to \citep{zhu2005constrained}. Suppose first
+that we are only interested in a one-dimensional score for rows and columns. Let
+$\alpha$ be a latent environmental gradient, for example, between warm-dry and
+cold-wet sites. For each of the $p_{1}$ species, define a normal density over
+the environmental variables, $f_{j}\left(x_{i}\right) =
+\Gsn_{p^{(2)}}\left(\mu_{j}, \Sigma_{j}\right)$. The mode of this density
+represents the preferred environmental conditions for species $j$. Next, project
+these densities onto the environmental gradient, giving a univariate
+$f_{j}^{\alpha}\left(z_{i}\right) = \Gsn\left(\alpha^{T}\mu_{j}, \alpha^{T}
+\Sigma_{j}\alpha\right)$ for each species. The $z_{i}$'s represent the scores
+for species $i$ along the environmental gradient $\alpha$.
+
+The generative model views species-site pairs one at a time. For each pair
+involving site $i$ and species $j$, draw a score according to
+$f_{j}^{\alpha}\left(z_{i}\right)$. That is, for each site $i$, draw a species
+according to a $p_{1}$-class LDA model.
+
+To use this idea to compute scores, we need to estimate the environmental
+gradient $\alpha$, which is also of interest in its own right. This is done by
+supposing equal covariances across species, $\Sigma_{j} = \Sigma$ for all $j$,
+and finding the $\hat{\alpha}$ maximizing the between vs. total variance across
+species,
+\begin{align*}
+  \frac{\alpha^{T} \Sigma_{B} \alpha}{\alpha^{T} \Sigma \alpha},
+\end{align*}
+where
+\begin{align*}
+  \Sigma_{B} = \sum_{j = 1}^{p_{1}} f_{\cdot j}\left(\mu_{j} -
+    \bar{\mu}\right)\left(\mu_{j} - \bar{\mu}\right)^{T}.
+\end{align*}
+Estimating $\hat{\alpha}$ in this way and writing $z_{i} =
+\hat{\alpha}^{T}x_{i}$ gives the original site scores from CCpnA.
+
+\subsection{Kernel CCA}
+\label{subsec:kernel_cca}
+
+Since CCA is based on correlation, it can only summarize linear relationships
+across tables -- KCCA is a modification that is sensitive to nonlinear
+associations \citep{akaho2006kernel, bach2003kernel, lanckriet2004statistical}.
+It does this by implicitly lifting the original data to a richer feature space,
+with the hope that nonlinear associations in the original data become linear
+associations in the richer space -- this is often called the ``kernel trick''
+\citep{scholkopf2001kernel}. Informaly, KCCA is the algorithm that emerges after
+applying the kernel trick to CCA.
+
+More precisely, let $\varphi^{Y}: \reals^{p_{1}} \to H^{Y}$ and $\varphi^{X}:
+\reals^{p_{2}} \to H^{X}$ be mappings from the features directly measured by $X$
+and $Y$ into richer spaces $H^{Y}$ and $H^{X}$. For example, the $\varphi$'s
+might map vectors into an expansion of all polynomial products of original
+feature values, up to some fixed degree (this is mapping is called the
+polynomial kernel). As in CCA, let $\P^{X}$ and $\P^{Y}$ denote the sampling
+distributions associated with the two tables, and write $x_{i}$ and $y_{i}$ for
+generic draws from these distribution.
+
+In the same way that the first CCA direction maximizes the covariance between
+linear combinations $u^{T}x_{i}$ and $v^{T}y_{i}$ (subject to a variance
+constraint), KCCA maximizes the correlation between the more general inner
+products, $z_{i}\left(u\right) = \left<u, x_{i}\right>$ and $z_{i}\left(v\right)
+= \left<v, y_{i}\right>$,
+\begin{align}
+  \argmax_{u \in H^{X}, v \in H^{Y}}
+  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} \label{eq:optim_kcca}\\
+\text{subject to } &\Varsubarg{P^{X}}{z_{i}\left(u\right)} = \Varsubarg{P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
+\end{align}
+
+As is, the problem is not well-posed, and it is necessarily to regularize. The
+regularized Lagrangian associated with the optimization \ref{eq:optim_kcca} is
+\begin{align}
+  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
+  \frac{\rho^{X}}{2}\Varsubarg{P^{X}}{z_{i}\left(u\right)} -
+  \frac{\rho^{Y}}{2}\Varsubarg{P^{Y}}{z_{i}\left(v\right)} + \label{eq:lagrangian_kcca}\\
+  &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right) + \frac{\lambda^{(Y)}}{2}\text{Pen}\left(v\right), \nonumber
+\end{align}
+where $\text{Pen}\left(x\right)$ is some regularizer, the $\ell^{1}$ or
+$\ell^{2}$ norm, for example.
+
+The optimal $u$ and $v$ must lie in the spans of
+$\left(\varphi^{X}\left(x_{i}\right)\right)_{i =1 }^{n}$ and
+$\left(\varphi^{Y}\left(y_{i}\right)\right)_{i =1 }^{n}$, respectively, since
+directions orthogonal to these subspaces cannot improve the correlation in the
+objective. Therefore,
+\begin{align*}
+u &= \Phi^{X} \alpha^{X} \\
+v &= \Phi^{Y} \alpha^{Y},
+\end{align*}
+for some $\alpha^{X}, \alpha^{Y}$, where $\Phi^{X} \in \reals^{n \times
+  \text{dim}\left(H^{X}\right)}$ has $i^{th}$ row
+$\varphi^{Y}\left(x_{i}\right)$ and $\Phi^{Y}$ is defined similarly.
+
+Substituting this into the Lagrangian \ref{eq:lagrangian_kcca}, it becomes clear
+that only the cross-products $\Phi^{X T}\Phi^{X}$ and $\Phi^{Y T}\Phi^{Y}$
+appear. Since these inner products can be written as kernel matrices -- call
+them $K^{X}$ and $K^{Y}$ -- the optimization can be fully expressed in terms of
+kernels, without reference to the original $X$ or $Y$. It can then be shown that
+the optimal $\alpha^{X}$ and $\alpha^{Y}$ are the solutions to the generalized
+eigenvalue problem,
+\begin{align*}
+  \begin{pmatrix}
+    0 & K^{X}K^{Y} \\
+    K^{Y}K^{X} & 0
+  \end{pmatrix}
+  \begin{pmatrix}
+    \alpha^{X} \\
+    \alpha^{Y}
+  \end{pmatrix}
+&= \rho
+\begin{pmatrix}
+  \left(K^{X} + \lambda^{X}I_{p_{1}}\right)^{2} & 0 \\
+  0 & \left(K^{Y} + \lambda^{Y}I_{p_{2}}\right)^{2}
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha^{(1)} \\
+  \alpha^{(2)}
+\end{pmatrix}.
+\end{align*}
+A geometric interpretation of Kernel CCA was described in
+\citep{kuss2003geometry}. The core idea is to translate the Euclidean picture
+associated with CCA to the more general RKHS setting. Often, however, KCCA
+results can be difficult to study, because only sample scores are provided.
+Eigenvectors are never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not
+possible to make a biplot. Consequently, KCCA scores are typically interpreted
+using supplementary characteristics of the samples.
 
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
