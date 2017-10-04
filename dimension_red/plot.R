@@ -128,7 +128,6 @@ link_scores <- function(mscores, alpha = 0.1) {
 plot_scores_wrapper <- function(xi, raw, processed, scv) {
   xi_df <- data.frame(
     "Axis" = xi,
-    "Axis.3" = 1,
     "Number" = rownames(processed$bc)
   ) %>%
     left_join(raw$bc) %>%

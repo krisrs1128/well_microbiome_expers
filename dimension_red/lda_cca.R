@@ -96,10 +96,14 @@ plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
 rownames(pmeans$By) <- colnames(processed$bc)
 rownames(pmeans$Bx) <- colnames(processed$x_seq)
 loadings <- prepare_loadings(
-  list(cbind(100 * pmeans$By, 5 * 1), cbind(pmeans$Bx, 1)),
+  list(100 * pmeans$By, pmeans$Bx),
   c("body_comp", "seq")
 ) %>%
-  left_join(processed$mseqtab)
+  left_join(
+    processed$mseqtab %>%
+    select(seq_num, family) %>%
+    unique()
+  )
 loadings[loadings$type == "body_comp", "family"] <- "Body Comp."
 
 plot_loadings(loadings, c(1, 1)) +
@@ -113,14 +117,22 @@ plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
 
 ## Now plot unshared loadings
 rownames(pmeans$Wx) <- colnames(processed$x_seq)
-loadings_x <- prepare_loadings(list(cbind(pmeans$Wx, 1)), "seq") %>%
-  left_join(processed$mseqtab)
+loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
+  left_join(
+    processed$mseqtab %>%
+    select(seq_num, family) %>%
+    unique()
+  )
 plot_loadings(loadings_x, c(1, 1)) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
-loadings_y <- prepare_loadings(list(cbind(pmeans$Wy, 1)), "body_comp") %>%
+loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   mutate(seq_num = "NA") %>%
-  left_join(processed$mseqtab)
+  left_join(
+    processed$mseqtab %>%
+    select(seq_num, family) %>%
+    unique()
+  )
 plot_loadings(loadings_y, c(1, 1)) +
   scale_size_continuous(range = c(1, 4), guide = FALSE)
