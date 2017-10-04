@@ -56,7 +56,7 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 bc_mat <- scale(processed$bc)
 
-K <- 2
+K <- 3
 L1 <- 3
 L2 <- 3
 
@@ -81,4 +81,46 @@ stan_data <- list(
 )
 
 m <- stan_model("lda_cca.stan")
-stan_fit <- vb(m, data = stan_data)
+vb_fit <- vb(m, data = stan_data)
+
+posterior <- rstan::extract(vb_fit)
+pmeans <- parameter_means(posterior)
+
+###############################################################################
+## Plot the results
+###############################################################################
+scv <- scale_color_viridis(guide = guide_colorbar(barwidth = 0.15, ticks = FALSE))
+
+## Plot some of the shared scores
+plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+rownames(pmeans$By) <- colnames(processed$bc)
+rownames(pmeans$Bx) <- colnames(processed$x_seq)
+loadings <- prepare_loadings(
+  list(cbind(100 * pmeans$By, 5 * 1), cbind(pmeans$Bx, 1)),
+  c("body_comp", "seq")
+) %>%
+  left_join(processed$mseqtab)
+loadings[loadings$type == "body_comp", "family"] <- "Body Comp."
+
+plot_loadings(loadings, c(1, 1)) +
+  facet_wrap(~family, ncol = 4) +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  scale_size_continuous(range = c(0, 2), guide = FALSE)
+
+## now plot unshared scores (species abundances first)
+plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
+plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
+
+## Now plot unshared loadings
+rownames(pmeans$Wx) <- colnames(processed$x_seq)
+loadings_x <- prepare_loadings(list(cbind(pmeans$Wx, 1)), "seq") %>%
+  left_join(processed$mseqtab)
+plot_loadings(loadings_x, c(1, 1)) +
+  scale_size_continuous(range = c(0, 2), guide = FALSE)
+
+rownames(pmeans$Wy) <- colnames(processed$bc)
+loadings_y <- prepare_loadings(list(cbind(pmeans$Wy, 1)), "body_comp") %>%
+  mutate(seq_num = "NA") %>%
+  left_join(processed$mseqtab)
+plot_loadings(loadings_y, c(1, 1)) +
+  scale_size_continuous(range = c(1, 4), guide = FALSE)
