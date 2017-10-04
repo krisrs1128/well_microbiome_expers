@@ -43,26 +43,37 @@ theme_update(
 raw <- read_data()
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
 
+K <- 2
+L1 <- 3
+L2 <- 3
 stan_data <- list(
   "K" = K,
+  "L1" = L1,
+  "L2" = L2,
   "p1" = ncol(processed$bc),
   "p2" = ncol(processed$x_seq),
   "n" = nrow(processed$bc),
   "tau" = 5,
+  "sigma_x" = 1,
+  "sigma_y" = 1,
   "x" = scale(processed$bc),
   "y" = scale(processed$x_seq),
   "id_x" = diag(ncol(processed$bc)),
   "id_y" = diag(ncol(processed$x_seq)),
   "id_k" = diag(K),
-  "zeros_k" = rep(0, K)
+  "id_l1" = diag(L1),
+  "id_l2" = diag(L2),
+  "zeros_k" = rep(0, K),
+  "zeros_l1" = rep(0, L1),
+  "zeros_l2" = rep(0, L2)
 )
 
 m <- stan_model("prob_cca.stan")
-micro_fit <- vb(m, stan_data, iter = 100)
-micro_samples <- rstan::extract(micro_fit)
-rm(micro_fit)
+vb_fit <- vb(m, stan_data, iter = 100)
+posterior <- rstan::extract(micro_fit)
+rm(vb_fit)
 
-micro_hat <- parameter_means(micro_samples)
+pmean <- parameter_means(posterior)
 shared_scores <- cbind(micro_hat$xi_s, processed$bc)
 colnames(shared_scores)[1:K] <- paste0("Axis", 1:K)
 
@@ -77,7 +88,8 @@ ggplot(shared_scores) +
   )
 
 rownames(micro_hat$Wx) <- colnames(processed$bc)
-rownames(micro_hat$Wy) <- colnames(processed$x_seq)
+rownames(micro_hat$Wy) <## extract samples
+- colnames(processed$x_seq)
 rownames(micro_hat$Bx) <- colnames(processed$bc)
 rownames(micro_hat$By) <- colnames(processed$x_seq)
 
