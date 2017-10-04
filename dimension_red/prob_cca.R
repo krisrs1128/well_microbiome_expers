@@ -41,7 +41,8 @@ theme_update(
 ###############################################################################
 ## read and prepare data
 raw <- read_data()
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
+opts <- list("filt_k" = 0.02)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 K <- 2
 L1 <- 3
@@ -69,12 +70,12 @@ stan_data <- list(
 )
 
 m <- stan_model("prob_cca.stan")
-vb_fit <- vb(m, stan_data, iter = 100)
-posterior <- rstan::extract(micro_fit)
+vb_fit <- vb(m, stan_data)
+posterior <- rstan::extract(vb_fit)
 rm(vb_fit)
 
 pmean <- parameter_means(posterior)
-shared_scores <- cbind(micro_hat$xi_s, processed$bc)
+shared_scores <- cbind(pmean$xi_s, processed$bc)
 colnames(shared_scores)[1:K] <- paste0("Axis", 1:K)
 
 ## should try to plot posteriors, not just means
@@ -87,22 +88,26 @@ ggplot(shared_scores) +
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 
-rownames(micro_hat$Wx) <- colnames(processed$bc)
-rownames(micro_hat$Wy) <## extract samples
-- colnames(processed$x_seq)
-rownames(micro_hat$Bx) <- colnames(processed$bc)
-rownames(micro_hat$By) <- colnames(processed$x_seq)
+rownames(pmean$Wx) <- colnames(processed$bc)
+rownames(pmean$Wy) <- colnames(processed$x_seq)
+rownames(pmean$Bx) <- colnames(processed$bc)
+rownames(pmean$By) <- colnames(processed$x_seq)
+
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
 
 loadings <- prepare_loadings(
-  list(micro_hat$Wx, micro_hat$Wy),
+  list(pmean$Wx, pmean$Wy),
   c("body_comp", "seq")
 ) %>%
-  left_join(processed$mseqtab)
+  left_join(seq_families)
 plot_loadings(loadings, c(1, 1))
 
 loadings_distinct <- prepare_loadings(
-  list(micro_hat$Bx, micro_hat$By),
-  c("body_comp", "seq")
+  list(cbind(pmean$Bx, 1), cbind(pmean$By, 1)),
+  c("body_comp", "seq"),
 ) %>%
-  left_join(processed$mseqtab)
-plot_loadings(loadings_distinct, c(1, 1))
+  left_join(seq_families)
+plot_loadings(loadings_distinct, c(1, 1)) +
+  scale_size(range = c(0, 4), guide = FALSE)
