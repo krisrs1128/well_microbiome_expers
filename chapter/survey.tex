@@ -1481,42 +1481,36 @@ directions.
 \subsection{Derivation of Curds \& Whey Shrinkage}
 \label{subsec:derivation_curds_and_whey}
 
-One way to pool information across the response dimensions is to
-define new fitted values from a linear combination of independent
-OLS fits. That is, to predict any the response $y_{i} \in
-\reals^{p_{1}}$ for any particular sample, we can set
-$\hat{y}^{\text{cw}}_{i} = B\hat{y}^{\text{ols}}_{i}$ for some square
-matrix $B \in \reals^{p_{1} \times
-  p_{1}}$. But how to choose $B$? One reasonable idea is to choose a
-$B$ that has the best performance in a full leave-one-out
-cross-validation (LOOCV),
+Consider prediction across many related response variables. One way to pool
+information across respones is to define new fitted values from a linear
+combination of independent OLS fits. That is, to predict a response $y_{i} \in
+\reals^{p_{1}}$, we set $\hat{y}^{\text{cw}}_{i} = B\hat{y}^{\text{ols}}_{i}$
+for some square matrix $B \in \reals^{p_{1} \times p_{1}}$. But how to choose
+$B$? One reasonable idea is to choose a $B$ that has the best performance in a
+full leave-one-out cross-validation (LOOCV),
 \begin{align}
-  \hat{B}^{\text{cw}} := \arg\min_{B} \sum_{i = 1}^{n} \|y_{i} - B
-  \hat{y}_{-i}\|_{2}^{2}. \label{eq:cv_looc}
+  \hat{B}^{\text{cw}} := \arg\min_{B} \sum_{i = 1}^{n} \|y_{i} - B \hat{y}_{-i}\|_{2}^{2}. \label{eq:cv_looc}
 \end{align}
 
-Here, $\hat{y}_{-i}$ is the OLS fitted value for $y_{i}$ when training
-on all samples but the $i^{th}$. For ease of notation, we write
-$\hat{y}$ instead of $\hat{y}^{\text{ols}}$, referring explicitly to
-$\hat{y}^{\text{c\&w}}$ when needed.
+Here, $\hat{y}_{-i}$ is the OLS fitted value for $y_{i}$ when training on all
+samples but the $i^{th}$. For ease of notation, we write $\hat{y}$ instead of
+$\hat{y}^{\text{ols}}$, referring explicitly to $\hat{y}^{\text{c\&w}}$ when
+needed.
 
 It is well known that $\hat{y}_{-i}$ can be decomposed as
 \begin{align}
   \hat{y}_{-i} &= \left(1 - g_{i}\right)y_{i} + g_{i} \hat{y}_{i}, \label{eq:cv_looc_trick}
 \end{align}
-where $g_{i} = \frac{1}{1 - h_{ii}}$ and $h_{ii}$ are the diagonal
-elements of the projection matrix $P_{X}$ and $\hat{y}_{i}$ is
-the fitted value on the $i^{th}$ sample, both computed using all the
-data.
+where $g_{i} = \frac{1}{1 - h_{ii}}$ and $h_{ii}$ are the diagonal elements of
+the projection matrix $P_{X}$ and $\hat{y}_{i}$ is the fitted value on the
+$i^{th}$ sample, both computed using all the data (see for example
+\citep{seber2012linear}).
 
-The advantage of the representation \ref{eq:cv_looc_trick} is that it
-makes it possible to perform a full LOOCV without actually computing
-$n$ regression models: only a single full regression using all the
-data needs to be computed, and all the LOOCV fits $\hat{y}_{-i}$ can
-be deduced directly. This can dramatically speed up computation of the
-sum in \ref{eq:cv_looc}. While this does not resolve the question of how to
-manage the search over possible $B$, concrete proposals are discussed
-in \cite{breiman1997predicting}.
+The advantage of the representation \ref{eq:cv_looc_trick} is that it makes it
+possible to perform LOOCV without computing $n$ regression models: from a single
+full regression using all the data, all the LOOCV fits $\hat{y}_{-i}$ can be
+deduced directly. This can dramatically speed up computation of the sum in
+\ref{eq:cv_looc}.
 
 An alternative is to use generalized cross-validation (GCV). This
 approach suggests a form for $B$ based on the response canonical
@@ -1524,12 +1518,11 @@ correlation directions. The GCV approximation is that the $h_{ii}$ can
 be approximated by their average across all diagonal elements of $H$:
 $h_{ii} \approx h := \frac{1}{n}\tr\left(H\right)$ for all $i$. In
 this spirit, define $g = \frac{1}{1 - h}$, and approximate
-\begin{align}
+\begin{align*}
   \hat{y}_{-i} \approx \left(1 - g\right)y_{i} + g\hat{y}_{i}.
-\end{align}
+\end{align*}
 
-Then, the LOOCV error optimized in \ref{eq:cv_looc} can be
-simplified to
+Then, the LOOCV error optimized in \ref{eq:cv_looc} can be simplified to
 \begin{align}
   \sum_{i = 1}^{n}\|y_{i} - B\hat{y}_{-i}\|_{2}^{2} &= \sum_{i =
     1}^{n} \|y_{i} - B\left(\left(1 - g\right)y_{i} +
