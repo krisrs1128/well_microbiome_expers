@@ -27,7 +27,9 @@ prepare_loadings <- function(loadings_list, types, K = 3) {
   }
 
   seq_ix <- which(types == "seq")
-  df_list[[seq_ix]]$seq_num <- df_list[[seq_ix]]$variable
+  if (length(seq_ix) > 0) {
+    df_list[[seq_ix]]$seq_num <- df_list[[seq_ix]]$variable
+  }
 
   do.call(rbind, df_list)
 }
@@ -59,7 +61,7 @@ perc_label <- function(eigs, i) {
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
 }
 
-plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
+plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
   ggplot(loadings) +
     geom_hline(yintercept = 0, size = 0.5) +
     geom_vline(xintercept = 0, size = 0.5) +
@@ -67,14 +69,15 @@ plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
       data = loadings %>%
         filter(type == "seq"),
       aes(x = Axis.1, y = Axis.2, size = Axis.3, col = family),
-      alpha = 1
+      alpha = a
     ) +
     geom_text_repel(
       data = loadings %>%
         filter(type == "body_comp"),
       aes(x = Axis.1, y = Axis.2, label = variable, size = Axis.3),
       segment.size = 0.3,
-      segment.alpha = 0.5
+      segment.alpha = 0.5,
+      force = 0.05
     ) +
     labs(
       "x" = perc_label(eigs, 1),
@@ -90,6 +93,8 @@ plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5)) {
 
 plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)) {
   ggplot() +
+    geom_hline(yintercept = 0, alpha = 0.5) +
+    geom_vline(xintercept = 0, alpha = 0.5) +
     geom_point(
       data = scores,
       aes_string(
@@ -118,4 +123,41 @@ link_scores <- function(mscores, alpha = 0.1) {
     ),
     alpha = alpha
   )
+}
+
+#' Useful for plotting scores for several features
+plot_scores_wrapper <- function(xi, raw, processed, scv) {
+  xi_df <- data.frame(
+    "Axis" = xi,
+    "Number" = rownames(processed$bc)
+  ) %>%
+    left_join(raw$bc) %>%
+    left_join(family_means(processed$mseqtab))
+  list(
+    plot_scores(xi_df, "age", "age", c(1, 1)) + scv,
+    plot_scores(xi_df, "bmi", "BMI", c(1, 1)) + scv,
+    plot_scores(xi_df, "Trunk_LM", "Trunk LM", c(1, 1)) + scv,
+    plot_scores(xi_df, "rl_ratio", "Rum. / Lachn.", c(1, 1)) + scv
+  )
+}
+
+
+#' Average across first dimension
+slice_mean <- function(x) {
+  apply(x, c(2, 3), mean)
+}
+
+#' Means from posterior samples
+parameter_means <- function(theta_samples) {
+  theta_hat <- list()
+  for (i in seq_along(theta_samples)) {
+    if (length(dim(theta_samples[[i]])) > 2) {
+      theta_hat[[i]] <- slice_mean(theta_samples[[i]])
+    } else {
+      theta_hat[[i]] <- mean(theta_samples[[i]])
+    }
+  }
+
+  names(theta_hat) <- names(theta_samples)
+  theta_hat
 }
