@@ -66,14 +66,14 @@ opts <- list(
   "p" = 20,
   "k" = 2,
   "l" = 2,
-  "sigma0" = 1 / sqrt(504),
-  "sigma" = 0.0005
+  "sigma0" = 2,
+  "sigma" = 0.01
 )
 
 ###############################################################################
 ## Simulate data
 ###############################################################################
-S <- 100 * qr.Q(qr(matnorm(opts$p, opts$k, opts$sigma0))) # same source between the two matrices
+S <- 500 * qr.Q(qr(matnorm(opts$p, opts$k, opts$sigma0))) # same source between the two matrices
 W <- replicate(opts$l, matrix(0, opts$n, opts$k), simplify = F)
 W[[1]][, 1] <- c(
   rep(0, opts$n / 8),
@@ -117,7 +117,6 @@ mW$type <- "truth"
 ###############################################################################
 ## Simulation according to common source model
 ###############################################################################
-opts$sigma <- 0
 X <- common_source_model(W, S, opts)
 colnames(X[[2]]) <- paste0("Y", seq_len(ncol(X[[2]])))
 
@@ -129,7 +128,9 @@ pairs(X[[2]][, y_ix], asp = 1, main = "Four columns of Y")
 pairs(cbind(X[[1]][, x_ix[1:2]], X[[2]][, y_ix[1:2]]), asp = 1,
       main = "Two columns of X vs. Two columns of Y")
 
-pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2)
+pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2, penalty = 10)
+pmd_res$ws[[2]][, 1] <- -pmd_res$ws[[2]][, 1]
+pmd_res$ws[[2]][, 2] <- -pmd_res$ws[[2]][, 2]
 
 mW_hat <- melt(pmd_res$ws)
 colnames(mW_hat) <- c("i", "k", "w", "table")
@@ -137,7 +138,9 @@ mW_hat$table[mW_hat$table == 1] <- "X"
 mW_hat$table[mW_hat$table == 2] <- "Y"
 mW_hat$type <- "recovered"
 mW_hat$k <- as.factor(mW_hat$k)
+
 mW$k <- as.factor(mW$k)
+## mW$k <- revalue(mW$k, c("2" = "1", "1" = "2"))
 
 ggplot() +
   geom_line(
@@ -151,5 +154,34 @@ ggplot() +
     size = 1
   ) +
   facet_grid(table ~ .)
+
+mW_bind <- bind_rows(mW, mW_hat)
+mW_bind$w <- mW_bind$w + runif(nrow(mW_bind), -0.01, 0.01)
+mW_points <- mW_bind %>%
+  spread(k, w) %>%
+  dplyr::rename(V1 = `1`, V2 = `2`)
+mW_links <- mW_bind %>%
+  dcast(i + table ~ k + type, value.var = "w")
+
+ggplot(mW_bind) +
+  geom_hline(yintercept = 0, alpha = 0.2) +
+  geom_vline(xintercept = 0, alpha = 0.2) +
+  geom_segment(
+    data = mW_links,
+    aes(x = `1_recovered`, xend = `1_truth`, y = `2_recovered`, yend = `2_truth`),
+    size = 0.4,
+    alpha = 0.1
+  ) +
+  geom_point(
+    data = mW_points,
+    aes(x = V1, y = V2, col = type),
+    size = 0.4,
+    alpha = 0.6
+  ) +
+  scale_color_brewer(
+    palette = "Set2",
+    guide = guide_legend(override.aes = list(alpha = 1, size = 2))
+  ) +
+  facet_wrap(~table, scale = "free")
 
 pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 1, type = "ordered")
