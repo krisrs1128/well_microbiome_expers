@@ -166,22 +166,15 @@ mW_links <- mW_bind %>%
 ggplot(mW_bind) +
   geom_hline(yintercept = 0, alpha = 0.2) +
   geom_vline(xintercept = 0, alpha = 0.2) +
-  geom_segment(
-    data = mW_links,
-    aes(x = `1_recovered`, xend = `1_truth`, y = `2_recovered`, yend = `2_truth`),
-    size = 0.4,
-    alpha = 0.1
-  ) +
   geom_point(
     data = mW_points,
-    aes(x = V1, y = V2, col = type),
+    aes(x = V1, y = V2, col = type, shape = table),
     size = 0.4,
     alpha = 0.6
   ) +
   scale_color_brewer(
     palette = "Set2",
     guide = guide_legend(override.aes = list(alpha = 1, size = 2))
-  ) +
-  facet_wrap(~table, scale = "free")
+  )
 
 pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 1, type = "ordered")
