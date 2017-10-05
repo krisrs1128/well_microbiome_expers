@@ -192,4 +192,5 @@ plot_simulation(mW, pmd_res)
 ## Exact same analysis but with ordered Ws
 ###############################################################################
 pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2, type = "ordered")
-plot_simulation(mW, pmd_res)
+p <- plot_simulation(mW, pmd_res)
+ggsave("../chapter/figure/pmd/illustration_sequence.png", p[[1]], width = 5, height = 3)

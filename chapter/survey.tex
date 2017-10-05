@@ -1293,21 +1293,27 @@ $\ell^{2}$ distance from the original data to their projections onto that
 subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
 \reals^{n}$ and eigenvector $v$ are the optimal values in the problem
 \begin{align*}
-  \\text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
+  \text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
   \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1.
 \end{align*}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/illustration_sequence}
+  \caption{An example of the PMD solution in a sparse source separation
+    problem. \label{fig:pmd_illustration_sequence} }
+\end{figure}
 
 The PMD generalizes this formulation of rank-one PCA to enforce additional
 structure on $u$ and $v$. The PMD solutions $u$ and $v$ are defined as the
 optimizers of
 \begin{align}
-\label{eq:pmd_opt} \minimize_{u \in \reals^{n}, v \in \reals^{p}, d
+\label{eq:pmd_opt} \text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d
   \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
   \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\ 
   & \text{Pen}_{1}\left(u\right) \leq \mu_{1} \nonumber \\
   & \text{Pen}_{2}\left(v\right) \leq \mu_{2}. \nonumber
 \end{align}
-
 
 To choose the regularization parameters $\mu_{1}$ and $\mu_{2}$,
 \citep{witten2009penalized} applied cross-validation to the reconstruction
@@ -1322,7 +1328,7 @@ problem \ref{eq:pmd_opt} on the residual: $X^{k} := X^{k - 1} - d_{k - 1}u_{k -
 %% \cite{allen2014generalized})
 
 This view can be specialized to develop regularized versions of a number of
-multivariate analysis problems. Here consider applications to the CCA and
+multivariate analysis problems. We consider applications to the CCA and
 MultiCCA problems.
 
 Recalling that $\|A\|_{F}^{2} = \tr\left(A^{T}A\right)$ along with the linearity
@@ -1340,8 +1346,8 @@ From this expression, and by partially minimizing out $d = v^{T}X^{T}u$, we see
 that the PMD solutions $u$ and $v$ in \ref{eq:pmd_opt} can be found as the
 optimizers of
 \begin{align}
-\label{eq:pmd_reform}  \maximize_{u \in \reals^{n}, v \in \reals^{p}} &u^{T}X^{T}v \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} \\
+\label{eq:pmd_reform}  \maximize_{u \in \reals^{n}, v \in \reals^{p}} \medspace &u^{T}X^{T}v \\
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} \nonumber \\
   &\text{Pen}_{1}\left(u\right) \leq \mu_{1}\nonumber \\
   &\text{Pen}_{2}\left(v\right) \leq \mu_{2} \nonumber
 \end{align}
@@ -1352,16 +1358,10 @@ alternately maximizing over $u$ and $v$.
 
 From this form, we can derive a sparsity-inducing version of
 CCA. Recall the maximal-covariance interpretation of CCA,
-\begin{align}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &
-  \Covsubarg{\P^{(1)}, \P^{(2)}}{u^{T}x_{i}^{(1)}, v^{T} x_{i}^{(2)}}, \\
-  &\Varsubarg{\P^{(1)}}{x_{i}^{(1)}} = \Varsubarg{\P^{(2)}}{x_{i}^{(2)}} = 1,
-\end{align}
-which in practice is approximated by
-\begin{align}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} & u^{T}\hat{\Sigma}_{12}v \\
-  \text{subject to } &u^{T}\hat{\Sigma}_{11} u &= v^{ T}\hat{\Sigma}_{22}v = 1.
-\end{align}
+\begin{align*}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}\hat{\Sigma}_{12}v \\
+  \text{subject to } &u^{T}\hat{\Sigma}_{11} u = v^{ T}\hat{\Sigma}_{22}v = 1.
+\end{align*}
 
 \citep{witten2009penalized} argues for diagonalized CCA, in which the variance
 constraints are replaced by unit norm constraints, and sparsity-inducing
@@ -1474,6 +1474,14 @@ derivation is provided in Supplementary Section
     \ref{fig:pca_iv_scores_total_fm}, but shaded by Ruminoccoccaceae vs.
     Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
 \end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/illustration_scatter}
+  \caption{\label{fig:pmd_illustration_scatter} }
+\end{figure}
+
+
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}
