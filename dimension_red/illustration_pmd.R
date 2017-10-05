@@ -21,6 +21,24 @@ opts <- list(
   "sigma" = 1
 )
 
+#' Model with common sources, but different scores for each
+#'
+#' @param W A list of matrices containing scores for each table.
+#' @param S A single source matrix underlying all the tables.
+#' @return A list of matrices, each with the same sources S but different
+#' scores W.
+common_source_model <- function(W, S, opts) {
+  X <- list()
+  n <- nrow(W[[1]])
+  p <- nrow(S)
+
+  for(l in seq_along(W)) {
+    X[[l]] <- W[[l]] %*% t(S) + matnorm(n, p, opts$sigma)
+  }
+
+  X
+}
+
 ###############################################################################
 ## Simulate data
 ###############################################################################
@@ -61,15 +79,18 @@ mW$table[mW$table == 2] <- "Y"
 
 ggplot(mW) +
   geom_point(aes(x = i, y = w)) +
-  xlab("sample index") + 
+  xlab("sample index") +
   facet_grid(table ~ k) +
   ggtitle(paste0("True latent weights W"))
 
-## another simulation
-X <- common_source_model(W, S, opts)
 
+###############################################################################
+## Simulation according to common source model
+###############################################################################
+X <- common_source_model(W, S, opts)
 colnames(X[[1]]) <- paste0("X", seq_len(ncol(X[[1]])))
 colnames(X[[2]]) <- paste0("Y", seq_len(ncol(X[[2]])))
+
 x_ix <- sample(seq_len(ncol(X[[1]])), 4)
 y_ix <- sample(seq_len(ncol(X[[1]])), 4)
 pairs(X[[1]][, x_ix], asp = 1, main = "Four columns of X")
@@ -83,14 +104,18 @@ pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 10, ncomponents = 3)
 
 mW_hat <- melt(pmd_res$ws)
 colnames(mW_hat) <- c("i", "k", "w", "table")
-mW_hat <- mW_hat %>% filter(k < 4)
+mW_hat <- mW_hat %>%
+  filter(k < 4)
 mW_hat$k <- paste0("Recovered Dimension ", mW_hat$k)
 mW_hat$table[mW_hat$table == 1] <- "X"
 mW_hat$table[mW_hat$table == 2] <- "Y"
 
 ggplot(mW_hat) +
-  geom_point(aes(x = i, y = w), alpha = 0.6, size = 1) +
-  facet_grid(table ~ k) +
-  ggtitle(expression(paste("Recovered Weights ", hat(W), " [PMD]")))
+  geom_point(
+    aes(x = i, y = w),
+    alpha = 0.6,
+    size = 1
+  ) +
+  facet_grid(table ~ k)
 
 pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 1, type = "ordered")
