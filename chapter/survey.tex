@@ -60,10 +60,9 @@ for 16s sequencing and metabolomic analysis. To date, 16s sequencing data is
 available for 221 of these participants. Evidently, various interesting
 relational questions can be investigated using this data source.
 
-For the purpose of illustration, we focus on one relatively focu
-sed question
-that can be addressed using this data: How is the distribution of lean and fat
-mass across the body related to patterns of microbial abundance? The measurement
+For the purpose of illustration, we focus on one relatively narrow question that
+can be addressed using this data: How is the distribution of lean and fat mass
+across the body related to patterns of microbial abundance? The measurement
 types most relevant in this analysis are (1) DEXA scans and (2) 16s sequencing.
 DEXA scans use relative X-ray absorption to gauge the among of lean and fat body
 mass within the region of the body being scanned. We will have access to these
@@ -1271,6 +1270,118 @@ Eigenvectors are never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not
 possible to make a biplot. Consequently, KCCA scores are typically interpreted
 using supplementary characteristics of the samples.
 
+\subsection{Penalized Matrix Decomposition}
+
+In high-dimensional settings, sparsity is a desirable property, both for
+qualitative interpretability and statistical stability. A regression model using
+only a few features is easier to understand than one involving a linear
+combination of all possible features. Further, regularized models typically
+outperform their non-regularized counterparts, and in fact, it is impossible to
+fit a non-regularized linear regression when the number of features is greater
+than the number of samples.
+
+The Penalized Matrix Decomposition (PMD) is a general approach to adapting the
+reguarlization machinery developed around regression to the multivariate
+analysis setting \citep{witten2009penalized}. The CCA and MultiCCA instances of
+PMD have been particularly well-studied \citep{witten2009penalized,
+  witten2013package}.
+
+The general setup is as follows. Suppose we want a one-dimensional
+representation of the samples (rows) in $X \in \reals^{n \times p}$. Recall that
+the first $k$-eigenvectors recovered by PCA span a subspace that minimizes the
+$\ell^{2}$ distance from the original data to their projections onto that
+subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
+\reals^{n}$ and eigenvector $v$ are the optimal values in the problem
+\begin{align*}
+  \\text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1.
+\end{align*}
+
+The PMD generalizes this formulation of rank-one PCA to enforce additional
+structure on $u$ and $v$. The PMD solutions $u$ and $v$ are defined as the
+optimizers of
+\begin{align}
+\label{eq:pmd_opt} \minimize_{u \in \reals^{n}, v \in \reals^{p}, d
+  \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\ 
+  & \text{Pen}_{1}\left(u\right) \leq \mu_{1} \nonumber \\
+  & \text{Pen}_{2}\left(v\right) \leq \mu_{2}. \nonumber
+\end{align}
+
+
+To choose the regularization parameters $\mu_{1}$ and $\mu_{2}$,
+\citep{witten2009penalized} applied cross-validation to the reconstruction
+errors after holding out random entries in $X$. To obtain a sequence of scores
+and eigenvectors $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
+  1}^{K}$ for $K > 1$, define $u_{k}$ and $v_{k}$ as the optimizers of the
+problem \ref{eq:pmd_opt} on the residual: $X^{k} := X^{k - 1} - d_{k - 1}u_{k -
+  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$.
+
+%% (todo: geometric interpretation)
+%% (todo: generalized least squares / probabilistic interpretation
+%% \cite{allen2014generalized})
+
+This view can be specialized to develop regularized versions of a number of
+multivariate analysis problems. Here consider applications to the CCA and
+MultiCCA problems.
+
+Recalling that $\|A\|_{F}^{2} = \tr\left(A^{T}A\right)$ along with the linearity
+and the cyclic properties of the trace, the objective in \ref{eq:pmd_opt} can be
+rewritten, using $\equiv$ to mean equality up to terms constant in $u$ and $v$,
+\begin{align*}
+  \|X - duv^{T}\|_{F}^{2} &\equiv \tr\left(\left(X -
+      duv^{T}\right)^{T}\left(X - duv^{T}\right)\right) \\
+  &\equiv -2d\tr\left(X^{T}uv^{T}\right) + d^{2}tr\left(uv^{T}vu^{T}\right) \\
+  &\equiv -2d v^{T}X^{T}u + d^{2}
+\end{align*}
+where for the last equivalence we used that $v^{T}v = u^{T}u = 1$.
+
+From this expression, and by partially minimizing out $d = v^{T}X^{T}u$, we see
+that the PMD solutions $u$ and $v$ in \ref{eq:pmd_opt} can be found as the
+optimizers of
+\begin{align}
+\label{eq:pmd_reform}  \maximize_{u \in \reals^{n}, v \in \reals^{p}} &u^{T}X^{T}v \\
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} \\
+  &\text{Pen}_{1}\left(u\right) \leq \mu_{1}\nonumber \\
+  &\text{Pen}_{2}\left(v\right) \leq \mu_{2} \nonumber
+\end{align}
+
+Notice that, as long as the penalties are convex in $u$ and $v$, the
+optimization is biconvex, so a local maximum can be found by
+alternately maximizing over $u$ and $v$.
+
+From this form, we can derive a sparsity-inducing version of
+CCA. Recall the maximal-covariance interpretation of CCA,
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &
+  \Covsubarg{\P^{(1)}, \P^{(2)}}{u^{T}x_{i}^{(1)}, v^{T} x_{i}^{(2)}}, \\
+  &\Varsubarg{\P^{(1)}}{x_{i}^{(1)}} = \Varsubarg{\P^{(2)}}{x_{i}^{(2)}} = 1,
+\end{align}
+which in practice is approximated by
+\begin{align}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} & u^{T}\hat{\Sigma}_{12}v \\
+  \text{subject to } &u^{T}\hat{\Sigma}_{11} u &= v^{ T}\hat{\Sigma}_{22}v = 1.
+\end{align}
+
+\citep{witten2009penalized} argues for diagonalized CCA, in which the variance
+constraints are replaced by unit norm constraints, and sparsity-inducing
+$\ell^{1}$ constraints are added,
+\begin{align*}
+  \maximize_{c_{1}^{(1)} \in \reals^{p_{1}}, c_{1}^{(2)} \in
+    \reals^{p_{2}}} & c_{1}^{(1) T}\hat{\Sigma}_{12}
+  c_{1}^{(2)} \\
+  \text{subject to } &\|c_{1}^{(1)}\|_{2}^{2} = \|c_{1}^{(2)}\|_{2}^{2} = 1 \\
+  &\|c_{1}^{(1)}\|_{1} \leq \mu_{1} \\
+  &\|c_{1}^{(2)}\|_{1} \leq \mu_{2}
+\end{align*}
+which is exactly of the form \ref{eq:pmd_reform} where $X =
+\hat{\Sigma}_{12}$.
+
+Multiple CCA can also be described in this framework, by replacing the objective
+with the sum over all pairwise covariances, $\sum_{l, l^{\prime} = 1}^{L}
+c_{1}^{(l) T}X^{(l) T}X^{(l^{\prime})}c_{1}^{(l)^{\prime}}$, and introducing
+constraints for each of the $c_{1}^{(l)}$.
+
 \subsection{Curds \& Whey}
 \label{subsec:cw}
 
@@ -1606,6 +1717,5 @@ data $Y$ according to the canonical directions, then projects the shrunk data
 onto the subspace defined by the columns of $X$. In any case, we see that C\&W
 pools across regression problems through a soft shrinkage weighted along
 canonical response directions.
-
 
 \end{document}
