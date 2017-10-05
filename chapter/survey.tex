@@ -1300,8 +1300,22 @@ subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/illustration_sequence}
-  \caption{An example of the PMD solution in a sparse source separation
-    problem. \label{fig:pmd_illustration_sequence} }
+  \caption{An example of the PMD CCA solution in a high-dimensional source
+    separation problem, modeled after the simulation experiment in
+    \citep{witten2009penalized}. The solid lines indicate true ``sources''
+    underlying two observed data tables $X \in \reals^{20 \times 504}$ and $Y
+    \in \reals^{20 \times 504}$. Specifically, $X$ and $Y$ are defined as random
+    linear combinations of two sources each, which are then corrupted with
+    noise. The recovered sources from CCA between $X$ and $Y$ using a
+    fused-lasso penalty are plotted as points. The fused-lasso regularization
+    parameter was chosen by cross-validation. The long flat lines in the
+    recovered solutions reflect this penalty. Note that PMD is able to recover
+    the positions at which changepoints in the source signal occur, but that
+    sources are nonidentifiable without further constraints. Further, in the
+    table $X$, a region with truly zero signal is estimated very poorly, for
+    reasons that are unclear. A scatterplot view of this same data is provided
+    in Figure
+    \ref{fig:pmd_illustration_scatter}. \label{fig:pmd_illustration_sequence}}
 \end{figure}
 
 The PMD generalizes this formulation of rank-one PCA to enforce additional
@@ -1321,7 +1335,9 @@ errors after holding out random entries in $X$. To obtain a sequence of scores
 and eigenvectors $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
   1}^{K}$ for $K > 1$, define $u_{k}$ and $v_{k}$ as the optimizers of the
 problem \ref{eq:pmd_opt} on the residual: $X^{k} := X^{k - 1} - d_{k - 1}u_{k -
-  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$.
+  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$. An
+illustration of the effect that regularization has on estimation is provided in
+Figure \ref{fig:pmd_illustration_sequence}.
 
 %% (todo: geometric interpretation)
 %% (todo: generalized least squares / probabilistic interpretation
@@ -1478,10 +1494,11 @@ derivation is provided in Supplementary Section
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/illustration_scatter}
-  \caption{\label{fig:pmd_illustration_scatter} }
+  \caption{An alternative view of Figure \ref{fig:pmd_illustration_sequence},
+    where the two underlying sources are plotted in two dimensions rather than
+    one. Basic unidentifiabilities in the model are visible as long swaps
+    between true and recovered points. \label{fig:pmd_illustration_scatter} }
 \end{figure}
-
-
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}
