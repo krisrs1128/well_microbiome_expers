@@ -12,13 +12,23 @@ library("tidyverse")
 library("PMA")
 set.seed(04032016)
 
-opts <- list(
-  "n" = 504, # want divisible by 8
-  "p" = 20,
-  "k" = 2,
-  "l" = 2,
-  "sigma0" = 5,
-  "sigma" = 1
+scale_colour_discrete <- function(...)
+  scale_colour_brewer(..., palette="Set2")
+scale_fill_discrete <- function(...)
+  scale_fill_brewer(..., palette="Set2")
+
+theme_set(theme_bw())
+theme_update(
+  panel.border = element_rect(size = 0.5),
+  panel.grid = element_blank(),
+  axis.ticks = element_blank(),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8),
+  legend.key = element_blank()
 )
 
 #' Model with common sources, but different scores for each
@@ -39,13 +49,34 @@ common_source_model <- function(W, S, opts) {
   X
 }
 
+#' i.i.d. Gaussian Matrix
+matnorm <- function(n, p, mu = 0, sigma = 1) {
+  matrix(
+    rnorm(n * p, mu, sigma),
+    n, p
+  )
+}
+
+norm <- function(x) {
+  sqrt(sum(x ^ 2))
+}
+
+opts <- list(
+  "n" = 504, # want divisible by 8
+  "p" = 20,
+  "k" = 2,
+  "l" = 2,
+  "sigma0" = 1 / sqrt(504),
+  "sigma" = 0.0005
+)
+
 ###############################################################################
 ## Simulate data
 ###############################################################################
-S <- qr.Q(qr(matnorm(opts$p, opts$k, opts$sigma0))) # same source between the two matrices
+S <- 100 * qr.Q(qr(matnorm(opts$p, opts$k, opts$sigma0))) # same source between the two matrices
 W <- replicate(opts$l, matrix(0, opts$n, opts$k), simplify = F)
 W[[1]][, 1] <- c(
-  rep(10, opts$n / 8),
+  rep(0, opts$n / 8),
   rep(-10, opts$n / 8),
   rep(10, opts$n / 8),
   rep(-10, opts$n / 8),
@@ -63,32 +94,31 @@ W[[2]][, 1] <- c(
 )
 W[[2]][, 2] <- c(
   rep(-10, opts$n / 4),
+  rep(0, opts$n / 4),
   rep(10, opts$n / 4),
-  rep(-10, opts$n / 4),
-  rep(10, opts$n / 4)
+  rep(0, opts$n / 4)
 )
+
+for (i in seq_along(W)) {
+  for (j in seq_len(ncol(W[[i]]))) {
+    W[[i]][, j] <- W[[i]][, j] / norm(W[[i]][, j])
+  }
+}
 
 ###############################################################################
 ## Plot the simulated data
 ###############################################################################
 mW <- melt(W)
 colnames(mW) <- c("i", "k", "w", "table")
-mW$k <- paste0("Latent Dimension ", mW$k)
 mW$table[mW$table == 1] <- "X"
 mW$table[mW$table == 2] <- "Y"
-
-ggplot(mW) +
-  geom_point(aes(x = i, y = w)) +
-  xlab("sample index") +
-  facet_grid(table ~ k) +
-  ggtitle(paste0("True latent weights W"))
-
+mW$type <- "truth"
 
 ###############################################################################
 ## Simulation according to common source model
 ###############################################################################
+opts$sigma <- 0
 X <- common_source_model(W, S, opts)
-colnames(X[[1]]) <- paste0("X", seq_len(ncol(X[[1]])))
 colnames(X[[2]]) <- paste0("Y", seq_len(ncol(X[[2]])))
 
 x_ix <- sample(seq_len(ncol(X[[1]])), 4)
@@ -99,23 +129,27 @@ pairs(X[[2]][, y_ix], asp = 1, main = "Four columns of Y")
 pairs(cbind(X[[1]][, x_ix[1:2]], X[[2]][, y_ix[1:2]]), asp = 1,
       main = "Two columns of X vs. Two columns of Y")
 
-X <- lapply(X, scale)
-pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 10, ncomponents = 3)
+pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2)
 
 mW_hat <- melt(pmd_res$ws)
 colnames(mW_hat) <- c("i", "k", "w", "table")
-mW_hat <- mW_hat %>%
-  filter(k < 4)
-mW_hat$k <- paste0("Recovered Dimension ", mW_hat$k)
 mW_hat$table[mW_hat$table == 1] <- "X"
 mW_hat$table[mW_hat$table == 2] <- "Y"
+mW_hat$type <- "recovered"
+mW_hat$k <- as.factor(mW_hat$k)
+mW$k <- as.factor(mW$k)
 
-ggplot(mW_hat) +
+ggplot() +
+  geom_line(
+    data = mW,
+    aes(x = i, y = w, col = k)
+  ) +
   geom_point(
-    aes(x = i, y = w),
+    data = mW_hat,
+    aes(x = i, y = w, col = k),
     alpha = 0.6,
     size = 1
   ) +
-  facet_grid(table ~ k)
+  facet_grid(table ~ .)
 
 pmd_res <- MultiCCA(lapply(X, function(x) t(x)), penalty = 1, type = "ordered")
