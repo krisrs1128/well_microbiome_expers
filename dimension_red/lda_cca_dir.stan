@@ -27,10 +27,10 @@ parameters {
   simplex[K] xi_s[n];
   simplex[L1] xi_x[n];
   simplex[L2] xi_y[n];
-  matrix[p1, L1] Wx;
-  matrix[p2, L2] Wy;
-  matrix[p1, K] Bx;
-  matrix[p2, K] By;
+  matrix[L1, p1] Wx;
+  matrix[L2, p2] Wy;
+  matrix[K, p1] Bx;
+  matrix[K, p2] By;
 }
 
 transformed parameters {
@@ -47,13 +47,16 @@ model {
   }
 
   for (k in 1:K) {
-    col(Bx, k) ~ dirichlet(gamma);
-    col(Wx, k) ~ dirichlet(gamma);
+    Bx[k]' ~ dirichlet(gamma);
+  }
+
+  for (l in 1:L1) {
+    Wx[l]' ~ dirichlet(gamma);
   }
 
   // likelihood
   for (i in 1:n) {
-    x[i] ~ multinomial(Bx * xi_s[i] + Wx * xi_x[i]);
-    y[i] ~ multi_normal(By * xi_s[i] + Wy * xi_y[i], cov_y);
+    x[i] ~ multinomial(Bx' * xi_s[i] + Wx' * xi_x[i]);
+    y[i] ~ multi_normal(By' * xi_s[i] + Wy' * xi_y[i], cov_y);
   }
 }

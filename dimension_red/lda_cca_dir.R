@@ -7,7 +7,7 @@
 ## with lda_cca.R is that this uses a dirichlet prior for the scores.
 ##
 ## author: sankaran.kris@gmail.com
-## date: 10/04/2017
+## date: 10/05/2017
 
 ###############################################################################
 ## Libraries and setup
@@ -77,7 +77,7 @@ stan_data <- list(
   "y" = bc_mat
 )
 
-m <- stan_model("lda_cca.stan")
+m <- stan_model("lda_cca_dir.stan")
 vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
