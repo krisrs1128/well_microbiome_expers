@@ -61,6 +61,61 @@ norm <- function(x) {
   sqrt(sum(x ^ 2))
 }
 
+#' Plot simulation experiment
+plot_simulation <- function(mW, pmd_res) {
+  mW_hat <- melt(pmd_res$ws)
+  colnames(mW_hat) <- c("i", "k", "w", "table")
+  mW_hat$table[mW_hat$table == 1] <- "X"
+  mW_hat$table[mW_hat$table == 2] <- "Y"
+  mW_hat$type <- "recovered"
+  mW_hat$k <- as.factor(mW_hat$k)
+  mW$k <- as.factor(mW$k)
+
+  plots <- list()
+  plots[["sequence"]] <- ggplot() +
+    geom_line(
+      data = mW,
+      aes(x = i, y = w, col = k)
+    ) +
+    geom_point(
+      data = mW_hat,
+      aes(x = i, y = w, col = k),
+      alpha = 0.6,
+      size = 1
+    ) +
+    facet_grid(table ~ .)
+
+  mW_bind <- bind_rows(mW, mW_hat)
+  mW_bind$w <- mW_bind$w + runif(nrow(mW_bind), -0.01, 0.01)
+  mW_points <- mW_bind %>%
+    spread(k, w) %>%
+    dplyr::rename(V1 = `1`, V2 = `2`)
+  mW_links <- mW_bind %>%
+    dcast(i + table ~ k + type, value.var = "w")
+
+  plots[["scatter"]] <- ggplot(mW_bind) +
+    geom_hline(yintercept = 0, alpha = 0.2) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_point(
+      data = mW_points,
+      aes(x = V1, y = V2, col = type, shape = table),
+      size = 1,
+      alpha = 0.6
+    ) +
+    geom_segment(
+      data = mW_links,
+      aes(x = `1_truth`, xend = `1_recovered`, y = `2_truth`, yend = `2_recovered`),
+      size = 0.2,
+      alpha = 0.1
+    ) +
+    scale_color_brewer(
+      palette = "Set2",
+      guide = guide_legend(override.aes = list(alpha = 1, size = 2))
+    )
+
+  plots
+}
+
 opts <- list(
   "n" = 504, # want divisible by 8
   "p" = 20,
@@ -131,93 +186,10 @@ pairs(cbind(X[[1]][, x_ix[1:2]], X[[2]][, y_ix[1:2]]), asp = 1,
 pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2, penalty = 10)
 pmd_res$ws[[2]][, 1] <- -pmd_res$ws[[2]][, 1]
 pmd_res$ws[[2]][, 2] <- -pmd_res$ws[[2]][, 2]
-
-mW_hat <- melt(pmd_res$ws)
-colnames(mW_hat) <- c("i", "k", "w", "table")
-mW_hat$table[mW_hat$table == 1] <- "X"
-mW_hat$table[mW_hat$table == 2] <- "Y"
-mW_hat$type <- "recovered"
-mW_hat$k <- as.factor(mW_hat$k)
-
-mW$k <- as.factor(mW$k)
-ggplot() +
-  geom_line(
-    data = mW,
-    aes(x = i, y = w, col = k)
-  ) +
-  geom_point(
-    data = mW_hat,
-    aes(x = i, y = w, col = k),
-    alpha = 0.6,
-    size = 1
-  ) +
-  facet_grid(table ~ .)
-
-mW_bind <- bind_rows(mW, mW_hat)
-mW_bind$w <- mW_bind$w + runif(nrow(mW_bind), -0.01, 0.01)
-mW_points <- mW_bind %>%
-  spread(k, w) %>%
-  dplyr::rename(V1 = `1`, V2 = `2`)
-mW_links <- mW_bind %>%
-  dcast(i + table ~ k + type, value.var = "w")
-
-ggplot(mW_bind) +
-  geom_hline(yintercept = 0, alpha = 0.2) +
-  geom_vline(xintercept = 0, alpha = 0.2) +
-  geom_point(
-    data = mW_points,
-    aes(x = V1, y = V2, col = type, shape = table),
-    size = 1,
-    alpha = 0.6
-  ) +
-  scale_color_brewer(
-    palette = "Set2",
-    guide = guide_legend(override.aes = list(alpha = 1, size = 2))
-  )
+plot_simulation(mW, pmd_res)
 
 ###############################################################################
 ## Exact same analysis but with ordered Ws
 ###############################################################################
 pmd_res <- MultiCCA(lapply(X, t), ncomponents = 2, type = "ordered")
-mW_hat <- melt(pmd_res$ws)
-colnames(mW_hat) <- c("i", "k", "w", "table")
-mW_hat$table[mW_hat$table == 1] <- "X"
-mW_hat$table[mW_hat$table == 2] <- "Y"
-mW_hat$type <- "recovered"
-mW_hat$k <- as.factor(mW_hat$k)
-mW$k <- as.factor(mW$k)
-
-ggplot() +
-  geom_line(
-    data = mW,
-    aes(x = i, y = w, col = k)
-  ) +
-  geom_point(
-    data = mW_hat,
-    aes(x = i, y = w, col = k),
-    alpha = 0.6,
-    size = 1
-  ) +
-  facet_grid(table ~ .)
-
-mW_bind <- bind_rows(mW, mW_hat)
-mW_bind$w <- mW_bind$w + runif(nrow(mW_bind), -0.01, 0.01)
-mW_points <- mW_bind %>%
-  spread(k, w) %>%
-  dplyr::rename(V1 = `1`, V2 = `2`)
-mW_links <- mW_bind %>%
-  dcast(i + table ~ k + type, value.var = "w")
-
-ggplot(mW_bind) +
-  geom_hline(yintercept = 0, alpha = 0.2) +
-  geom_vline(xintercept = 0, alpha = 0.2) +
-  geom_point(
-    data = mW_points,
-    aes(x = V1, y = V2, col = type, shape = table),
-    size = 1,
-    alpha = 0.6
-  ) +
-  scale_color_brewer(
-    palette = "Set2",
-    guide = guide_legend(override.aes = list(alpha = 1, size = 2))
-  )
+plot_simulation(mW, pmd_res)
