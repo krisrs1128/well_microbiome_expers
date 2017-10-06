@@ -116,7 +116,7 @@ plot_loadings(
   a = 0.4
 ) +
   facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(guide = FALSE) +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
 
