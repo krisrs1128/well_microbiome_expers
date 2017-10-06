@@ -1271,6 +1271,7 @@ possible to make a biplot. Consequently, KCCA scores are typically interpreted
 using supplementary characteristics of the samples.
 
 \subsection{Penalized Matrix Decomposition}
+\label{subsec:pmd}
 
 In high-dimensional settings, sparsity is a desirable property, both for
 qualitative interpretability and statistical stability. A regression model using
@@ -1397,6 +1398,70 @@ Multiple CCA can also be described in this framework, by replacing the objective
 with the sum over all pairwise covariances, $\sum_{l, l^{\prime} = 1}^{L}
 c_{1}^{(l) T}X^{(l) T}X^{(l^{\prime})}c_{1}^{(l)^{\prime}}$, and introducing
 constraints for each of the $c_{1}^{(l)}$.
+
+\subsection{Multitable Mixed-Membership}
+\label{subsec:multitable_mixed_membership}
+
+In Section \ref{subsec:cca}, a latent variable interpretation of CCA was
+provided as an alternative to the standard covariance maximization perspective.
+Since likelihood based methods are easily adapted to different data types, it is
+natural to consider versions of CCA designed for non-Gaussian data, using the
+setup of Section \ref{subsec:cca} as a starting point. We are particularly
+interested in data with the same structure as the WELL-China body composition
+and microbiome data, namely two table data sets where one table is continuous
+with Gaussian marginals and correlated columns and the other is a
+high-dimensional collection of counts, where many entries are exactly zero.
+
+As before, define a set of shared scores $\xi_{i}^{s} \in \reals^{K}$, and two
+sets of within-table scores, $\xi_{i}^{X} \in \reals^{L_{1}}$ and $\xi_{i}^{Y}
+\in \reals^{L_{2}}$. As before, we model the body composition variables using a
+essentially a Gaussian factor analysis model, $y_{i} \vert \xi_{i}^{X},
+\xi_{i}^{Y} \sim \Gsn\left(B^{y}\xi_{i}^s + W^y \xi_{i}^y,
+\sigma^{2}I_{p_{2}}\right)$ with a spherical Gaussian prior on $\xi_{i}^{X},
+\xi_{i}^{Y}$. For the counts matrix, we might consider a few different
+approaches,
+
+\begin{itemize}
+\item Exponential Family PCA \citep{mohamed2009bayesian}: By requiring low-rank
+  structure on the natural parameters of an exponential family model, we could
+  naturally model high-dimensional count data, using a Poisson or Multinomial
+  likelihood, for example.
+\item Nonnegative Matrix Factorization \citep{lee2001algorithms}: A variant of
+  the exponential family approach is to directly model the counts matrix as a
+  Poisson likelihood with a product of Gamma matrix priors.
+\item Latent Dirichlet Allocation (LDA) \citep{blei2003latent}: We can model the
+  observed samples as Dirichlet mixtures of a few underlying ``topics.''
+\end{itemize}
+
+Here, we focus on the LDA approach, though we suspect the other two approaches
+are potentially interesting as well. Formally, this model supposes the counts
+are drawn according to
+\begin{align*}
+  x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k})
+  \theta_{i} &\sim \Dir\left(\alpha\right),
+\end{align*}
+which has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k
+  =1}^{K}$ are scores for the $i^{th}$ sample and $\left(\beta_{k}\right)$ are
+$K$ underlying topics.
+
+The only complexity with using LDA model of $X$ together with a Gaussian factor
+analysis on $Y$ is that the shared scores $\xi_{i}^{s}$ typically have different
+priors -- a Dirichlet for LDA and a spherical Gaussian for factor analysis. In
+any formulation of probabilistic CCA that uses both models, this must be
+reconciled. One approach is to continue to place Dirichlet priors on all the
+scores, $\xi_{i}^s, \xi_{i}^x$, and $\xi_{i}^y$. While the model for the
+Gaussian data is no longer exactly traditional factor analysis, it has a similar
+interpretation. Alternatively, we could use a spherical Gaussian prior on all
+scores and then recover probability vectors by applying the softmax function,
+$\left[\S\left(v\right)\right]_{k} =
+\frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
+\begin{align*}
+  x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
+  \S\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x})) \\
+  \xi_{i}^{s} \sim \Gsn\left(0, \tau^{2}\right).
+\end{align*}
+It is this second model that we use in our experiments below.
 
 \subsection{Curds \& Whey}
 \label{subsec:cw}
