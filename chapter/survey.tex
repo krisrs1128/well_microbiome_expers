@@ -1438,7 +1438,7 @@ are potentially interesting as well. Formally, this model supposes the counts
 are drawn according to
 \begin{align*}
   x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
-  \sum_{k = 1}^{K} \theta_{ik} \beta_{k})
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right)
   \theta_{i} &\sim \Dir\left(\alpha\right),
 \end{align*}
 which has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k
@@ -1458,7 +1458,7 @@ $\left[\S\left(v\right)\right]_{k} =
 \frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
 \begin{align*}
   x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
-  \S\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x})) \\
+  \S\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right) \\
   \xi_{i}^{s} \sim \Gsn\left(0, \tau^{2}\right).
 \end{align*}
 It is this second model that we use in our experiments below.
