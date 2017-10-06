@@ -37,7 +37,9 @@ read_data <- function(data_dir = "../data/") {
     data.frame() %>%
     rownames_to_column("seq")
   taxa$seq_num <- colnames(seqtab)
-  taxa$family <- fct_lump(taxa$Family, n = 7)
+  taxa$family <- fct_lump(taxa$Family, n = 6)
+  levels(taxa$family) <- c(levels(taxa$family), "NA")
+  taxa$family[is.na(taxa$family)] <- "NA"
   list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc)
 }
 
@@ -89,8 +91,8 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
 family_means <- function(mseqtab) {
   processed$mseqtab %>%
     group_by(family, Number) %>%
-    summarise(family_mean = mean(value)) %>%
+    dplyr::summarise(family_mean = mean(value)) %>%
     spread(family, family_mean) %>%
     group_by(Number) %>%
-    summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
+    dplyr::summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
 }
