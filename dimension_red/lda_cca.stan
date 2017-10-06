@@ -13,7 +13,8 @@ data {
   int<lower=1> L1;
   int<lower=1> L2;
   real<lower=0> sigma;
-  real<lower=0> tau;
+  real<lower=0> a0;
+  real<lower=0> b0;
 
   int<lower=0> x[n, p1];
   matrix[n, p2] y;
@@ -28,6 +29,7 @@ data {
 
 
 parameters {
+  real<lower=0> tau_sq[3];
   matrix[n, K] xi_s;
   matrix[n, L1] xi_x;
   matrix[n, L2] xi_y;
@@ -39,15 +41,22 @@ parameters {
 
 transformed parameters {
   matrix[p2, p2] cov_y;
+  real<lower=0> tau[3];
+
   cov_y = sigma ^ 2 * id_y;
+  tau = sqrt(tau_sq);
 }
 
 model {
   // prior
+  for (v in 1:3) {
+    tau_sq[v] ~ inv_gamma(a0, b0);
+  }
+
   for (i in 1:n) {
-    xi_s[i] ~ multi_normal(zeros_k, tau * id_k);
-    xi_x[i] ~ multi_normal(zeros_l1, tau * id_l1);
-    xi_y[i] ~ multi_normal(zeros_l2, tau * id_l2);
+    xi_s[i] ~ multi_normal(zeros_k, tau[1] * id_k);
+    xi_x[i] ~ multi_normal(zeros_l1, tau[2] * id_l1);
+    xi_y[i] ~ multi_normal(zeros_l2, tau[3] * id_l2);
   }
 
   // likelihood
