@@ -37,22 +37,27 @@ read_data <- function(data_dir = "../data/") {
     data.frame() %>%
     rownames_to_column("seq")
   taxa$seq_num <- colnames(seqtab)
-  taxa$family <- fct_lump(taxa$Family, n = 7)
   list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc)
 }
 
 process_data <- function(seqtab, bc, taxa, opts = list()) {
   opts <- merge_default_opts(opts)
-  mseqtab <- seqtab %>%
-    melt(varnames = c("Number", "seq_num")) %>%
-    left_join(bc) %>%
-    left_join(taxa)
 
   ## filter counts
   seqtab <- seqtab[bc$Number, ]
   seqtab <- seqtab[bc$gender == opts$gender, ]
   seqtab <- seqtab %>%
     filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
+  taxa <- taxa %>%
+    filter(seq_num %in% colnames(seqtab)) %>%
+    mutate(
+      family = fct_explicit_na(fct_lump(Family, n = 11))
+    )
+
+  mseqtab <- seqtab %>%
+    melt(varnames = c("Number", "seq_num")) %>%
+    left_join(bc) %>%
+    left_join(taxa)
 
   dds <- DESeqDataSetFromMatrix(
     countData = t(get_taxa(seqtab)),
