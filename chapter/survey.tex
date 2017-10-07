@@ -1468,45 +1468,72 @@ It is this second model that we use in our experiments below.
 
 We illustrate this formulation of the multitable mixed membership approach on
 the WELL-China data. We choose $K = 3$ for the number of shared topics and
-$L_{1} = L_{2} = 4$ for the number of unshared topics. While the use of
-shared ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives
+$L_{1} = L_{2} = 3$ for the number of unshared topics per table. While the use
+of shared ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives
 more flexibility in modeling, it also leads to additional complexity in
 interpretation -- there are both more scores and more loadings that need to be
 visualized.
 
+Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
+\ref{fig:lda_cca_loadings_body_comp} and \ref{fig:lda_cca_loadings_seq}. Note
+that there is no sense of variance explained by different axes, and we use an
+aspect ratio of $1$ throughout. Figure \ref{fig:lda_cca_loadings_body_comp}
+suggests that the first axes of $W^{Y}$ captures variation between lean and fat
+mass, which can be used to interpret the scores in Supplementary Figures
+\ref{fig:lda_cca_unshared_scores_3} and \ref{fig:lda_cca_unshared_scores_4}. The
+second axes reflects similar variation, while the third axes captures difference
+between mass in the trunk versus arms and legs.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/lda_cca/loadings_body_comp}
-  \caption{\label{fig:loadings_body_comp} }
+  \caption{\label{fig:lda_cca_loadings_body_comp} }
 \end{figure}
+
+Figure \ref{fig:lda_cca_loadings_seq} summarizes table-specific variation in
+bacterial abundances. The first axes primarily distinguishes between Bacteroides
+and Ruminoccocus. The second axes seems related to a few isolated species of
+Prevotella and Lachnospiraceae, while the third has no obvious interpretation.
+These loadings can be used to interpret the scores of Supplementary Figures
+\ref{fig:lda_cca_unshard_scores_1} and \ref{fig:lda_unshared_scores_2}.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/lda_cca/loadings_seq}
-  \caption{\label{fig:loadings_seq} }
+  \caption{\label{fig:lda_cca_loadings_seq} }
 \end{figure}
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
-  \caption{\label{fig:shared_scores_1} }
-\end{figure}
+These interpretations could likely have been obtained by analyzing each table
+separately. More interest lies in covariation between the two tables, captured
+by the shared scores $\xi_{i}^{2}$ and loadings $B^{x}, B^{y}$. The shared body
+body composition loadings are given in Figure
+\ref{fig:lda_cca_loadings_body_comp}. While there is still grouping within lean
+and fat mass variable types, most variation is related to high versus low
+combined mass. The bacterial composition loadings are given in Figures
+\ref{fig:lda_cca_shared_loadings_seq}. The most interesting scores are those
+that lie in the top left and bottom right quadrants: these are species that are
+highly abundant in the first topic but not the second, and vice versa. The first
+shared topic seems dominated by Bacteroidaceae and Lachnospiraceae, while the
+second seems characterized by an absence of Prevotellaceae and
+Porphyromonadaceae. Taxonomic variation in the shared loadings is not as
+definitive as in the species abundance table specific case, however.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.5\textwidth]{figure/lda_cca/shared_loadings_body_comp}
-  \caption{\label{fig:shared_loadings_body_comp} }
+  \caption{\label{fig:lda_cca_shared_loadings_body_comp} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
-  \caption{\label{fig:shared_loadings_seq} }
+  \caption{\label{fig:lda_ca_shared_loadings_seq} }
 \end{figure}
 
-Supplementary Figures \ref{fig:lda_cca_shared_scores_2} through
-\ref{fig:lda_cca_unshared_scores_4} layer alternative supplementary variables on
-both the shared scores and the table-specific scores.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
+  \caption{\label{fig:lda_cca_shared_scores_1} }
+\end{figure}
 
 \subsection{Curds \& Whey}
 \label{subsec:cw}
