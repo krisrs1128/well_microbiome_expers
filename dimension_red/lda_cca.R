@@ -104,7 +104,7 @@ p <- plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
 for (i in seq_along(p)) {
   p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
   ggsave(
-    sprintf("../chapter/figure/lda_cca/shared_scores_%s.png"),
+    sprintf("../chapter/figure/lda_cca/shared_scores_%s.png", i),
     width = 3.56, height = 2.6
   )
 }
@@ -128,7 +128,7 @@ plot_loadings(
 ggsave(sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"))
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
 ggsave(
-  "../chapter/figure/lda_cca/shared_loadings_body_comp.png"
+  "../chapter/figure/lda_cca/shared_loadings_body_comp.png",
   width = 4.56, height = 2.3
 )
 
@@ -139,7 +139,7 @@ p <- c(p, plot_scores_wrapper(pmeans$xi_y, raw, processed, scv))
 for (i in seq_along(p)) {
   p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
   ggsave(
-    sprintf("../chapter/figure/lda_cca/unshared_scores_%s.png"),
+    sprintf("../chapter/figure/lda_cca/unshared_scores_%s.png", i),
     width = 3.56, height = 2.6
   )
 }
