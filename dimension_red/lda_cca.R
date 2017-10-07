@@ -25,9 +25,9 @@ options(mc.cores = parallel::detectCores())
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_colour_brewer(..., palette="Set3")
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_brewer(..., palette="Set3")
 
 theme_set(theme_bw())
 theme_update(
@@ -56,7 +56,7 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 bc_mat <- scale(processed$bc)
 
 K <- 3
-L1 <- 3
+L1 <- 4
 L2 <- 3
 
 stan_data <- list(
@@ -132,7 +132,7 @@ ggsave(
   sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
   width = 6.56, height = 3.9
   )
-plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
+plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +Eigenvalues
   scale_size_continuous(range = c(1.3, 2), guide = FALSE) +
   theme(axis.title = element_blank())
 ggsave(
