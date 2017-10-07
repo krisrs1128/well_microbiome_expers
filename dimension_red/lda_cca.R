@@ -25,12 +25,19 @@ options(mc.cores = parallel::detectCores())
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set3")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set3")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -84,6 +91,7 @@ m <- stan_model("lda_cca.stan")
 vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
+rm(vb_fit)
 pmeans <- parameter_means(posterior)
 for (i in seq_along(pmeans)) {
   pmeans[[i]] <- cbind(pmeans[[i]], 1) # in case only used 2 dimensions
@@ -122,17 +130,20 @@ loadings <- prepare_loadings(
 plot_loadings(
   loadings %>% filter(type == "seq", !is.na(family)),
   c(1, 1),
-  a = 0.4
+  a = 0.9
 ) +
-  facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  facet_wrap(~family, ncol = 5) +
   scale_size_continuous(range = c(0, 2), guide = FALSE) +
-  theme(axis.title = element_blank())
+  theme(
+    axis.title = element_blank(),
+    legend.position="none"
+  )
+
 ggsave(
   sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
   width = 6.56, height = 3.9
   )
-plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +Eigenvalues
+plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
   scale_size_continuous(range = c(1.3, 2), guide = FALSE) +
   theme(axis.title = element_blank())
 ggsave(
@@ -157,11 +168,14 @@ rownames(pmeans$Wx) <- colnames(processed$x_seq)
 loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
   left_join(seq_families) %>%
   filter(!is.na(family))
-plot_loadings(loadings_x, c(1, 1), a = 0.4) +
-  facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(palette = "Set2", guide = FALSE) +
+plot_loadings(loadings_x, c(1, 1), a = 0.9) +
+  facet_wrap(~family, ncol = 5) +
   scale_size_continuous(range = c(0, 2), guide = FALSE) +
-  theme(axis.title = element_blank())
+  theme(
+    axis.title = element_blank(),
+    legend.position = "none"
+  )
+
 ggsave(
   "../chapter/figure/lda_cca/loadings_seq.png",
   width = 5.56, height = 3.5
