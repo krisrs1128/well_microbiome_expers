@@ -56,6 +56,16 @@ melt_scores <- function(scores) {
     spread(comp_type, value)
 }
 
+reshape_posterior_score <- function(xi, bc) {
+  xi %>%
+    mutate(
+      Number = bc$Number[row],
+      col = paste0("topic_", col)
+    ) %>%
+    spread(col, value) %>%
+    left_join(bc)
+}
+
 perc_label <- function(eigs, i) {
   perc <- 100 * eigs[i] / sum(eigs)
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
@@ -203,8 +213,7 @@ melt_parameters <- function(theta_samples) {
     if (length(dim(theta_samples[[i]])) > 2) {
       mtheta[[i]] <- theta_samples[[i]] %>%
         melt(
-          varnames = c("iteration", "row", "col"),
-          value.name = names(theta_samples)[i]
+          varnames = c("iteration", "row", "col")
         )
     } else {
       mtheta[[i]] <- theta_samples[[i]] %>%

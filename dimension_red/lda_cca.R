@@ -195,13 +195,9 @@ ggsave(
 
 ## Plot posteriors associated with scores / topics
 mdist <- melt_parameters(posterior)
-mdist$xi_s <- mdist$xi_s %>%
-  mutate(
-    Number = bc$Number[row],
-    col = paste0("topic_", col)
-  ) %>%
-  spread(col, xi_s) %>%
-  left_join(bc)
+mdist$xi_s <-reshape_posterior_score(mdist$xi_s, bc)
+mdist$xi_x <-reshape_posterior_score(mdist$xi_x, bc)
+mdist$xi_y <-reshape_posterior_score(mdist$xi_y, bc)
 
 ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
@@ -247,6 +243,33 @@ ggplot() +
   ) +
   coord_equal() +
   facet_wrap(~weight_dxa_cut, ncol = 4) +
+  scale_color_viridis(
+    option = "magma",
+    guide = guide_legend(
+      override.aes = list(alpha = 1, size = 2)
+    )
+  ) +
+  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+
+## using the scores from just the bc table
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_y %>%
+      mutate(
+        Total_FM_cut = cut(round(Total_FM / 1e4, 2), 4)
+      ),
+    aes(
+      x = topic_1,
+      y = topic_2,
+      col = topic_3
+    ),
+    size = 0.1,
+    alpha = 0.01
+  ) +
+  coord_equal() +
+  facet_wrap(~Total_FM_cut, nrow = 1) +
   scale_color_viridis(
     option = "magma",
     guide = guide_legend(
