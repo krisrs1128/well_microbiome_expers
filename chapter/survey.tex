@@ -1468,25 +1468,11 @@ It is this second model that we use in our experiments below.
 
 We illustrate this formulation of the multitable mixed membership approach on
 the WELL-China data. We choose $K = 3$ for the number of shared topics and
-$L_{1} = L_{2} = 4$ for the number of unshared topics.
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
-  \caption{\label{fig:shared_scores_1} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_body_comp}
-  \caption{\label{fig:shared_loadings_body_comp} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
-  \caption{\label{fig:shared_loadings_seq} }
-\end{figure}
+$L_{1} = L_{2} = 4$ for the number of unshared topics. While the use of
+shared ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives
+more flexibility in modeling, it also leads to additional complexity in
+interpretation -- there are both more scores and more loadings that need to be
+visualized.
 
 \begin{figure}[ht]
   \centering
@@ -1498,6 +1484,24 @@ $L_{1} = L_{2} = 4$ for the number of unshared topics.
   \centering
   \includegraphics[width=\textwidth]{figure/lda_cca/loadings_seq}
   \caption{\label{fig:loadings_seq} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
+  \caption{\label{fig:shared_scores_1} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figure/lda_cca/shared_loadings_body_comp}
+  \caption{\label{fig:shared_loadings_body_comp} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
+  \caption{\label{fig:shared_loadings_seq} }
 \end{figure}
 
 Supplementary Figures \ref{fig:lda_cca_shared_scores_2} through

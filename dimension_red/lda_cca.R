@@ -130,14 +130,14 @@ plot_loadings(
   theme(axis.title = element_blank())
 ggsave(
   sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
-  width = 5.56, height = 3.5
+  width = 6.56, height = 3.9
   )
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
-  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  scale_size_continuous(range = c(1.3, 2), guide = FALSE) +
   theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/shared_loadings_body_comp.png",
-  width = 5.56, height = 3.0
+  width = 4.0, height = 6.0
 )
 
 ## now plot unshared scores (species abundances first)
@@ -172,9 +172,9 @@ loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   mutate(seq_num = "NA") %>%
   left_join(seq_families)
 plot_loadings(loadings_y, c(1, 1)) +
-  scale_size_continuous(range = c(1, 4), guide = FALSE) +
+  scale_size_continuous(range = c(1.5, 3), guide = FALSE) +
   theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/loadings_body_comp.png",
-  width = 4.56, height = 2.3
+  width = 6.0, height = 1.5
 )
