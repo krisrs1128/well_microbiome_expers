@@ -196,3 +196,22 @@ parameter_means <- function(theta_samples) {
   names(theta_hat) <- names(theta_samples)
   theta_hat
 }
+
+melt_parameters <- function(theta_samples) {
+  mtheta <- list()
+  for (i in seq_along(theta_samples)) {
+    if (length(dim(theta_samples[[i]])) > 2) {
+      mtheta[[i]] <- theta_samples[[i]] %>%
+        melt(
+          varnames = c("iteration", "row", "col"),
+          value.name = names(theta_samples)[i]
+        )
+    } else {
+      mtheta[[i]] <- theta_samples[[i]] %>%
+        melt(value.name = names(theta_samples)[i])
+    }
+  }
+  names(mtheta) <- names(theta_samples)
+
+  mtheta
+}

@@ -192,3 +192,66 @@ ggsave(
   "../chapter/figure/lda_cca/loadings_body_comp.png",
   width = 6.0, height = 1.5
 )
+
+## Plot posteriors associated with scores / topics
+mdist <- melt_parameters(posterior)
+mdist$xi_s <- mdist$xi_s %>%
+  mutate(
+    Number = bc$Number[row],
+    col = paste0("topic_", col)
+  ) %>%
+  spread(col, xi_s) %>%
+  left_join(bc)
+
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_s %>%
+      mutate(
+        Total_FM_cut = cut(round(Total_FM / 1e4, 2), 8)
+      ),
+    aes(
+      x = topic_1,
+      y = topic_2,
+      col = topic_3
+    ),
+    size = 0.1,
+    alpha = 0.01
+  ) +
+  coord_equal() +
+  facet_wrap(~Total_FM_cut, ncol = 4) +
+  scale_color_viridis(
+    option = "magma",
+    guide = guide_legend(
+      override.aes = list(alpha = 1, size = 2)
+    )
+  ) +
+  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_s %>%
+      mutate(
+        weight_dxa_cut = cut(weight_dxa, 8)
+      ),
+    aes(
+      x = topic_1,
+      y = topic_2,
+      col = topic_3
+    ),
+    size = 0.1,
+    alpha = 0.01
+  ) +
+  coord_equal() +
+  facet_wrap(~weight_dxa_cut, ncol = 4) +
+  scale_color_viridis(
+    option = "magma",
+    guide = guide_legend(
+      override.aes = list(alpha = 1, size = 2)
+    )
+  ) +
+  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+
