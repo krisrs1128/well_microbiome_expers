@@ -56,8 +56,8 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 bc_mat <- scale(processed$bc)
 
 K <- 3
-L1 <- 4
-L2 <- 4
+L1 <- 3
+L2 <- 3
 
 stan_data <- list(
   "n" = nrow(bc_mat),
@@ -137,7 +137,7 @@ plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
   theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/shared_loadings_body_comp.png",
-  width = 4.0, height = 6.0
+  width = 4.0, height = 4.0
 )
 
 ## now plot unshared scores (species abundances first)
