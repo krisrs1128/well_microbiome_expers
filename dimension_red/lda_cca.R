@@ -100,7 +100,11 @@ seq_families <- processed$mseqtab %>%
   unique()
 
 ## Plot some of the shared scores and loadings
-plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+p <- plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+for (i in seq_along(p)) {
+  p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
+  ggsave(sprintf("../chapter/figure/lda_cca/shared_scores_%s.png"))
+}
 
 rownames(pmeans$By) <- colnames(processed$bc)
 rownames(pmeans$Bx) <- colnames(processed$x_seq)
@@ -118,11 +122,18 @@ plot_loadings(
   facet_wrap(~family, ncol = 4) +
   scale_color_brewer(palette = "Set2", guide = FALSE) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
+ggsave(sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"))
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
+ggsave(sprintf("../chapter/figure/lda_cca/shared_loadings_body_comp.png"))
 
 ## now plot unshared scores (species abundances first)
-plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
-plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
+p <- plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
+p <- c(p, plot_scores_wrapper(pmeans$xi_y, raw, processed, scv))
+
+for (i in seq_along(p)) {
+  p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
+  ggsave(sprintf("../chapter/figure/lda_cca/unshared_scores_%s.png"))
+}
 
 ## Now plot unshared loadings
 rownames(pmeans$Wx) <- colnames(processed$x_seq)
@@ -133,6 +144,7 @@ plot_loadings(loadings_x, c(1, 1), a = 0.4) +
   facet_wrap(~family, ncol = 4) +
   scale_color_brewer(palette = "Set2", guide = FALSE) +
   scale_size_continuous(range = c(0, 2), guide = FALSE)
+ggsave(sprintf("../chapter/figure/lda_cca/loadings_seq.png"))
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
 loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
@@ -140,3 +152,4 @@ loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   left_join(seq_families)
 plot_loadings(loadings_y, c(1, 1)) +
   scale_size_continuous(range = c(1, 4), guide = FALSE)
+ggsave(sprintf("../chapter/figure/lda_cca/loadings_body_comp.png"))
