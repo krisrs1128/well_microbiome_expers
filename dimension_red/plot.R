@@ -61,6 +61,42 @@ perc_label <- function(eigs, i) {
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
 }
 
+plot_topics <- function(loadings) {
+  taxa_hc <- loadings %>%
+    select(starts_with("Axis")) %>%
+    as.matrix() %>%
+    dist() %>%
+    hclust()
+
+  mloadings <- loadings %>%
+    filter(type == "seq") %>%
+    select(variable, starts_with("Axis"), family) %>%
+    gather(topic, loading, -variable, -family)
+
+  mloadings$variable <- factor(
+    mloadings$variable,
+    levels = loadings$seq_num[taxa_hc$order]
+  )
+  mloadings$topic <- gsub("Axis\\.", "Topic ", mloadings$topic)
+
+  ggplot(mloadings) +
+    geom_hline(yintercept = 0) +
+    geom_point(
+      aes(
+        x = variable,
+        col = family,
+        y = loading
+      )
+    ) +
+    facet_grid(topic ~ family, scale = "free_x", space = "free") +
+    theme(
+      panel.spacing.x = unit(0, "cm"),
+      axis.text.x = element_blank(),
+      strip.text.x = element_blank()
+    )
+}
+
+
 plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
   ggplot(loadings) +
     geom_hline(yintercept = 0, size = 0.5) +
@@ -140,7 +176,6 @@ plot_scores_wrapper <- function(xi, raw, processed, scv) {
     plot_scores(xi_df, "rl_ratio", "Rum. / Lachn.", c(1, 1)) + scv
   )
 }
-
 
 #' Average across first dimension
 slice_mean <- function(x) {
