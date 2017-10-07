@@ -55,9 +55,9 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 bc_mat <- scale(processed$bc)
 
-K <- 2
+K <- 3
 L1 <- 4
-L2 <- 2
+L2 <- 4
 
 stan_data <- list(
   "n" = nrow(bc_mat),
@@ -102,7 +102,9 @@ seq_families <- processed$mseqtab %>%
 ## Plot some of the shared scores and loadings
 p <- plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
 for (i in seq_along(p)) {
-  p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
+  p[[i]] +
+    scale_size_continuous(range = c(0, 1.5), guide = FALSE) +
+    theme(axis.title = element_blank())
   ggsave(
     sprintf("../chapter/figure/lda_cca/shared_scores_%s.png", i),
     width = 3.56, height = 2.6
@@ -124,12 +126,18 @@ plot_loadings(
 ) +
   facet_wrap(~family, ncol = 4) +
   scale_color_brewer(palette = "Set2", guide = FALSE) +
-  scale_size_continuous(range = c(0, 2), guide = FALSE)
-ggsave(sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"))
-plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
+  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  theme(axis.title = element_blank())
+ggsave(
+  sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
+  width = 5.56, height = 3.5
+  )
+plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
+  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/shared_loadings_body_comp.png",
-  width = 4.56, height = 2.3
+  width = 5.56, height = 3.0
 )
 
 ## now plot unshared scores (species abundances first)
@@ -152,10 +160,11 @@ loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
 plot_loadings(loadings_x, c(1, 1), a = 0.4) +
   facet_wrap(~family, ncol = 4) +
   scale_color_brewer(palette = "Set2", guide = FALSE) +
-  scale_size_continuous(range = c(0, 2), guide = FALSE)
+  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/loadings_seq.png",
-  width = 4.56, height = 2.3
+  width = 5.56, height = 3.5
 )
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
@@ -163,7 +172,8 @@ loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   mutate(seq_num = "NA") %>%
   left_join(seq_families)
 plot_loadings(loadings_y, c(1, 1)) +
-  scale_size_continuous(range = c(1, 4), guide = FALSE)
+  scale_size_continuous(range = c(1, 4), guide = FALSE) +
+  theme(axis.title = element_blank())
 ggsave(
   "../chapter/figure/lda_cca/loadings_body_comp.png",
   width = 4.56, height = 2.3

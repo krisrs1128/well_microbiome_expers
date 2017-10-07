@@ -1438,7 +1438,7 @@ are potentially interesting as well. Formally, this model supposes the counts
 are drawn according to
 \begin{align*}
   x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
-  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right)
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\
   \theta_{i} &\sim \Dir\left(\alpha\right),
 \end{align*}
 which has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k
@@ -1466,38 +1466,43 @@ It is this second model that we use in our experiments below.
 \subsubsection{Example}
 \label{subsubsec:lda_cca_example}
 
+We illustrate this formulation of the multitable mixed membership approach on
+the WELL-China data. We choose $K = 3$ for the number of shared topics and
+$L_{1} = L_{2} = 4$ for the number of unshared topics.
+
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_scores_1}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
+  \caption{\label{fig:shared_scores_1} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_loadings_body_comp}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_body_comp}
+  \caption{\label{fig:shared_loadings_body_comp} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_loadings_seq}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
+  \caption{\label{fig:shared_loadings_seq} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/loadings_body_comp}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_body_comp}
+  \caption{\label{fig:loadings_body_comp} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/loadings_seq}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_seq}
+  \caption{\label{fig:loadings_seq} }
 \end{figure}
 
-
-
+Supplementary Figures \ref{fig:lda_cca_shared_scores_2} through
+\ref{fig:lda_cca_unshared_scores_4} layer alternative supplementary variables on
+both the shared scores and the table-specific scores.
 
 \subsection{Curds \& Whey}
 \label{subsec:cw}
@@ -1603,48 +1608,45 @@ derivation is provided in Supplementary Section
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_scores_2}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_2}
+  \caption{\label{fig:lda_cca_shared_scores_2} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_scores_3}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_3}
+  \caption{\label{fig:lda_cca_shared_scores_3} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/shared_scores_4}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_4}
+  \caption{\label{fig:lda_cca_shared_scores_4} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/unshared_scores_1}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_1}
+  \caption{\label{fig:lda_cca_unshared_scores_1} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/unshared_scores_2}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_2}
+  \caption{\label{fig:lda_cca_unshared_scores_2} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/unshared_scores_3}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_3}
+  \caption{\label{fig:lda_cca_unshared_scores_3} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/unshared_scores_4}
-  \caption{\label{fig:label} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_4}
+  \caption{\label{fig:lda_cca_unshared_scores_4} }
 \end{figure}
-
-
-
 
 
 \subsection{Derivation details for PCA-IV}
