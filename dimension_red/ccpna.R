@@ -51,4 +51,30 @@ cca_res <- cca(
   data.frame(x)
 )
 
-cca_res
+###############################################################################
+## Plot loadings and scores
+###############################################################################
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
+## Plot the scores
+cc_scores <- prepare_scores(
+  scores(cca_res, choices = 1:3)[2],
+  "body_comp"
+) %>%
+  left_join(raw$bc)
+
+plot_scores(cc_scores, "Total_FM", "Total FM", cca_res$CCA$eig) +
+  scale_color_viridis(
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  )
+ggsave("../chapter/figure/ccpna/scores_total_fm.png", width = 3.56, height = 2.6)
+
+loadings <- prepare_loadings(
+  list(4 * cca_res$CCA$biplot, cca_res$CCA$v),
+  c("body_comp", "seq")
+) %>%
+  left_join(seq_families)
+plot_loadings(loadings, cca_res$CCA$eig, c(-8, 4))
+ggsave("../chapter/figure/ccpna/loadings.png", width = 4.56, height = 2.3)

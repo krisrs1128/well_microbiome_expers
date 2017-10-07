@@ -51,11 +51,15 @@ x_seq <- scale(processed$x_seq)
 cca_res <- CCorA(bc_mat, x_seq)
 
 ## Plot the loadings
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
 loadings <- prepare_loadings(
   list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
   c("body_comp", "seq")
 ) %>%
-  left_join(processed$mseqtab)
+  left_join(seq_families)
 
 plot_loadings(loadings, cca_res$Eigenvalues) +
   ylim(-0.5, 0.4) +
