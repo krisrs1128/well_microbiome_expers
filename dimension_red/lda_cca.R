@@ -175,6 +175,7 @@ plot_loadings(loadings_x, c(1, 1), a = 0.9) +
     axis.title = element_blank(),
     legend.position = "none"
   )
+plot_topics(loadings_x)
 
 ggsave(
   "../chapter/figure/lda_cca/loadings_seq.png",
@@ -223,7 +224,7 @@ ggplot() +
       override.aes = list(alpha = 1, size = 2)
     )
   ) +
-  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
 
 ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
@@ -249,7 +250,7 @@ ggplot() +
       override.aes = list(alpha = 1, size = 2)
     )
   ) +
-  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
 
 ## using the scores from just the bc table
 ggplot() +
@@ -276,5 +277,109 @@ ggplot() +
       override.aes = list(alpha = 1, size = 2)
     )
   ) +
-  labs(x = "Topic 1", y = "Topic 2", col = "Topic 3")
+  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
 
+## Now plotting loadings boxplots
+mdist$Wx$seq_num <- colnames(processed$x_seq)[mdist$Wx$row]
+mdist$Wx <- mdist$Wx %>%
+  left_join(seq_families)
+mdist$Wx$seq_num <- factor(
+  mdist$Wx$seq_num,
+  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+)
+
+ggplot(mdist$Wx) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(x = seq_num, y = value, col = family, fill = family),
+    outlier.size = 0.05,
+    width = 0.1
+  ) +
+  facet_grid(col ~ family, scale = "free_x", space = "free_x") +
+  theme(
+    panel.spacing.x = unit(0, "cm"),
+    axis.text.x = element_blank(),
+    strip.text.x = element_blank()
+  )
+ggsave(
+  "../chapter/figure/lda_cca/within_loadings_boxplots.png",
+  width = 8, height = 3
+)
+
+mdist$Bx$seq_num <- colnames(processed$x_seq)[mdist$Bx$row]
+mdist$Bx <- mdist$Bx %>%
+  left_join(seq_families)
+mdist$Bx$seq_num <- factor(
+  mdist$Bx$seq_num,
+  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+)
+
+ggplot(mdist$Bx) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(x = seq_num, y = value, col = family, fill = family),
+    outlier.size = 0.05,
+    width = 0.1
+  ) +
+  facet_grid(col ~ family, scale = "free_x", space = "free_x") +
+  theme(
+    panel.spacing.x = unit(0, "cm"),
+    axis.text.x = element_blank(),
+    strip.text.x = element_blank()
+  )
+ggsave(
+  "../chapter/figure/lda_cca/between_loadings_boxplots.png",
+  width = 8, height = 3
+)
+
+## and finally loadings boxplot for body composition variables
+site_ordered <- c(
+  "aoi", "age", "height_dxa", "weight_dxa",
+  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
+  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
+  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
+  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
+  "arms_lm"
+)
+mass_type_ordered <- c(
+  site_ordered[!grepl("fm|lm", site_ordered)],
+  site_ordered[grepl("fm", site_ordered)],
+  site_ordered[grepl("lm", site_ordered)]
+)
+
+mdist$Wy$variable <- tolower(colnames(processed$bc)[mdist$Wy$row])
+mdist$Wy$variable <- factor(
+  mdist$Wy$variable,
+  levels = mass_type_ordered
+)
+
+ggplot(mdist$Wy) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(
+      x = variable,
+      y = value
+    ),
+    outlier.size = 1
+  ) +
+  facet_grid(col ~ .) +
+  theme(axis.text.x = element_text(angle = -90))
+
+mdist$By$variable <- tolower(colnames(processed$bc)[mdist$By$row])
+mdist$By$variable <- factor(
+  mdist$By$variable,
+  levels = mass_type_ordered
+)
+
+ggplot(mdist$By) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(
+      x = variable,
+      y = value
+    ),
+    outlier.size = 1
+  ) +
+  facet_grid(col ~ .) +
+  theme(axis.text.x = element_text(angle = -90))

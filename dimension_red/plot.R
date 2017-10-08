@@ -60,7 +60,7 @@ reshape_posterior_score <- function(xi, bc) {
   xi %>%
     mutate(
       Number = bc$Number[row],
-      col = paste0("topic_", col)
+      col = paste0("axis_", col)
     ) %>%
     spread(col, value) %>%
     left_join(bc)
@@ -71,13 +71,18 @@ perc_label <- function(eigs, i) {
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
 }
 
-plot_topics <- function(loadings) {
-  taxa_hc <- loadings %>%
+taxa_order <- function(loadings) {
+  hc <- loadings %>%
     select(starts_with("Axis")) %>%
     as.matrix() %>%
     dist() %>%
     hclust()
 
+  hc$order
+}
+
+plot_topics <- function(loadings) {
+  taxa_hc <- taxa_order(loadings)
   mloadings <- loadings %>%
     filter(type == "seq") %>%
     select(variable, starts_with("Axis"), family) %>%
@@ -87,7 +92,7 @@ plot_topics <- function(loadings) {
     mloadings$variable,
     levels = loadings$seq_num[taxa_hc$order]
   )
-  mloadings$topic <- gsub("Axis\\.", "Topic ", mloadings$topic)
+  mloadings$topic <- gsub("Axis\\.", "Axis ", mloadings$topic)
 
   ggplot(mloadings) +
     geom_hline(yintercept = 0) +
@@ -105,7 +110,6 @@ plot_topics <- function(loadings) {
       strip.text.x = element_blank()
     )
 }
-
 
 plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
   ggplot(loadings) +
