@@ -62,8 +62,8 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 ###############################################################################
 bc_mat <- scale(processed$bc)
 
-K <- 3
-L1 <- 4
+K <- 2
+L1 <- 3
 L2 <- 3
 
 stan_data <- list(
@@ -74,8 +74,8 @@ stan_data <- list(
   "L1" = L1,
   "L2" = L2,
   "sigma" = 1,
-  "a0" = 1,
-  "b0" = 1,
+  "a0" = 0.01,
+  "b0" = 0.01,
   "x" = processed$x_seq,
   "y" = bc_mat,
   "id_y" = diag(ncol(bc_mat)),
@@ -88,7 +88,7 @@ stan_data <- list(
 )
 
 m <- stan_model("lda_cca.stan")
-vb_fit <- vb(m, data = stan_data)
+vb_fit <- vb(m, data = stan_data, grad_samples = 3)
 
 posterior <- rstan::extract(vb_fit)
 rm(vb_fit)
@@ -128,7 +128,7 @@ loadings <- prepare_loadings(
   left_join(seq_families)
 
 plot_loadings(
-  loadings %>% filter(type == "seq", !is.na(family)),
+  loadings %>% filter(type == "seq"),
   c(1, 1),
   a = 0.9
 ) +
@@ -138,11 +138,12 @@ plot_loadings(
     axis.title = element_blank(),
     legend.position="none"
   )
+plot_topics(loadings %>% filter(type == "seq"))
 
 ggsave(
   sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
   width = 6.56, height = 3.9
-  )
+)
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
   scale_size_continuous(range = c(1.3, 2), guide = FALSE) +
   theme(axis.title = element_blank())
@@ -175,10 +176,13 @@ plot_loadings(loadings_x, c(1, 1), a = 0.9) +
     axis.title = element_blank(),
     legend.position = "none"
   )
-plot_topics(loadings_x)
-
 ggsave(
-  "../chapter/figure/lda_cca/loadings_seq.png",
+  "../chapter/figure/lda_cca/loadings_seq_scatter.png",
+  width = 5.56, height = 3.5
+)
+plot_topics(loadings_x)
+ggsave(
+  "../chapter/figure/lda_cca/loadings_seq_rows.png",
   width = 5.56, height = 3.5
 )
 
@@ -194,63 +198,58 @@ ggsave(
   width = 6.0, height = 1.5
 )
 
-## Plot posteriors associated with scores / topics
+###############################################################################
+## Instead of providing point estimate posterior means, we can display the
+## entire posteriors for different scores and loadings
+###############################################################################
 mdist <- melt_parameters(posterior)
-mdist$xi_s <-reshape_posterior_score(mdist$xi_s, bc)
-mdist$xi_x <-reshape_posterior_score(mdist$xi_x, bc)
-mdist$xi_y <-reshape_posterior_score(mdist$xi_y, bc)
+mdist$xi_s <- reshape_posterior_score(mdist$xi_s, bc)
+mdist$xi_x <- reshape_posterior_score(mdist$xi_x, bc)
+mdist$xi_y <- reshape_posterior_score(mdist$xi_y, bc)
 
 ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
   geom_vline(xintercept = 0, alpha = 0.5) +
   geom_point(
-    data = mdist$xi_s %>%
-      mutate(
-        Total_FM_cut = cut(round(Total_FM / 1e4, 2), 8)
-      ),
+    data = mdist$xi_s,
     aes(
-      x = topic_1,
-      y = topic_2,
-      col = topic_3
+      x = axis_1,
+      y = axis_2,
+      col = Total_LM
     ),
     size = 0.1,
     alpha = 0.01
   ) +
   coord_equal() +
-  facet_wrap(~Total_FM_cut, ncol = 4) +
-  scale_color_viridis(
-    option = "magma",
-    guide = guide_legend(
-      override.aes = list(alpha = 1, size = 2)
-    )
-  ) +
-  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
+  scv +
+  labs(x = "Axis 1", y = "Axis 2", col = "Total FM")
+
+ggsave(
+  "../chapter/figure/lda_cca/shared_scores_total_fm_posterior.png",
+  width = 6, height = 2
+)
 
 ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
   geom_vline(xintercept = 0, alpha = 0.5) +
   geom_point(
-    data = mdist$xi_s %>%
-      mutate(
-        weight_dxa_cut = cut(weight_dxa, 8)
-      ),
+    data = mdist$xi_s,
     aes(
-      x = topic_1,
-      y = topic_2,
-      col = topic_3
+      x = axis_1,
+      y = axis_2,
+      col = weight_dxa
     ),
     size = 0.1,
     alpha = 0.01
   ) +
   coord_equal() +
-  facet_wrap(~weight_dxa_cut, ncol = 4) +
-  scale_color_viridis(
-    option = "magma",
-    guide = guide_legend(
-      override.aes = list(alpha = 1, size = 2)
-    )
-  ) +
+  scv +
   labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
+
+ggsave(
+  "../chapter/figure/lda_cca/shared_scores_weight_posterior.png",
+  width = 6, height = 2
+)
 
 ## using the scores from just the bc table
 ggplot() +
@@ -259,18 +258,18 @@ ggplot() +
   geom_point(
     data = mdist$xi_y %>%
       mutate(
-        Total_FM_cut = cut(round(Total_FM / 1e4, 2), 4)
+        Total_LM_cut = cut(round(Total_LM / 1e4, 2), 4)
       ),
     aes(
-      x = topic_1,
-      y = topic_2,
-      col = topic_3
+      x = axis_1,
+      y = axis_2,
+      col = axis_3
     ),
     size = 0.1,
-    alpha = 0.01
+    alpha = 0.1
   ) +
+  facet_wrap(~Total_LM_cut) +
   coord_equal() +
-  facet_wrap(~Total_FM_cut, nrow = 1) +
   scale_color_viridis(
     option = "magma",
     guide = guide_legend(
@@ -278,6 +277,11 @@ ggplot() +
     )
   ) +
   labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
+
+ggsave(
+  "../chapter/figure/lda_cca/unshared_scores_total_fm_posterior.png",
+  width = 6, height = 2
+)
 
 ## Now plotting loadings boxplots
 mdist$Wx$seq_num <- colnames(processed$x_seq)[mdist$Wx$row]
@@ -299,11 +303,12 @@ ggplot(mdist$Wx) +
   theme(
     panel.spacing.x = unit(0, "cm"),
     axis.text.x = element_blank(),
-    strip.text.x = element_blank()
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
   )
 ggsave(
-  "../chapter/figure/lda_cca/within_loadings_boxplots.png",
-  width = 8, height = 3
+  "../chapter/figure/lda_cca/within_loadings_seq_boxplots.png",
+  width = 6, height = 3
 )
 
 mdist$Bx$seq_num <- colnames(processed$x_seq)[mdist$Bx$row]
@@ -325,11 +330,12 @@ ggplot(mdist$Bx) +
   theme(
     panel.spacing.x = unit(0, "cm"),
     axis.text.x = element_blank(),
-    strip.text.x = element_blank()
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
   )
 ggsave(
-  "../chapter/figure/lda_cca/between_loadings_boxplots.png",
-  width = 8, height = 3
+  "../chapter/figure/lda_cca/between_loadings_seq_boxplots.png",
+  width = 6, height = 3
 )
 
 ## and finally loadings boxplot for body composition variables
@@ -365,6 +371,10 @@ ggplot(mdist$Wy) +
   ) +
   facet_grid(col ~ .) +
   theme(axis.text.x = element_text(angle = -90))
+ggsave(
+  "../chapter/figure/lda_cca/within_loadings_body_comp_boxplots.png",
+  width = 6, height = 3
+)
 
 mdist$By$variable <- tolower(colnames(processed$bc)[mdist$By$row])
 mdist$By$variable <- factor(
@@ -383,3 +393,8 @@ ggplot(mdist$By) +
   ) +
   facet_grid(col ~ .) +
   theme(axis.text.x = element_text(angle = -90))
+
+ggsave(
+  "../chapter/figure/lda_cca/between_loadings_body_comp_boxplots.png",
+  width = 6, height = 3
+)

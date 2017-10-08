@@ -90,7 +90,7 @@ plot_topics <- function(loadings) {
 
   mloadings$variable <- factor(
     mloadings$variable,
-    levels = loadings$seq_num[taxa_hc$order]
+    levels = loadings$seq_num[taxa_hc]
   )
   mloadings$topic <- gsub("Axis\\.", "Axis ", mloadings$topic)
 
