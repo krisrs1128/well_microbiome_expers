@@ -74,8 +74,8 @@ stan_data <- list(
   "L1" = L1,
   "L2" = L2,
   "sigma" = 1,
-  "a0" = 0.01,
-  "b0" = 0.01,
+  "a0" = 1,
+  "b0" = 1,
   "x" = processed$x_seq,
   "y" = bc_mat,
   "id_y" = diag(ncol(bc_mat)),
@@ -88,7 +88,7 @@ stan_data <- list(
 )
 
 m <- stan_model("lda_cca.stan")
-vb_fit <- vb(m, data = stan_data, grad_samples = 3)
+vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
 rm(vb_fit)
@@ -203,9 +203,9 @@ ggsave(
 ## entire posteriors for different scores and loadings
 ###############################################################################
 mdist <- melt_parameters(posterior)
-mdist$xi_s <- reshape_posterior_score(mdist$xi_s, bc)
-mdist$xi_x <- reshape_posterior_score(mdist$xi_x, bc)
-mdist$xi_y <- reshape_posterior_score(mdist$xi_y, bc)
+mdist$xi_s <- reshape_posterior_score(mdist$xi_s, raw$bc)
+mdist$xi_x <- reshape_posterior_score(mdist$xi_x, raw$bc)
+mdist$xi_y <- reshape_posterior_score(mdist$xi_y, raw$bc)
 
 ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
@@ -244,7 +244,7 @@ ggplot() +
   ) +
   coord_equal() +
   scv +
-  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
+  labs(x = "Axis 1", y = "Axis 2", col = "Weight ")
 
 ggsave(
   "../chapter/figure/lda_cca/shared_scores_weight_posterior.png",
@@ -272,9 +272,7 @@ ggplot() +
   coord_equal() +
   scale_color_viridis(
     option = "magma",
-    guide = guide_legend(
-      override.aes = list(alpha = 1, size = 2)
-    )
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   ) +
   labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
 

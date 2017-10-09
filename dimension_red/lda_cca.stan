@@ -49,9 +49,9 @@ transformed parameters {
 
 model {
   // prior
-  /* for (v in 1:3) { */
-  /*   tau_sq[v] ~ inv_gamma(a0, b0); */
-  /* } */
+  for (v in 1:3) {
+    tau_sq[v] ~ inv_gamma(a0, b0);
+  }
 
   for (i in 1:n) {
     xi_s[i] ~ multi_normal(zeros_k, tau[1] * id_k);
