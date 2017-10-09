@@ -94,8 +94,8 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
 family_means <- function(mseqtab) {
   processed$mseqtab %>%
     group_by(family, Number) %>%
-    summarise(family_mean = mean(value)) %>%
+    dplyr::summarise(family_mean = mean(value)) %>%
     spread(family, family_mean) %>%
     group_by(Number) %>%
-    summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
+    dplyr::summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
 }
