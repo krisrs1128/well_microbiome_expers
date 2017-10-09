@@ -51,7 +51,7 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   taxa <- taxa %>%
     filter(seq_num %in% colnames(seqtab)) %>%
     mutate(
-      family = fct_lump(Family, n = 9)
+      family = fct_lump(taxa$Family, n = 10, ties.method = "first")
     )
 
   mseqtab <- seqtab %>%
