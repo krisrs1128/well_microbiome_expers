@@ -25,12 +25,19 @@ options(mc.cores = parallel::detectCores())
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -56,8 +63,8 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 bc_mat <- scale(processed$bc)
 
 K <- 2
-L1 <- 4
-L2 <- 2
+L1 <- 3
+L2 <- 3
 
 stan_data <- list(
   "n" = nrow(bc_mat),
@@ -67,7 +74,8 @@ stan_data <- list(
   "L1" = L1,
   "L2" = L2,
   "sigma" = 1,
-  "tau" = 8,
+  "a0" = 1,
+  "b0" = 1,
   "x" = processed$x_seq,
   "y" = bc_mat,
   "id_y" = diag(ncol(bc_mat)),
@@ -83,6 +91,7 @@ m <- stan_model("lda_cca.stan")
 vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
+rm(vb_fit)
 pmeans <- parameter_means(posterior)
 for (i in seq_along(pmeans)) {
   pmeans[[i]] <- cbind(pmeans[[i]], 1) # in case only used 2 dimensions
@@ -99,7 +108,16 @@ seq_families <- processed$mseqtab %>%
   unique()
 
 ## Plot some of the shared scores and loadings
-plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+p <- plot_scores_wrapper(pmeans$xi_s, raw, processed, scv)
+for (i in seq_along(p)) {
+  p[[i]] +
+    scale_size_continuous(range = c(0, 1.5), guide = FALSE) +
+    theme(axis.title = element_blank())
+  ggsave(
+    sprintf("../chapter/figure/lda_cca/shared_scores_%s.png", i),
+    width = 3.56, height = 2.6
+  )
+}
 
 rownames(pmeans$By) <- colnames(processed$bc)
 rownames(pmeans$Bx) <- colnames(processed$x_seq)
@@ -110,32 +128,271 @@ loadings <- prepare_loadings(
   left_join(seq_families)
 
 plot_loadings(
-  loadings %>% filter(type == "seq", !is.na(family)),
+  loadings %>% filter(type == "seq"),
   c(1, 1),
-  a = 0.4
+  a = 0.9
 ) +
-  facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(guide = FALSE) +
-  scale_size_continuous(range = c(0, 2), guide = FALSE)
-plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1))
+  facet_wrap(~family, ncol = 5) +
+  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  theme(
+    axis.title = element_blank(),
+    legend.position="none"
+  )
+plot_topics(loadings %>% filter(type == "seq"))
+
+ggsave(
+  sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
+  width = 6.56, height = 3.9
+)
+plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
+  scale_size_continuous(range = c(1.3, 2), guide = FALSE) +
+  theme(axis.title = element_blank())
+ggsave(
+  "../chapter/figure/lda_cca/shared_loadings_body_comp.png",
+  width = 4.0, height = 4.0
+)
 
 ## now plot unshared scores (species abundances first)
-plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
-plot_scores_wrapper(pmeans$xi_y, raw, processed, scv)
+p <- plot_scores_wrapper(pmeans$xi_x, raw, processed, scv)
+p <- c(p, plot_scores_wrapper(pmeans$xi_y, raw, processed, scv))
+
+for (i in seq_along(p)) {
+  p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
+  ggsave(
+    sprintf("../chapter/figure/lda_cca/unshared_scores_%s.png", i),
+    width = 3.56, height = 2.6
+  )
+}
 
 ## Now plot unshared loadings
 rownames(pmeans$Wx) <- colnames(processed$x_seq)
 loadings_x <- prepare_loadings(list(pmeans$Wx), "seq") %>%
   left_join(seq_families) %>%
   filter(!is.na(family))
-plot_loadings(loadings_x, c(1, 1), a = 0.4) +
-  facet_wrap(~family, ncol = 4) +
-  scale_color_brewer(palette = "Set2", guide = FALSE) +
-  scale_size_continuous(range = c(0, 2), guide = FALSE)
+plot_loadings(loadings_x, c(1, 1), a = 0.9) +
+  facet_wrap(~family, ncol = 5) +
+  scale_size_continuous(range = c(0, 2), guide = FALSE) +
+  theme(
+    axis.title = element_blank(),
+    legend.position = "none"
+  )
+ggsave(
+  "../chapter/figure/lda_cca/loadings_seq_scatter.png",
+  width = 5.56, height = 3.5
+)
+plot_topics(loadings_x)
+ggsave(
+  "../chapter/figure/lda_cca/loadings_seq_rows.png",
+  width = 5.56, height = 3.5
+)
 
 rownames(pmeans$Wy) <- colnames(processed$bc)
 loadings_y <- prepare_loadings(list(pmeans$Wy), "body_comp") %>%
   mutate(seq_num = "NA") %>%
   left_join(seq_families)
 plot_loadings(loadings_y, c(1, 1)) +
-  scale_size_continuous(range = c(1, 4), guide = FALSE)
+  scale_size_continuous(range = c(1.5, 3), guide = FALSE) +
+  theme(axis.title = element_blank())
+ggsave(
+  "../chapter/figure/lda_cca/loadings_body_comp.png",
+  width = 6.0, height = 1.5
+)
+
+###############################################################################
+## Instead of providing point estimate posterior means, we can display the
+## entire posteriors for different scores and loadings
+###############################################################################
+mdist <- melt_parameters(posterior)
+mdist$xi_s <- reshape_posterior_score(mdist$xi_s, raw$bc)
+mdist$xi_x <- reshape_posterior_score(mdist$xi_x, raw$bc)
+mdist$xi_y <- reshape_posterior_score(mdist$xi_y, raw$bc)
+
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_s,
+    aes(
+      x = axis_1,
+      y = axis_2,
+      col = Total_LM
+    ),
+    size = 0.1,
+    alpha = 0.01
+  ) +
+  coord_equal() +
+  scv +
+  labs(x = "Axis 1", y = "Axis 2", col = "Total FM")
+
+ggsave(
+  "../chapter/figure/lda_cca/shared_scores_total_fm_posterior.png",
+  width = 6, height = 2
+)
+
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_s,
+    aes(
+      x = axis_1,
+      y = axis_2,
+      col = weight_dxa
+    ),
+    size = 0.1,
+    alpha = 0.01
+  ) +
+  coord_equal() +
+  scv +
+  labs(x = "Axis 1", y = "Axis 2", col = "Weight ")
+
+ggsave(
+  "../chapter/figure/lda_cca/shared_scores_weight_posterior.png",
+  width = 6, height = 2
+)
+
+## using the scores from just the bc table
+ggplot() +
+  geom_hline(yintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_point(
+    data = mdist$xi_y %>%
+      mutate(
+        Total_LM_cut = cut(round(Total_LM / 1e4, 2), 4)
+      ),
+    aes(
+      x = axis_1,
+      y = axis_2,
+      col = axis_3
+    ),
+    size = 0.1,
+    alpha = 0.1
+  ) +
+  facet_wrap(~Total_LM_cut) +
+  coord_equal() +
+  scale_color_viridis(
+    option = "magma",
+    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  ) +
+  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
+
+ggsave(
+  "../chapter/figure/lda_cca/unshared_scores_total_fm_posterior.png",
+  width = 6, height = 2
+)
+
+## Now plotting loadings boxplots
+mdist$Wx$seq_num <- colnames(processed$x_seq)[mdist$Wx$row]
+mdist$Wx <- mdist$Wx %>%
+  left_join(seq_families)
+mdist$Wx$seq_num <- factor(
+  mdist$Wx$seq_num,
+  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+)
+
+ggplot(mdist$Wx) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(x = seq_num, y = value, col = family, fill = family),
+    outlier.size = 0.05,
+    width = 0.1
+  ) +
+  facet_grid(col ~ family, scale = "free_x", space = "free_x") +
+  theme(
+    panel.spacing.x = unit(0, "cm"),
+    axis.text.x = element_blank(),
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/lda_cca/within_loadings_seq_boxplots.png",
+  width = 6, height = 3
+)
+
+mdist$Bx$seq_num <- colnames(processed$x_seq)[mdist$Bx$row]
+mdist$Bx <- mdist$Bx %>%
+  left_join(seq_families)
+mdist$Bx$seq_num <- factor(
+  mdist$Bx$seq_num,
+  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+)
+
+ggplot(mdist$Bx) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(x = seq_num, y = value, col = family, fill = family),
+    outlier.size = 0.05,
+    width = 0.1
+  ) +
+  facet_grid(col ~ family, scale = "free_x", space = "free_x") +
+  theme(
+    panel.spacing.x = unit(0, "cm"),
+    axis.text.x = element_blank(),
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/lda_cca/between_loadings_seq_boxplots.png",
+  width = 6, height = 3
+)
+
+## and finally loadings boxplot for body composition variables
+site_ordered <- c(
+  "aoi", "age", "height_dxa", "weight_dxa",
+  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
+  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
+  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
+  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
+  "arms_lm"
+)
+mass_type_ordered <- c(
+  site_ordered[!grepl("fm|lm", site_ordered)],
+  site_ordered[grepl("fm", site_ordered)],
+  site_ordered[grepl("lm", site_ordered)]
+)
+
+mdist$Wy$variable <- tolower(colnames(processed$bc)[mdist$Wy$row])
+mdist$Wy$variable <- factor(
+  mdist$Wy$variable,
+  levels = mass_type_ordered
+)
+
+ggplot(mdist$Wy) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(
+      x = variable,
+      y = value
+    ),
+    outlier.size = 1
+  ) +
+  facet_grid(col ~ .) +
+  theme(axis.text.x = element_text(angle = -90))
+ggsave(
+  "../chapter/figure/lda_cca/within_loadings_body_comp_boxplots.png",
+  width = 6, height = 3
+)
+
+mdist$By$variable <- tolower(colnames(processed$bc)[mdist$By$row])
+mdist$By$variable <- factor(
+  mdist$By$variable,
+  levels = mass_type_ordered
+)
+
+ggplot(mdist$By) +
+  geom_hline(yintercept = 0, alpha = 0.4) +
+  geom_boxplot(
+    aes(
+      x = variable,
+      y = value
+    ),
+    outlier.size = 1
+  ) +
+  facet_grid(col ~ .) +
+  theme(axis.text.x = element_text(angle = -90))
+
+ggsave(
+  "../chapter/figure/lda_cca/between_loadings_body_comp_boxplots.png",
+  width = 6, height = 3
+)

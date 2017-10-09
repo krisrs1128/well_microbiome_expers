@@ -56,9 +56,59 @@ melt_scores <- function(scores) {
     spread(comp_type, value)
 }
 
+reshape_posterior_score <- function(xi, bc) {
+  xi %>%
+    mutate(
+      Number = bc$Number[row],
+      col = paste0("axis_", col)
+    ) %>%
+    spread(col, value) %>%
+    left_join(bc)
+}
+
 perc_label <- function(eigs, i) {
   perc <- 100 * eigs[i] / sum(eigs)
   sprintf("Axis %s [%s%%]", i, round(perc, 2))
+}
+
+taxa_order <- function(loadings) {
+  hc <- loadings %>%
+    select(starts_with("Axis")) %>%
+    as.matrix() %>%
+    dist() %>%
+    hclust()
+
+  hc$order
+}
+
+plot_topics <- function(loadings) {
+  taxa_hc <- taxa_order(loadings)
+  mloadings <- loadings %>%
+    filter(type == "seq") %>%
+    select(variable, starts_with("Axis"), family) %>%
+    gather(topic, loading, -variable, -family)
+
+  mloadings$variable <- factor(
+    mloadings$variable,
+    levels = loadings$seq_num[taxa_hc]
+  )
+  mloadings$topic <- gsub("Axis\\.", "Axis ", mloadings$topic)
+
+  ggplot(mloadings) +
+    geom_hline(yintercept = 0) +
+    geom_point(
+      aes(
+        x = variable,
+        col = family,
+        y = loading
+      )
+    ) +
+    facet_grid(topic ~ family, scale = "free_x", space = "free") +
+    theme(
+      panel.spacing.x = unit(0, "cm"),
+      axis.text.x = element_blank(),
+      strip.text.x = element_blank()
+    )
 }
 
 plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
@@ -141,7 +191,6 @@ plot_scores_wrapper <- function(xi, raw, processed, scv) {
   )
 }
 
-
 #' Average across first dimension
 slice_mean <- function(x) {
   apply(x, c(2, 3), mean)
@@ -160,4 +209,22 @@ parameter_means <- function(theta_samples) {
 
   names(theta_hat) <- names(theta_samples)
   theta_hat
+}
+
+melt_parameters <- function(theta_samples) {
+  mtheta <- list()
+  for (i in seq_along(theta_samples)) {
+    if (length(dim(theta_samples[[i]])) > 2) {
+      mtheta[[i]] <- theta_samples[[i]] %>%
+        melt(
+          varnames = c("iteration", "row", "col")
+        )
+    } else {
+      mtheta[[i]] <- theta_samples[[i]] %>%
+        melt(value.name = names(theta_samples)[i])
+    }
+  }
+  names(mtheta) <- names(theta_samples)
+
+  mtheta
 }

@@ -19,12 +19,19 @@ source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a', 'grey'),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a', 'grey'),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -41,7 +48,8 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
+opts <- list(filt_k = 0.5, filt_a = 0)
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 ###############################################################################
 ## Run and plot CCA on the two (scaled) tables
@@ -61,10 +69,8 @@ loadings <- prepare_loadings(
 ) %>%
   left_join(seq_families)
 
-plot_loadings(loadings, cca_res$Eigenvalues) +
-  ylim(-0.5, 0.4) +
-  xlim(-0.9, 0.3)
-ggsave("../chapter/figure/cca/loadings.png", width = 4.56, height = 2.3)
+plot_loadings(loadings, cca_res$Eigenvalues)
+ggsave("../chapter/figure/cca/loadings.png", width = 5.77, height = 4.73)
 
 ## Plot the scores
 scores <- prepare_scores(
@@ -80,12 +86,12 @@ plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
 ## color by weight
-plot_scores(scores, "Total_FM", "Total FM", cca_res$Eigenvalues) +
+plot_scores(scores, "Total_LM", "Total LM", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_total_fm.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_total_lm.png", width = 3.67, height = 3.4)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
@@ -95,4 +101,4 @@ plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$Eigenvalues) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.67, height = 3.4)

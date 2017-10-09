@@ -51,14 +51,14 @@ interest. This richer scientific question motivates the development of methods
 distinct from those used to analyze a single measurement type at a time.
 
 For more concrete motivation, we will use data from the WELL-China study, which
-is focused on the relationship between various indicators of wellness and
-microbial community structure (todo: give reference). In this study, 1969
-individuals\footnote{Though sampling is still ongoing.} underwent clinical
-examinations, filled out wellness surveys (covering topics such as exercise,
-sleep, diet, and mental health, for example), and provided stool samples, used
-for 16s sequencing and metabolomic analysis. To date, 16s sequencing data is
-available for 221 of these participants. Evidently, various interesting
-relational questions can be investigated using this data source.
+is focused on the relationships between various indicators of wellness (todo:
+give reference). In this study, 1969 individuals\footnote{Though sampling is
+  still ongoing.} underwent clinical examinations, filled out wellness surveys
+(covering topics such as exercise, sleep, diet, and mental health, for example),
+and provided stool samples, used for 16s sequencing and metabolomic analysis. To
+date, 16s sequencing data is available for 221 of these participants. Evidently,
+various interesting relational questions can be investigated using this data
+source.
 
 For the purpose of illustration, we focus on one relatively narrow question that
 can be addressed using this data: How is the distribution of lean and fat mass
@@ -1271,6 +1271,7 @@ possible to make a biplot. Consequently, KCCA scores are typically interpreted
 using supplementary characteristics of the samples.
 
 \subsection{Penalized Matrix Decomposition}
+\label{subsec:pmd}
 
 In high-dimensional settings, sparsity is a desirable property, both for
 qualitative interpretability and statistical stability. A regression model using
@@ -1398,6 +1399,142 @@ with the sum over all pairwise covariances, $\sum_{l, l^{\prime} = 1}^{L}
 c_{1}^{(l) T}X^{(l) T}X^{(l^{\prime})}c_{1}^{(l)^{\prime}}$, and introducing
 constraints for each of the $c_{1}^{(l)}$.
 
+\subsection{Multitable Mixed-Membership}
+\label{subsec:multitable_mixed_membership}
+
+In Section \ref{subsec:cca}, a latent variable interpretation of CCA was
+provided as an alternative to the standard covariance maximization perspective.
+Since likelihood based methods are easily adapted to different data types, it is
+natural to consider versions of CCA designed for non-Gaussian data, using the
+setup of Section \ref{subsec:cca} as a starting point. We are particularly
+interested in data with the same structure as the WELL-China body composition
+and microbiome data, namely two table data sets where one table is continuous
+with Gaussian marginals and correlated columns and the other is a
+high-dimensional collection of counts, where many entries are exactly zero.
+
+As before, define a set of shared scores $\xi_{i}^{s} \in \reals^{K}$, and two
+sets of within-table scores, $\xi_{i}^{X} \in \reals^{L_{1}}$ and $\xi_{i}^{Y}
+\in \reals^{L_{2}}$. As before, we model the body composition variables using a
+essentially a Gaussian factor analysis model, $y_{i} \vert \xi_{i}^{X},
+\xi_{i}^{Y} \sim \Gsn\left(B^{y}\xi_{i}^s + W^y \xi_{i}^y,
+\sigma^{2}I_{p_{2}}\right)$ with a spherical Gaussian prior on $\xi_{i}^{X},
+\xi_{i}^{Y}$. For the counts matrix, we might consider a few different
+approaches,
+
+\begin{itemize}
+\item Exponential Family PCA \citep{mohamed2009bayesian}: By requiring low-rank
+  structure on the natural parameters of an exponential family model, we could
+  naturally model high-dimensional count data, using a Poisson or Multinomial
+  likelihood, for example.
+\item Nonnegative Matrix Factorization \citep{lee2001algorithms}: A variant of
+  the exponential family approach is to directly model the counts matrix as a
+  Poisson likelihood with a product of Gamma matrix priors.
+\item Latent Dirichlet Allocation (LDA) \citep{blei2003latent}: We can model the
+  observed samples as Dirichlet mixtures of a few underlying ``topics.''
+\end{itemize}
+
+Here, we focus on the LDA approach, though we suspect the other two approaches
+are potentially interesting as well. Formally, this model supposes the counts
+are drawn according to
+\begin{align*}
+  x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\
+  \theta_{i} &\sim \Dir\left(\alpha\right),
+\end{align*}
+which has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k
+  =1}^{K}$ are scores for the $i^{th}$ sample and $\left(\beta_{k}\right)$ are
+$K$ underlying topics.
+
+The only complexity with using LDA model of $X$ together with a Gaussian factor
+analysis on $Y$ is that the shared scores $\xi_{i}^{s}$ typically have different
+priors -- a Dirichlet for LDA and a spherical Gaussian for factor analysis. In
+any formulation of probabilistic CCA that uses both models, this must be
+reconciled. One approach is to continue to place Dirichlet priors on all the
+scores, $\xi_{i}^s, \xi_{i}^x$, and $\xi_{i}^y$. While the model for the
+Gaussian data is no longer exactly traditional factor analysis, it has a similar
+interpretation. Alternatively, we could use a spherical Gaussian prior on all
+scores and then recover probability vectors by applying the softmax function,
+$\left[\S\left(v\right)\right]_{k} =
+\frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
+\begin{align*}
+  x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
+  \S\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right) \\
+  \xi_{i}^{s} \sim \Gsn\left(0, \tau^{2}\right).
+\end{align*}
+It is this second model that we use in our experiments below.
+
+\subsubsection{Example}
+\label{subsubsec:lda_cca_example}
+
+We illustrate this formulation of the multitable mixed membership approach on
+the WELL-China data. We choose $K = 3$ for the number of shared topics and
+$L_{1} = L_{2} = 3$ for the number of unshared topics per table. While the use
+of shared ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives
+more flexibility in modeling, it also leads to additional complexity in
+interpretation -- there are both more scores and more loadings that need to be
+visualized.
+
+Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
+\ref{fig:lda_cca_loadings_body_comp} and \ref{fig:lda_cca_loadings_seq}. Note
+that there is no sense of variance explained by different axes, and we use an
+aspect ratio of $1$ throughout. Figure \ref{fig:lda_cca_loadings_body_comp}
+suggests that the first axes of $W^{Y}$ captures variation between lean and fat
+mass, which can be used to interpret the scores in Supplementary Figures
+\ref{fig:lda_cca_unshared_scores_3} and \ref{fig:lda_cca_unshared_scores_4}. The
+second axes reflects similar variation, while the third axes captures difference
+between mass in the trunk versus arms and legs.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_body_comp}
+  \caption{\label{fig:lda_cca_loadings_body_comp} }
+\end{figure}
+
+Figure \ref{fig:lda_cca_loadings_seq} summarizes table-specific variation in
+bacterial abundances. The first axes primarily distinguishes between Bacteroides
+and Ruminoccocus. The second axes seems related to a few isolated species of
+Prevotella and Lachnospiraceae, while the third has no obvious interpretation.
+These loadings can be used to interpret the scores of Supplementary Figures
+\ref{fig:lda_cca_unshard_scores_1} and \ref{fig:lda_unshared_scores_2}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_seq}
+  \caption{\label{fig:lda_cca_loadings_seq} }
+\end{figure}
+
+These interpretations could likely have been obtained by analyzing each table
+separately. More interest lies in covariation between the two tables, captured
+by the shared scores $\xi_{i}^{2}$ and loadings $B^{x}, B^{y}$. The shared body
+body composition loadings are given in Figure
+\ref{fig:lda_cca_loadings_body_comp}. While there is still grouping within lean
+and fat mass variable types, most variation is related to high versus low
+combined mass. The bacterial composition loadings are given in Figures
+\ref{fig:lda_cca_shared_loadings_seq}. The most interesting scores are those
+that lie in the top left and bottom right quadrants: these are species that are
+highly abundant in the first topic but not the second, and vice versa. The first
+shared topic seems dominated by Bacteroidaceae and Lachnospiraceae, while the
+second seems characterized by an absence of Prevotellaceae and
+Porphyromonadaceae. Taxonomic variation in the shared loadings is not as
+definitive as in the species abundance table specific case, however.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figure/lda_cca/shared_loadings_body_comp}
+  \caption{\label{fig:lda_cca_shared_loadings_body_comp} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
+  \caption{\label{fig:lda_ca_shared_loadings_seq} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
+  \caption{\label{fig:lda_cca_shared_scores_1} }
+\end{figure}
+
 \subsection{Curds \& Whey}
 \label{subsec:cw}
 
@@ -1499,6 +1636,49 @@ derivation is provided in Supplementary Section
     one. Basic unidentifiabilities in the model are visible as long swaps
     between true and recovered points. \label{fig:pmd_illustration_scatter} }
 \end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_2}
+  \caption{\label{fig:lda_cca_shared_scores_2} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_3}
+  \caption{\label{fig:lda_cca_shared_scores_3} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_4}
+  \caption{\label{fig:lda_cca_shared_scores_4} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_1}
+  \caption{\label{fig:lda_cca_unshared_scores_1} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_2}
+  \caption{\label{fig:lda_cca_unshared_scores_2} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_3}
+  \caption{\label{fig:lda_cca_unshared_scores_3} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_4}
+  \caption{\label{fig:lda_cca_unshared_scores_4} }
+\end{figure}
+
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}

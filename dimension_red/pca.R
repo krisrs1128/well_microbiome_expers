@@ -20,12 +20,19 @@ source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a', 'grey'),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a', 'grey'),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -64,21 +71,23 @@ loadings_list <- list(
   pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$x_seq), ]
 )
 
-loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
-  left_join(processed$mseqtab)
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
 
-plot_loadings(loadings, pc_res$sdev) +
-  ylim(-0.15, 0.35) +
-  xlim(-0.15, 0.2)
-ggsave("../chapter/figure/pca/loadings.png", width = 4.56, height = 3)
+loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
+  left_join(seq_families)
+
+plot_loadings(loadings, pc_res$sdev)
+ggsave("../chapter/figure/pca/loadings.png", width = 7.69, height = 5.17)
 
 ## and study the scores
-plot_scores(scores, "Total_FM", "Trunk FM", pc_res$sdev) +
+plot_scores(scores, "Total_LM", "Trunk LM", pc_res$sdev) +
   scale_color_viridis(
-    "Total FM ",
+    "Total LM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca/scores_total_fm.png", width = 3.56, height = 2.6)
+ggsave("../chapter/figure/pca/scores_total_lm.png", width = 4.45, height = 2.63)
 
 ##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
 scores <- scores %>%
