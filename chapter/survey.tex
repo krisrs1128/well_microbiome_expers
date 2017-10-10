@@ -412,7 +412,7 @@ $\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
 optimization \label{eq:cancor_emp} can now be expressed as
 \begin{align}
   \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
-    \reals^{p_{2}}} 
+    \reals^{p_{2}}}
     &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
     \text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber \\
     &\|\tilde{v}\|_{2}^{2} = 1. \nonumber
@@ -1325,7 +1325,7 @@ optimizers of
 \begin{align}
 \label{eq:pmd_opt} \text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d
   \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\ 
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\
   & \text{Pen}_{1}\left(u\right) \leq \mu_{1} \nonumber \\
   & \text{Pen}_{2}\left(v\right) \leq \mu_{2}. \nonumber
 \end{align}
@@ -1475,64 +1475,98 @@ interpretation -- there are both more scores and more loadings that need to be
 visualized.
 
 Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
-\ref{fig:lda_cca_loadings_body_comp} and \ref{fig:lda_cca_loadings_seq}. Note
-that there is no sense of variance explained by different axes, and we use an
-aspect ratio of $1$ throughout. Figure \ref{fig:lda_cca_loadings_body_comp}
-suggests that the first axes of $W^{Y}$ captures variation between lean and fat
-mass, which can be used to interpret the scores in Supplementary Figures
-\ref{fig:lda_cca_unshared_scores_3} and \ref{fig:lda_cca_unshared_scores_4}. The
-second axes reflects similar variation, while the third axes captures difference
-between mass in the trunk versus arms and legs.
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_body_comp}
-  \caption{\label{fig:lda_cca_loadings_body_comp} }
-\end{figure}
-
-Figure \ref{fig:lda_cca_loadings_seq} summarizes table-specific variation in
-bacterial abundances. The first axes primarily distinguishes between Bacteroides
-and Ruminoccocus. The second axes seems related to a few isolated species of
-Prevotella and Lachnospiraceae, while the third has no obvious interpretation.
-These loadings can be used to interpret the scores of Supplementary Figures
-\ref{fig:lda_cca_unshard_scores_1} and \ref{fig:lda_unshared_scores_2}.
+\ref{fig:lda_cca_within_loadings_seq_boxplots} and
+\ref{fig:lda_cca_within_loadings_body_comp_boxplots}. Note that there is no
+sense of variance explained by different axes, and we use an aspect ratio of $1$
+throughout.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/loadings_seq}
-  \caption{\label{fig:lda_cca_loadings_seq} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_seq_boxplots}
+  \caption{Table-specific loadings for different species. As in Figure
+    \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, each row is a loading
+    dimension, columns are features (species in this case), and intervals
+    summarize posterior samples for the associated loading parameter,
+    $W^{X}_{jk}$. Species are sorted from most to least abundant, within each
+    taxonomic family. Caution must be exercised when interpreting these
+    loadings, as loadings are invariant under rotations and
+    reflections. \label{fig:lda_cca_within_loadings_seq_boxplots}}
 \end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_body_comp_boxplots}
+  \caption{Table-specific loadings for the body composition variables. Each row
+    is one loading dimension, columns are features, and boxplots summarize
+    posterior samples for the associated loading parameter, $W_{jk}^{Y}$.
+  \label{fig:lda_cca_within_loadings_body_comp_boxplots}}
+\end{figure}
+
+Figure \ref{fig:lda_cca_within_loadings_seq_boxplots} summarizes table-specific variation in
+bacterial abundances. Invariance under rotation and reflection complicates
+interpretation of these loadings. If we flip the sign of the second row of
+loadings, it appears that the main difference between the first and second
+loadings is the rate of decay in frequencies from more to less abundant species.
+However, no clear distinction between taxa among the first two loadings. The
+main characteristic of the third loading is that it differentiates
+Ruminococcaceae, which mostly have positive loadings, from Bacteroidaceae, which
+mostly have negative loadings.
+
+Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots} suggests that the
+first axes of $W^{Y}$ captures variation between lean and fat mass, which can be
+used to interpret the scores in Supplementary Figure
+\ref{fig:lda_cca_unshared_scores_lm_posterior}. The second axes reflects similar
+variation, while the third axes captures difference between mass in the trunk
+versus arms and legs.
 
 These interpretations could likely have been obtained by analyzing each table
 separately. More interest lies in covariation between the two tables, captured
 by the shared scores $\xi_{i}^{2}$ and loadings $B^{x}, B^{y}$. The shared body
 body composition loadings are given in Figure
-\ref{fig:lda_cca_loadings_body_comp}. While there is still grouping within lean
-and fat mass variable types, most variation is related to high versus low
-combined mass. The bacterial composition loadings are given in Figures
-\ref{fig:lda_cca_shared_loadings_seq}. The most interesting scores are those
-that lie in the top left and bottom right quadrants: these are species that are
-highly abundant in the first topic but not the second, and vice versa. The first
-shared topic seems dominated by Bacteroidaceae and Lachnospiraceae, while the
-second seems characterized by an absence of Prevotellaceae and
-Porphyromonadaceae. Taxonomic variation in the shared loadings is not as
-definitive as in the species abundance table specific case, however.
+\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The second row of loadings slightly
+differentiates lean and fat mass variables. In the first row of loadings, total
+fat mass, android lean mass, and total lean mass seem to stand out. However, in
+light of Supplementary Figure \ref{fig:lda_cca_shared_scores_lm_posterior}, this
+variation is not clearly visible in the raw data, and may simply be due to
+chance.
+
+The bacterial composition loadings are given in Figures
+\ref{fig:lda_cca_between_loadings_seq_boxplots}. The most notable observation is
+that unlabeled (``Other'') and Ruminococcaceae species have wider spread in the
+second loading than in the first. This could be associated with decreased
+diversity in these species among samples with high weight on the second loading.
+Generally however, taxonomic variation in the shared loadings is not as
+definitive as in the species abundance table specific case.
+
+In general, we find the results from the LDA-CCA approach less satisfying than
+those of the sparse CCA of Section \ref{subsec:pmd}. It seems that inference of
+a probabilistic model with shared and unshared parameters is more difficult than
+optimization of a single set of shared parameters. It may be possible to improve
+this approach through the following strategies,
+
+\begin{itemize}
+\item Initializing LDA-CCA with the results from sparse CCA.
+\item Applying LDA-CCA only to those species that are not sent entirely to zero by
+  sparse CCA.
+\item Placing a sparsity-inducing prior the scores $B^{X}, B^{Y}, W^{X}$, and
+  $W^{Y}$, respectively, in the spirit of \citep{archambeau2009sparse}.
+\end{itemize}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/lda_cca/shared_loadings_body_comp}
-  \caption{\label{fig:lda_cca_shared_loadings_body_comp} }
+  \includegraphics[width=\textwidth]{figure/lda_cca/between_loadings_seq_boxplots}
+  \caption{Cross-table loadings for species, as in
+    \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
+    $B^{X}_{jk}$. \label{fig:lda_cca_between_loadings_seq_boxplots} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_loadings_seq}
-  \caption{\label{fig:lda_ca_shared_loadings_seq} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_1}
-  \caption{\label{fig:lda_cca_shared_scores_1} }
+  \includegraphics[width=0.95\textwidth]{figure/lda_cca/between_loadings_body_comp_boxplots}
+  \caption{Cross-table loadings for the body composition variables, read exactly
+    as in Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, but for for the
+    parameters
+    $B^{Y}_{jk}$. \label{fig:lda_cca_between_loadings_body_comp_boxplots}}
 \end{figure}
 
 \subsection{Curds \& Whey}
@@ -1637,48 +1671,29 @@ derivation is provided in Supplementary Section
     between true and recovered points. \label{fig:pmd_illustration_scatter} }
 \end{figure}
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_2}
-  \caption{\label{fig:lda_cca_shared_scores_2} }
-\end{figure}
+ \begin{figure}[ht]
+   \centering
+   \includegraphics[width=0.9\textwidth]{figure/lda_cca/unshared_scores_lm_posterior}
+   \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
+     composition variables. These are much more spread out than either the
+     $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
+     33 body composition variables, rather than counts for all $\sim 600$
+     species.
+     \label{fig:lda_cca_unshared_scores_lm_posterior} }
+ \end{figure}
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_3}
-  \caption{\label{fig:lda_cca_shared_scores_3} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/shared_scores_4}
-  \caption{\label{fig:lda_cca_shared_scores_4} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_1}
-  \caption{\label{fig:lda_cca_unshared_scores_1} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_2}
-  \caption{\label{fig:lda_cca_unshared_scores_2} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_3}
-  \caption{\label{fig:lda_cca_unshared_scores_3} }
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/unshared_scores_4}
-  \caption{\label{fig:lda_cca_unshared_scores_4} }
-\end{figure}
-
+ \begin{figure}[ht]
+   \centering
+   \includegraphics[width=0.9\textwidth]{figure/lda_cca/shared_scores_lm_posterior}
+   \caption{Posterior samples of scores $\xi^{s}_i$ shared across both bacterial
+     abundance and body composition variables. Points are positioned according
+     to their value in the first two dimensions shared body composition loading
+     dimensions, $B^{Y}_{\cdot, 1:2}$. Clouds of points correspond to
+     participants, and they are shaded by their total lean mass. This method
+     does not appear to pick up on any associations between body composition and
+     microbiome structure.
+ \label{fig:lda_cca_shared_scores_lm_posterior} }
+ \end{figure}
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}

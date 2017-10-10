@@ -232,7 +232,7 @@ ggplot() +
   labs(x = "Axis 1", y = "Axis 2", col = "Total LM")
 
 ggsave(
-  sprintf("%s/shared_scores_total_lm_posterior.png", opts$outdir),
+  sprintf("%s/shared_scores_lm_posterior.png", opts$outdir),
   width = 5.63, height = 3.42
 )
 
