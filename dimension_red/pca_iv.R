@@ -19,12 +19,19 @@ source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -70,7 +77,8 @@ loadings <- prepare_loadings(
     c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
-plot_loadings(loadings, pcaiv_res$eig)
+plot_loadings(loadings, pcaiv_res$eig) +
+  scale_size_continuous(range = c(0.3, 1))
 ggsave("../chapter/figure/pca_iv/loadings.png", width = 4.56, height = 3)
 
 ## project the samples onto the principal axes
@@ -81,12 +89,12 @@ scores <- prepare_scores(
   left_join(raw$bc)
 
 mscores <- melt_scores(scores)
-plot_scores(scores, "Total_FM", "Total FM", pcaiv_res$eig) +
+plot_scores(scores, "Total_LM", "Total LM", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca_iv/scores_total_fm.png", width = 3.56, height = 1.8)
+ggsave("../chapter/figure/pca_iv/scores_total_lm.png", width = 3.56, height = 1.8)
 
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))

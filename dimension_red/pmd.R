@@ -20,12 +20,19 @@ source("plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
-  scale_colour_brewer(..., palette="Set2")
+  scale_color_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
+    na.value = "black"
+  )
 scale_fill_discrete <- function(...)
-  scale_fill_brewer(..., palette="Set2")
+  scale_fill_manual(
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
+    na.value = "black"
+  )
 
 theme_set(theme_bw())
 theme_update(
+  panel.background = element_rect(fill = "#F8F8F8"),
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
@@ -42,7 +49,7 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02)
+opts <- list("filt_k" = 0.02, "filt_a" = 0)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 x <- scale(processed$bc)
 y <- scale(processed$x_seq)
@@ -62,21 +69,12 @@ loadings <- prepare_loadings(
 ) %>%
   left_join(seq_families)
 
-p <- plot_loadings(
-  loadings %>%
-  filter((Axis.1 != 0 & Axis.2 != 0) | type == "body_comp"),
+plot_loadings(
+  loadings,
   cca_res$d
 ) +
-  geom_point(
-    data = loadings %>%
-      filter(!((Axis.1 != 0 & Axis.2 != 0) | type == "body_comp")),
-    aes(x = Axis.1, y = Axis.2, col = family),
-    alpha = 0.8, size = 0.9
-  ) +
   scale_size(range = c(1.5, 4), breaks = c(-5, 5))
-
-p$layers[c(4, 5)] <- p$layers[c(5, 4)]
-p
+ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
 
 ## Plot the scores
 scores <- prepare_scores(
@@ -90,12 +88,13 @@ plot_scores(scores, "type", "Meas. Type", cca_res$d) +
   link_scores(mscores) +
   scale_color_brewer(palette = "Set1")
 
-## color by weight
-plot_scores(scores, "Total_FM", "Total FM", cca_res$d) +
+## color by lean mass
+plot_scores(scores, "Total_LM", "Total LM", cca_res$d, c(-3, 3)) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
+ggsave("../chapter/figure/pmd/scores_lm.png", width = 5.52, height = 3.86)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
