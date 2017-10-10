@@ -26,12 +26,12 @@ options(mc.cores = parallel::detectCores())
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
   scale_color_manual(
-    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
     na.value = "black"
   )
 scale_fill_discrete <- function(...)
   scale_fill_manual(
-    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c', '#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', '#6a3d9a'),
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
     na.value = "black"
   )
 
@@ -54,7 +54,14 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "rlog" = FALSE)
+opts <- list(
+  "filt_k" = 0.02,
+  "rlog" = FALSE,
+  ## "stan_file" = "lda_cca.stan",
+  ## "outdir" = "../chapter/figure/lda_cca/"
+  "stan_file" = "lda_cca_exp.stan",
+  "outdir" = "../chapter/figure/lda_cca_exp/"
+)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 ###############################################################################
@@ -87,7 +94,7 @@ stan_data <- list(
   "zeros_l2" = rep(0, L2)
 )
 
-m <- stan_model("lda_cca.stan")
+m <- stan_model(opts$stan_file)
 vb_fit <- vb(m, data = stan_data)
 
 posterior <- rstan::extract(vb_fit)
@@ -114,7 +121,7 @@ for (i in seq_along(p)) {
     scale_size_continuous(range = c(0, 1.5), guide = FALSE) +
     theme(axis.title = element_blank())
   ggsave(
-    sprintf("../chapter/figure/lda_cca/shared_scores_%s.png", i),
+    sprintf("%s/shared_scores_%s.png", opts$outdir, i),
     width = 3.56, height = 2.6
   )
 }
@@ -141,7 +148,7 @@ plot_loadings(
 plot_topics(loadings %>% filter(type == "seq"))
 
 ggsave(
-  sprintf("../chapter/figure/lda_cca/shared_loadings_seq.png"),
+  sprintf("%s/shared_loadings_seq.png", opts$outdir),
   width = 6.56, height = 3.9
 )
 plot_loadings(loadings %>% filter(type == "body_comp"), c(1, 1)) +
@@ -159,7 +166,7 @@ p <- c(p, plot_scores_wrapper(pmeans$xi_y, raw, processed, scv))
 for (i in seq_along(p)) {
   p[[i]] + scale_size_continuous(range = c(0, 1.5), guide = FALSE)
   ggsave(
-    sprintf("../chapter/figure/lda_cca/unshared_scores_%s.png", i),
+    sprintf("%s/unshared_scores_%s.png", opts$outdir, i),
     width = 3.56, height = 2.6
   )
 }
@@ -177,7 +184,7 @@ plot_loadings(loadings_x, c(1, 1), a = 0.9) +
     legend.position = "none"
   )
 ggsave(
-  "../chapter/figure/lda_cca/loadings_seq_scatter.png",
+  sprintf("%s/loadings_seq_scatter.png", opts$outdir),
   width = 5.56, height = 3.5
 )
 plot_topics(loadings_x)
@@ -194,7 +201,7 @@ plot_loadings(loadings_y, c(1, 1)) +
   scale_size_continuous(range = c(1.5, 3), guide = FALSE) +
   theme(axis.title = element_blank())
 ggsave(
-  "../chapter/figure/lda_cca/loadings_body_comp.png",
+  sprintf("%s/loadings_body_comp.png", opts$outdir),
   width = 6.0, height = 1.5
 )
 
@@ -222,33 +229,11 @@ ggplot() +
   ) +
   coord_equal() +
   scv +
-  labs(x = "Axis 1", y = "Axis 2", col = "Total FM")
+  labs(x = "Axis 1", y = "Axis 2", col = "Total LM")
 
 ggsave(
-  "../chapter/figure/lda_cca/shared_scores_total_fm_posterior.png",
-  width = 6, height = 2
-)
-
-ggplot() +
-  geom_hline(yintercept = 0, alpha = 0.5) +
-  geom_vline(xintercept = 0, alpha = 0.5) +
-  geom_point(
-    data = mdist$xi_s,
-    aes(
-      x = axis_1,
-      y = axis_2,
-      col = weight_dxa
-    ),
-    size = 0.1,
-    alpha = 0.01
-  ) +
-  coord_equal() +
-  scv +
-  labs(x = "Axis 1", y = "Axis 2", col = "Weight ")
-
-ggsave(
-  "../chapter/figure/lda_cca/shared_scores_weight_posterior.png",
-  width = 6, height = 2
+  sprintf("%s/shared_scores_total_lm_posterior.png", opts$outdir),
+  width = 5.63, height = 3.42
 )
 
 ## using the scores from just the bc table
@@ -256,29 +241,22 @@ ggplot() +
   geom_hline(yintercept = 0, alpha = 0.5) +
   geom_vline(xintercept = 0, alpha = 0.5) +
   geom_point(
-    data = mdist$xi_y %>%
-      mutate(
-        Total_LM_cut = cut(round(Total_LM / 1e4, 2), 4)
-      ),
+    data = mdist$xi_y,
     aes(
       x = axis_1,
       y = axis_2,
-      col = axis_3
+      col = Total_LM
     ),
     size = 0.1,
     alpha = 0.1
   ) +
-  facet_wrap(~Total_LM_cut) +
   coord_equal() +
-  scale_color_viridis(
-    option = "magma",
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
-  ) +
-  labs(x = "Axis 1", y = "Axis 2", col = "Axis 3")
-
+  scv +
+  labs(x = "Axis 1", y = "Axis 2", col = "Total LM")
 ggsave(
-  "../chapter/figure/lda_cca/unshared_scores_total_fm_posterior.png",
-  width = 6, height = 2
+  sprintf("%s/unshared_scores_lm_posterior.png", opts$outdir),
+  width = 9.24,
+  height = 2.5
 )
 
 ## Now plotting loadings boxplots
@@ -287,15 +265,24 @@ mdist$Wx <- mdist$Wx %>%
   left_join(seq_families)
 mdist$Wx$seq_num <- factor(
   mdist$Wx$seq_num,
-  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+  levels = names(sort(colSums(processed$x_seq), decreasing = TRUE))
 )
 
-ggplot(mdist$Wx) +
+wx_summary <- mdist$Wx %>%
+  group_by(col, seq_num) %>%
+  summarise(
+    family = family[1],
+    lower = quantile(value, 0.25),
+    upper = quantile(value, 0.75),
+    med = median(value)
+  )
+
+ggplot(wx_summary) +
   geom_hline(yintercept = 0, alpha = 0.4) +
-  geom_boxplot(
-    aes(x = seq_num, y = value, col = family, fill = family),
-    outlier.size = 0.05,
-    width = 0.1
+  geom_pointrange(
+    aes(x = seq_num, ymin = lower, ymax = upper, y = med, col = family, fill = family),
+    fatten = 1.2,
+    size = 0.1
   ) +
   facet_grid(col ~ family, scale = "free_x", space = "free_x") +
   theme(
@@ -305,8 +292,9 @@ ggplot(mdist$Wx) +
     legend.position = "bottom"
   )
 ggsave(
-  "../chapter/figure/lda_cca/within_loadings_seq_boxplots.png",
-  width = 6, height = 3
+  sprintf("%s/within_loadings_seq_boxplots.png", opts$outdir),
+  width = 7.45,
+  height = 3.37
 )
 
 mdist$Bx$seq_num <- colnames(processed$x_seq)[mdist$Bx$row]
@@ -314,15 +302,24 @@ mdist$Bx <- mdist$Bx %>%
   left_join(seq_families)
 mdist$Bx$seq_num <- factor(
   mdist$Bx$seq_num,
-  levels = colnames(processed$x_seq)[taxa_order(loadings)]
+  levels = names(sort(colSums(processed$x_seq), decreasing = TRUE))
 )
 
-ggplot(mdist$Bx) +
+bx_summary <- mdist$Bx %>%
+  group_by(col, seq_num) %>%
+  summarise(
+    family = family[1],
+    lower = quantile(value, 0.25),
+    upper = quantile(value, 0.75),
+    med = median(value)
+  )
+
+ggplot(bx_summary) +
   geom_hline(yintercept = 0, alpha = 0.4) +
-  geom_boxplot(
-    aes(x = seq_num, y = value, col = family, fill = family),
-    outlier.size = 0.05,
-    width = 0.1
+  geom_pointrange(
+    aes(x = seq_num, ymin = lower, ymax = upper, y = med, col = family, fill = family),
+    fatten = 1.2,
+    size = 0.1
   ) +
   facet_grid(col ~ family, scale = "free_x", space = "free_x") +
   theme(
@@ -332,8 +329,9 @@ ggplot(mdist$Bx) +
     legend.position = "bottom"
   )
 ggsave(
-  "../chapter/figure/lda_cca/between_loadings_seq_boxplots.png",
-  width = 6, height = 3
+  sprintf("%s/between_loadings_seq_boxplots.png", opts$outdir),
+  width = 7.45,
+  height = 3.37
 )
 
 ## and finally loadings boxplot for body composition variables
@@ -369,9 +367,11 @@ ggplot(mdist$Wy) +
   ) +
   facet_grid(col ~ .) +
   theme(axis.text.x = element_text(angle = -90))
+
 ggsave(
-  "../chapter/figure/lda_cca/within_loadings_body_comp_boxplots.png",
-  width = 6, height = 3
+  sprintf("%s/within_loadings_body_comp_boxplots.png", opts$outdir),
+  width = 6.44,
+  height = 3.95
 )
 
 mdist$By$variable <- tolower(colnames(processed$bc)[mdist$By$row])
@@ -393,6 +393,7 @@ ggplot(mdist$By) +
   theme(axis.text.x = element_text(angle = -90))
 
 ggsave(
-  "../chapter/figure/lda_cca/between_loadings_body_comp_boxplots.png",
-  width = 6, height = 3
+  sprintf("%s/between_loadings_body_comp_boxplots.png", opts$outdir),
+  width = 6.44,
+  height = 3.95
 )
