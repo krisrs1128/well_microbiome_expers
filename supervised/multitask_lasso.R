@@ -95,12 +95,14 @@ mbeta$feature <- factor(
   levels = mass_type_ordered
 )
 
-ggplot(mbeta %>% filter(feature %in% colnames(y))) +
+ggplot(mbeta) +
   geom_tile(
     aes(x = seq_num, y = lambda, fill = value)
   ) +
   scale_fill_gradient2(
-    guide = guide_colorbar(ticks = FALSE, keywidth = 0.5)
+    guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
+    low = "#40004b",
+    high = "#00441b"
   ) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -113,3 +115,8 @@ ggplot(mbeta %>% filter(feature %in% colnames(y))) +
     legend.position = "bottom"
   )
 
+ggsave(
+  "../chapter/figure/multitask_lasso_hm.png",
+  height = 11.3,
+  width = 8.01
+)
