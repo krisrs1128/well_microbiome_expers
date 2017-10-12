@@ -2,7 +2,7 @@
 
 ## File description -------------------------------------------------------------
 ##
-## An experiment using lasso to model multiple responses in the WELL-China data.
+## Sparse partial least squares applied to the WELL microbiome data.
 ##
 ## author: sankaran.kris@gmail.com
 ## date: 10/12/2017
@@ -12,9 +12,9 @@
 ###############################################################################
 library("phyloseq")
 library("tidyverse")
-library("viridis")
-library("glmnet")
+library("reshape2")
 source("../dimension_red/prep_tables.R")
+library("spls")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -44,43 +44,27 @@ theme_update(
 )
 
 ###############################################################################
-## Apply parallel lassos
+## read and prepare the data
 ###############################################################################
 raw <- read_data()
 opts <- list("filt_k" = 0.07)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
+cv_eval <- cv.spls(x, y, K = 1:6, eta = seq(0, 0.9, 0.05), scale.x = FALSE, fold = 5)
+cv_eval
 
-n_lambda <- 30
-lambdas <- seq(0.001, 0.7, length.out = n_lambda)
-beta_hats <- array(dim = c(ncol(y), 1 + ncol(x), n_lambda))
-fits <- list()
-
-for (r in seq_len(ncol(y))) {
-  message("tuning response ", r)
-  fit[[r]] <- cv.glmnet(x, y[, r], lambda = lambdas, alpha = 0.3)
-  beta_hats[r,, ] <- as.matrix(coef(fit[[r]]$glmnet.fit))
-}
-
-###############################################################################
-## Plot the cross validation errors
-###############################################################################
-cv_err <- do.call(cbind, sapply(fit, function(x) x$cvm))
-cv_err[cv_err > 1.4] <- NA
-colnames(cv_err) <- colnames(y)
-rownames(cv_err) <- lambdas
-
-ggplot(melt(cv_err)) +
-  geom_tile(
-    aes(x = Var1, y = Var2, fill = value)
-  ) +
-  scale_fill_gradient2(midpoint = 1, low = "blue", high = "red") +
-  scale_x_continuous(expand = c(0, 0))
-  scale_y_discrete(expand = c(0, 0))
+train_ix <- sample(1:nrow(x), 80)
+#fit <- spls(x[train_ix, ], y[train_ix, ], cv_eval$K.opt, cv_eval$eta.opt)
+fit <- spls(x[train_ix, ], y[train_ix, ], 2, 0.8)
+y_hat <- x %*% fit$betahat
+plot(y[train_ix, 24], y_hat[train_ix, 24])
+points(y[-train_ix, 24], y_hat[-train_ix, 24], col = "blue")
+abline(a = 0, b = 1, col = "red")
 
 ###############################################################################
-## Plot the results
+## plot fitted coefficients
 ###############################################################################
 seq_families <- processed$mseqtab %>%
   select(seq_num, family) %>%
@@ -101,18 +85,14 @@ mass_type_ordered <- c(
   site_ordered[grepl("LM", site_ordered)]
 )
 
-rownames(beta_hats) <- colnames(y)
-colnames(beta_hats) <- c("intercept", colnames(x))
-mbeta <- beta_hats %>%
-  melt(
-    varnames = c("feature", "seq_num", "lambda")
-  ) %>%
+mbeta <- fit$betahat %>%
+  melt(varnames = c("seq_num", "feature")) %>%
   left_join(seq_families) %>%
   mutate(feature = factor(feature, mass_type_ordered))
 
 ggplot(mbeta) +
   geom_tile(
-    aes(x = seq_num, y = lambda, fill = value)
+    aes(x = seq_num, y = feature, fill = value)
   ) +
   scale_fill_gradient2(
     guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
@@ -120,18 +100,12 @@ ggplot(mbeta) +
     high = "#00441b"
   ) +
   scale_x_discrete(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  facet_grid(feature ~ family, scale = "free", space = "free") +
+  scale_y_discrete(expand = c(0, 0)) +
+  facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
-    strip.text.y = element_text(size = 7, angle = 0, hjust = 0),
+    axis.text.y = element_text(size = 7, angle = 0, hjust = 0),
     strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
     legend.position = "bottom"
   )
-
-ggsave(
-  "../chapter/figure/multitask_lasso_hm.png",
-  height = 11.3,
-  width = 8.01
-)
