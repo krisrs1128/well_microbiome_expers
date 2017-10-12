@@ -47,7 +47,7 @@ theme_update(
 ## Apply parallel lassos
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.1)
+opts <- list("filt_k" = 0.07)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
@@ -67,6 +67,7 @@ for (r in seq_len(ncol(y))) {
 ## Plot the cross validation errors
 ###############################################################################
 cv_err <- do.call(cbind, sapply(fit, function(x) x$cvm))
+cv_err[cv_err > 1.4] <- NA
 colnames(cv_err) <- colnames(y)
 rownames(cv_err) <- lambdas
 
@@ -85,14 +86,6 @@ seq_families <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
 
-rownames(beta_hats) <- colnames(y)
-colnames(beta_hats) <- c("intercept", colnames(x))
-mbeta <- beta_hats %>%
-  melt(
-    varnames = c("feature", "seq_num", "lambda")
-  ) %>%
-  left_join(seq_families)
-
 site_ordered <- c(
   "aoi", "age", "height_dxa", "weight_dxa",
   "bmi", "Android_FM", "Android_LM", "Gynoid_FM", "Gynoid_LM", "L_Trunk_FM",
@@ -108,10 +101,14 @@ mass_type_ordered <- c(
   site_ordered[grepl("LM", site_ordered)]
 )
 
-mbeta$feature <- factor(
-  mbeta$feature,
-  levels = mass_type_ordered
-)
+rownames(beta_hats) <- colnames(y)
+colnames(beta_hats) <- c("intercept", colnames(x))
+mbeta <- beta_hats %>%
+  melt(
+    varnames = c("feature", "seq_num", "lambda")
+  ) %>%
+  left_join(seq_families) %>%
+  mutate(feature = factor(feature, mass_type_ordered))
 
 ggplot(mbeta) +
   geom_tile(
