@@ -47,18 +47,36 @@ theme_update(
 ## Apply parallel lassos
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "rlog" = FALSE)
+opts <- list("filt_k" = 0.1)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
 
-n_lambda <- 50
+n_lambda <- 30
+lambdas <- seq(0.001, 0.7, length.out = n_lambda)
 beta_hats <- array(dim = c(ncol(y), 1 + ncol(x), n_lambda))
+fits <- list()
+
 for (r in seq_len(ncol(y))) {
-  fit <- glmnet(x, y[, r], nlambda = n_lambda, alpha = 0.7)
-  beta_hats[r,, ] <- as.matrix(coef(fit))
+  message("tuning response ", r)
+  fit[[r]] <- cv.glmnet(x, y[, r], lambda = lambdas, alpha = 0.3)
+  beta_hats[r,, ] <- as.matrix(coef(fit[[r]]$glmnet.fit))
 }
-plot(y[, r], predict(fit, x)[, 20]) ## seems like some real associations (though not test set)
+
+###############################################################################
+## Plot the cross validation errors
+###############################################################################
+cv_err <- do.call(cbind, sapply(fit, function(x) x$cvm))
+colnames(cv_err) <- colnames(y)
+rownames(cv_err) <- lambdas
+
+ggplot(melt(cv_err)) +
+  geom_tile(
+    aes(x = Var1, y = Var2, fill = value)
+  ) +
+  scale_fill_gradient2(midpoint = 1, low = "blue", high = "red") +
+  scale_x_continuous(expand = c(0, 0))
+  scale_y_discrete(expand = c(0, 0))
 
 ###############################################################################
 ## Plot the results
