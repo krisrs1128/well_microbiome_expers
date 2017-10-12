@@ -58,6 +58,7 @@ for (r in seq_len(ncol(y))) {
   fit <- glmnet(x, y[, r], nlambda = n_lambda, alpha = 0.7)
   beta_hats[r,, ] <- as.matrix(coef(fit))
 }
+plot(y[, r], predict(fit, x)[, 20]) ## seems like some real associations (though not test set)
 
 ###############################################################################
 ## Plot the results
@@ -74,14 +75,41 @@ mbeta <- beta_hats %>%
   ) %>%
   left_join(seq_families)
 
-ggplot(mbeta %>% filter(feature %in% colnames(y)[1:10])) +
+site_ordered <- c(
+  "aoi", "age", "height_dxa", "weight_dxa",
+  "bmi", "Android_FM", "Android_LM", "Gynoid_FM", "Gynoid_LM", "L_Trunk_FM",
+  "L_Trunk_LM", "R_Trunk_FM", "R_Trunk_LM", "Trunk_FM", "Trunk_LM",
+  "L_Total_FM", "L_Total_LM", "R_Total_FM", "R_Total_LM", "Total_FM",
+  "Total_LM", "L_Leg_FM", "L_Leg_LM", "R_Leg_FM", "R_Leg_LM", "Legs_FM",
+  "Legs_LM", "L_Arm_FM", "L_Arm_LM", "R_Arm_FM", "R_Arm_LM", "Arms_FM",
+  "Arms_LM"
+)
+mass_type_ordered <- c(
+  site_ordered[!grepl("FM|LM", site_ordered)],
+  site_ordered[grepl("FM", site_ordered)],
+  site_ordered[grepl("LM", site_ordered)]
+)
+
+mbeta$feature <- factor(
+  mbeta$feature,
+  levels = mass_type_ordered
+)
+
+ggplot(mbeta %>% filter(feature %in% colnames(y))) +
   geom_tile(
-    aes(x = lambda, y = seq_num, fill = value)
+    aes(x = seq_num, y = lambda, fill = value)
   ) +
-  scale_fill_gradient2() +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  facet_wrap(family ~ feature, nrow = 2) +
+  scale_fill_gradient2(
+    guide = guide_colorbar(ticks = FALSE, keywidth = 0.5)
+  ) +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  facet_grid(feature ~ family, scale = "free", space = "free") +
   theme(
-    axis.text = element_blank()
+    axis.text = element_blank(),
+    panel.spacing = unit(0, "cm"),
+    strip.text.y = element_text(size = 7, angle = 0, hjust = 0),
+    strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
+    legend.position = "bottom"
   )
+
