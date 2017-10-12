@@ -47,10 +47,17 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02)
+opts <- list("filt_k" = 0.5)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
-fit <- spls(x, y, K = 4, eta = 0.2, scale.x = FALSE, maxstep = 10, trace = TRUE)
-dim(fit$betahat)
+cv_eval <- cv.spls(x, y, K = 1:6, eta = seq(0, 0.9, 0.05), scale.x = FALSE, fold = 5)
+cv_eval
+
+train_ix <- sample(1:nrow(x), 80)
+fit <- spls(x[train_ix, ], y[train_ix, ], cv_eval$K.opt, cv_eval$eta.opt)
+y_hat <- x %*% fit$betahat
+plot(y[train_ix, 24], y_hat[train_ix, 24])
+points(y[-train_ix, 24], y_hat[-train_ix, 24], col = "blue")
+abline(a = 0, b = 1, col = "red")
