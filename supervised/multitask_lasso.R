@@ -59,3 +59,29 @@ for (r in seq_len(ncol(y))) {
   beta_hats[r,, ] <- as.matrix(coef(fit))
 }
 
+###############################################################################
+## Plot the results
+###############################################################################
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
+rownames(beta_hats) <- colnames(y)
+colnames(beta_hats) <- c("intercept", colnames(x))
+mbeta <- beta_hats %>%
+  melt(
+    varnames = c("feature", "seq_num", "lambda")
+  ) %>%
+  left_join(seq_families)
+
+ggplot(mbeta %>% filter(feature %in% colnames(y)[1:10])) +
+  geom_tile(
+    aes(x = lambda, y = seq_num, fill = value)
+  ) +
+  scale_fill_gradient2() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  facet_wrap(family ~ feature, nrow = 2) +
+  theme(
+    axis.text = element_blank()
+  )
