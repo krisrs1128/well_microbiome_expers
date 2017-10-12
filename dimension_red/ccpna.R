@@ -14,7 +14,6 @@
 library("phyloseq")
 library("tidyverse")
 library("vegan")
-library("PMA")
 library("viridis")
 source("prep_tables.R")
 source("plot.R")
