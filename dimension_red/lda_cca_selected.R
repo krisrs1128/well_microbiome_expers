@@ -65,16 +65,16 @@ bc_mat <- scale(processed$bc)
 ###############################################################################
 K <- 2
 cca_res <- CCA(
-  bc_mat,
   scale(processed$x_seq),
-  penaltyx = 0.6,
-  penaltyz = 0.3,
+  bc_mat,
+  penaltyz = 0.6,
+  penaltyx = 0.3,
   K = K
 )
 
 opts$rlog <- FALSE
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
-keep_ix <- rowSums(cca_res$v) != 0
+keep_ix <- rowSums(cca_res$u) != 0
 
 ###############################################################################
 ## Run and plot LDA / CCA on the two (scaled) tables
@@ -103,8 +103,14 @@ stan_data <- list(
   "zeros_l2" = rep(0, L2)
 )
 
+init_vals <- list(
+  "Bx" = cca_res$u[keep_ix, ],
+  "By" = cca_res$v,
+  "xi_s" = bc_mat %*% cca_res$v
+)
+
 m <- stan_model(opts$stan_file)
-vb_fit <- vb(m, data = stan_data)
+vb_fit <- vb(m, data = stan_data, init = init_vals)
 posterior <- rstan::extract(vb_fit)
 
 ###############################################################################
