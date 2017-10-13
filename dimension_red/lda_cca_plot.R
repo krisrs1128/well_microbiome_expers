@@ -68,7 +68,7 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
 
   wx_summary <- mdist$Wx %>%
     group_by(col, seq_num) %>%
-    summarise(
+    dplyr::summarise(
       family = family[1],
       lower = quantile(value, 0.25),
       upper = quantile(value, 0.75),
@@ -105,7 +105,7 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
 
   bx_summary <- mdist$Bx %>%
     group_by(col, seq_num) %>%
-    summarise(
+    dplyr::summarise(
       family = family[1],
       lower = quantile(value, 0.25),
       upper = quantile(value, 0.75),
