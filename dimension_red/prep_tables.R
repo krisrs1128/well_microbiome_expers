@@ -74,7 +74,7 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   ##
   ## code copied from here: https://support.bioconductor.org/p/76548/
   if (opts$rlog) {
-    fname <- paste0(c("rlog_data_", opts, ".rda"), collapse = "")
+    fname <- paste0(c("rlog_data_", opts[!grep("dir", names(opts))], ".rda"), collapse = "")
     fpath <- file.path("..", "data", fname)
     if (file.exists(fpath)) {
       dds <- get(load(fpath))

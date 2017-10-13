@@ -191,26 +191,6 @@ plot_scores_wrapper <- function(xi, raw, processed, scv) {
   )
 }
 
-#' Average across first dimension
-slice_mean <- function(x) {
-  apply(x, c(2, 3), mean)
-}
-
-#' Means from posterior samples
-parameter_means <- function(theta_samples) {
-  theta_hat <- list()
-  for (i in seq_along(theta_samples)) {
-    if (length(dim(theta_samples[[i]])) > 2) {
-      theta_hat[[i]] <- slice_mean(theta_samples[[i]])
-    } else {
-      theta_hat[[i]] <- mean(theta_samples[[i]])
-    }
-  }
-
-  names(theta_hat) <- names(theta_samples)
-  theta_hat
-}
-
 melt_parameters <- function(theta_samples) {
   mtheta <- list()
   for (i in seq_along(theta_samples)) {

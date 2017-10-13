@@ -2,22 +2,18 @@
 
 ## File description -------------------------------------------------------------
 ##
-## An experiment using Latent Dirichlet Allocation + Canonical Correlation
-## Analysis simultaneously across count and gaussian tables.
+## Variant of lda_cca.R that runs the shared LDA scores model only only CCA.
 ##
 ## author: sankaran.kris@gmail.com
-## date: 10/04/2017
+## date: 10/12/2017
 
-###############################################################################
-## Libraries and setup
-###############################################################################
 library("phyloseq")
 library("rstan")
 library("tidyverse")
+library("PMA")
 library("reshape2")
 library("ggrepel")
 library("viridis")
-library("PMA")
 source("prep_tables.R")
 source("plot.R")
 source("lda_cca_plot.R")
@@ -58,36 +54,37 @@ theme_update(
 raw <- read_data()
 opts <- list(
   "filt_k" = 0.02,
-  "rlog" = FALSE,
   "stan_file" = "lda_cca.stan",
-  "outdir" = "../chapter/figure/lda_cca/"
+  "outdir" = "../chapter/figure/lda_cca_selected/"
 )
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+bc_mat <- scale(processed$bc)
+
+###############################################################################
+## Identify subset of features to run on using CCA
+###############################################################################
+K <- 2
+cca_res <- CCA(
+  scale(processed$x_seq),
+  bc_mat,
+  penaltyz = 0.6,
+  penaltyx = 0.3,
+  K = K
+)
+
+opts$rlog <- FALSE
+processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+keep_ix <- rowSums(cca_res$u) != 0
 
 ###############################################################################
 ## Run and plot LDA / CCA on the two (scaled) tables
 ###############################################################################
-bc_mat <- scale(processed$bc)
-
-K <- 2
 L1 <- 3
 L2 <- 3
 
-## initialize using results from sparse CCA
-opts_cca <- opts
-opts_cca$rlog <- TRUE
-processed_rlog <- process_data(raw$seqtab, raw$bc, raw$taxa, opts_cca)
-cca_res <- CCA(
-  scale(processed_rlog$x_seq),
-  bc_mat,
-  penaltyx = 0.6,
-  penaltyz = 0.3,
-  K = K
-)
-
 stan_data <- list(
   "n" = nrow(bc_mat),
-  "p1" = ncol(processed$x_seq),
+  "p1" = sum(keep_ix),
   "p2" = ncol(bc_mat),
   "K" = K,
   "L1" = L1,
@@ -95,7 +92,7 @@ stan_data <- list(
   "sigma" = 1,
   "a0" = 1,
   "b0" = 1,
-  "x" = processed$x_seq,
+  "x" = processed$x_seq[, keep_ix],
   "y" = bc_mat,
   "id_y" = diag(ncol(bc_mat)),
   "id_k" = diag(K),
@@ -106,16 +103,15 @@ stan_data <- list(
   "zeros_l2" = rep(0, L2)
 )
 
-m <- stan_model(opts$stan_file)
 init_vals <- list(
-  "Bx" = cca_res$u,
+  "Bx" = cca_res$u[keep_ix, ],
   "By" = cca_res$v,
   "xi_s" = bc_mat %*% cca_res$v
 )
 
+m <- stan_model(opts$stan_file)
 vb_fit <- vb(m, data = stan_data, init = init_vals)
 posterior <- rstan::extract(vb_fit)
-rm(vb_fit)
 
 ###############################################################################
 ## Plot the results
