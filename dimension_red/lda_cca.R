@@ -17,6 +17,7 @@ library("tidyverse")
 library("reshape2")
 library("ggrepel")
 library("viridis")
+library("PMA")
 source("prep_tables.R")
 source("plot.R")
 source("lda_cca_plot.R")
@@ -58,10 +59,8 @@ raw <- read_data()
 opts <- list(
   "filt_k" = 0.02,
   "rlog" = FALSE,
-  ## "stan_file" = "lda_cca.stan",
-  ## "outdir" = "../chapter/figure/lda_cca/"
-  "stan_file" = "lda_cca_exp.stan",
-  "outdir" = "../chapter/figure/lda_cca_exp/"
+  "stan_file" = "lda_cca.stan",
+  "outdir" = "../chapter/figure/lda_cca/"
 )
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
@@ -73,6 +72,18 @@ bc_mat <- scale(processed$bc)
 K <- 2
 L1 <- 3
 L2 <- 3
+
+## initialize using results from sparse CCA
+opts_cca <- opts
+opts_cca$rlog <- TRUE
+processed_rlog <- process_data(raw$seqtab, raw$bc, raw$taxa, opts_cca)
+cca_res <- CCA(
+  scale(processed_rlog$x_seq),
+  bc_mat,
+  penaltyx = 0.6,
+  penaltyz = 0.3,
+  K = K
+)
 
 stan_data <- list(
   "n" = nrow(bc_mat),
@@ -96,14 +107,15 @@ stan_data <- list(
 )
 
 m <- stan_model(opts$stan_file)
-vb_fit <- vb(m, data = stan_data)
+init_vals <- list(
+  "Bx" = cca_res$u,
+  "By" = cca_res$v,
+  "xi_s" = bc_mat %*% cca_res$v
+)
 
+vb_fit <- vb(m, data = stan_data, init = init_vals)
 posterior <- rstan::extract(vb_fit)
 rm(vb_fit)
-pmeans <- parameter_means(posterior)
-for (i in seq_along(pmeans)) {
-  pmeans[[i]] <- cbind(pmeans[[i]], 1) # in case only used 2 dimensions
-}
 
 ###############################################################################
 ## Plot the results
