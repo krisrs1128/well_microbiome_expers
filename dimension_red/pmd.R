@@ -100,7 +100,7 @@ loadings <- prepare_loadings(
 
 large_species <- loadings %>%
   filter(
-    abs(Axis.1) > 0.15 | abs(Axis.2) > 0.15,
+    sqrt(Axis.1 ^ 2 + Axis.2 ^ 2) > 0.16,
     type == "seq"
   )
 
@@ -120,3 +120,62 @@ plot_loadings(
   ) +
   scale_size(range = c(1.5, 4), breaks = c(-5, 5))
 ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
+
+mlarge_species <- melt(
+  data.frame(
+    "Number" = rownames(x),
+    y[, large_species$seq_num],
+    x[, c("Total_FM", "Total_LM")]
+  ),
+  id.vars = c("Number", "Total_FM", "Total_LM"),
+  variable.name = "seq_num"
+) %>%
+  left_join(seq_families)
+
+mlarge_species$seq_num <- factor(
+  mlarge_species$seq_num,
+  loadings %>%
+    arrange(desc(Axis.2)) %>%
+    .[["seq_num"]]
+)
+
+ggplot(mlarge_species) +
+  geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_point(
+    aes(x = value, y = Total_LM, col = family),
+    size = 0.7, alpha = 0.8
+  ) +
+  facet_wrap(~seq_num, ncol = 8) +
+  theme(
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/pmd/total_lm_species.png",
+  width = 7.06,
+  height = 4.41
+)
+
+mlarge_species$seq_num <- factor(
+  mlarge_species$seq_num,
+  loadings %>%
+    arrange(desc(Axis.1)) %>%
+    .[["seq_num"]]
+)
+
+ggplot(mlarge_species) +
+  geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_point(
+    aes(x = value, y = Total_FM, col = family),
+    size = 0.7, alpha = 0.8
+  ) +
+  facet_wrap(~seq_num, ncol = 8) +
+  theme(
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/pmd/total_fm_species.png",
+  width = 7.06,
+  height = 4.41
+)
