@@ -113,3 +113,8 @@ ggplot(mbeta) +
     strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
     legend.position = "bottom"
   )
+ggsave(
+  "../chapter/figure/spls/coef_heatmap.png"
+  width = 8.77,
+  height = 5.17
+)
