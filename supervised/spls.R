@@ -47,7 +47,7 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.07)
+opts <- list("filt_k" = 0.02, "filt_a" = 0)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 y <- scale(processed$bc)
@@ -113,8 +113,80 @@ ggplot(mbeta) +
     strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
     legend.position = "bottom"
   )
+
 ggsave(
-  "../chapter/figure/spls/coef_heatmap.png"
+  "../chapter/figure/spls/coef_heatmap.png",
   width = 8.77,
   height = 5.17
+)
+
+large_species <- mbeta %>%
+  filter(
+    feature %in% c("Total_LM", "Total_FM")
+  ) %>%
+  group_by(seq_num) %>%
+  mutate(norm = sqrt(sum(value ^ 2))) %>%
+  filter(norm > 0.1) %>%
+  arrange(desc(norm))
+
+mlarge_species <- melt(
+  data.frame(
+    "Number" = rownames(x),
+    x[, unique(large_species$seq_num)],
+    y[, c("Total_FM", "Total_LM")]
+  ),
+  id.vars = c("Number", "Total_FM", "Total_LM"),
+  variable.name = "seq_num"
+) %>%
+  left_join(seq_families)
+
+mlarge_species$seq_num <- factor(
+  mlarge_species$seq_num,
+  mbeta %>%
+    filter(feature == "Total_LM") %>%
+    arrange(value) %>%
+    .[["seq_num"]]
+)
+
+ggplot(mlarge_species) +
+  geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_point(
+    aes(x = value, y = Total_LM, col = family),
+    size = 0.7, alpha = 0.8
+  ) +
+  facet_wrap(~seq_num, ncol = 8) +
+  theme(
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/spls/total_lm_species.png",
+  width = 7.4,
+  height = 4.3
+)
+
+## same plot for Total FM
+mlarge_species$seq_num <- factor(
+  mlarge_species$seq_num,
+  mbeta %>%
+    filter(feature == "Total_FM") %>%
+    arrange(value) %>%
+    .[["seq_num"]]
+)
+
+ggplot(mlarge_species) +
+  geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  geom_point(
+    aes(x = value, y = Total_FM, col = family),
+    size = 0.7, alpha = 0.8
+  ) +
+  facet_wrap(~seq_num, ncol = 8) +
+  theme(
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/spls/total_fm_species.png",
+  width = 7.4,
+  height = 4.3
 )
