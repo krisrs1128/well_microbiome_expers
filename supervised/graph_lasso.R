@@ -15,6 +15,7 @@ library("tidyverse")
 library("reshape2")
 source("../dimension_red/prep_tables.R")
 library("gflasso")
+library("glasso")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -53,7 +54,7 @@ processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
 
-R <- cor(y)
+R <- glasso(cov(y), rho = 1e-1)
 opts <- list(
   gamma = 0.01,
   lambda = 0.1,
@@ -61,7 +62,7 @@ opts <- list(
   verbose = TRUE
 )
 
-fit <- gflasso(y, x, R, opts)
+fit <- gflasso(y, x, R$w, opts)
 
 ###############################################################################
 ## plot fitted coefficients
@@ -85,7 +86,7 @@ mass_type_ordered <- c(
   site_ordered[grepl("LM", site_ordered)]
 )
 
-species_order <- colnames(x)[hclust(dist(t(x)))$order]
+species_order <- colnames(x)[hclust(dist(fit$B))$order]
 
 colnames(fit$B) <- colnames(y)
 mbeta <- fit$B %>%
