@@ -76,14 +76,14 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   if (opts$rlog) {
     fname <- paste0(c("rlog_data_", opts[!grep("dir", names(opts))], ".rda"), collapse = "")
     fpath <- file.path("..", "data", fname)
-    if (file.exists(fpath)) {
-      dds <- get(load(fpath))
-    } else {
+    ## if (file.exists(fpath)) {
+    ##   dds <- get(load(fpath))
+    ## } else {
       qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
       sizeFactors(dds) <- qs / exp(mean(log(qs)))
       dds <- rlog(dds, fitType = "local", betaPriorVar = 0.5)
       save(dds, file = fpath)
-    }
+    ## }
   }
 
   x_seq <- t(assay(dds))
