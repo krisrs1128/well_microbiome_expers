@@ -56,26 +56,6 @@ y <- scale(processed$x_seq)
 
 cca_res <- CCA(x, y, penaltyx = 0.6, penaltyz = 0.3, K = 3)
 
-## Plot the loadings
-rownames(cca_res$u) <- colnames(x)
-rownames(cca_res$v) <- colnames(y)
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
-
-loadings <- prepare_loadings(
-  list(data.frame(cca_res$u), data.frame(cca_res$v)),
-  c("body_comp", "seq")
-) %>%
-  left_join(seq_families)
-
-plot_loadings(
-  loadings,
-  cca_res$d
-) +
-  scale_size(range = c(1.5, 4), breaks = c(-5, 5))
-ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
-
 ## Plot the scores
 scores <- prepare_scores(
   list(x %*% cca_res$u, y %*% cca_res$v),
@@ -104,3 +84,39 @@ plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$d) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
+
+## Plot the loadings
+rownames(cca_res$u) <- colnames(x)
+rownames(cca_res$v) <- colnames(y)
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
+loadings <- prepare_loadings(
+  list(data.frame(cca_res$u), data.frame(cca_res$v)),
+  c("body_comp", "seq")
+) %>%
+  left_join(seq_families)
+
+large_species <- loadings %>%
+  filter(
+    abs(Axis.1) > 0.15 | abs(Axis.2) > 0.15,
+    type == "seq"
+  )
+
+plot_loadings(
+  loadings,
+  cca_res$d
+) +
+  geom_text_repel(
+    data = large_species,
+    aes(
+      x = Axis.1,
+      y = Axis.2,
+      label = seq_num,
+      col = family
+    ),
+    size = 3
+  ) +
+  scale_size(range = c(1.5, 4), breaks = c(-5, 5))
+ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
