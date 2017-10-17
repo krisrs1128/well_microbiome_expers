@@ -47,7 +47,7 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "filt_a" = 0)
+opts <- list("filt_k" = 0.07, "filt_a" = 0)
 processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
 
 y <- scale(processed$bc)
@@ -144,7 +144,7 @@ mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   mbeta %>%
     filter(feature == "Total_LM") %>%
-    arrange(value) %>%
+    arrange(desc(value)) %>%
     .[["seq_num"]]
 )
 
@@ -170,7 +170,7 @@ mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   mbeta %>%
     filter(feature == "Total_FM") %>%
-    arrange(value) %>%
+    arrange(desc(value)) %>%
     .[["seq_num"]]
 )
 
