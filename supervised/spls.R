@@ -57,7 +57,7 @@ cv_eval
 
 train_ix <- sample(1:nrow(x), 80)
 #fit <- spls(x[train_ix, ], y[train_ix, ], cv_eval$K.opt, cv_eval$eta.opt)
-fit <- spls(x[train_ix, ], y[train_ix, ], 2, 0.8)
+fit <- spls(x[train_ix, ], y[train_ix, ], 4, 0.6)
 y_hat <- x %*% fit$betahat
 plot(y[train_ix, 24], y_hat[train_ix, 24])
 points(y[-train_ix, 24], y_hat[-train_ix, 24], col = "blue")
@@ -84,11 +84,15 @@ mass_type_ordered <- c(
   site_ordered[grepl("FM", site_ordered)],
   site_ordered[grepl("LM", site_ordered)]
 )
+species_order <- colnames(x)[hclust(dist(fit$betahat))$order]
 
 mbeta <- fit$betahat %>%
   melt(varnames = c("seq_num", "feature")) %>%
   left_join(seq_families) %>%
-  mutate(feature = factor(feature, mass_type_ordered))
+  mutate(
+    feature = factor(feature, mass_type_ordered),
+    seq_num = factor(seq_num, species_order)
+  )
 
 ggplot(mbeta) +
   geom_tile(
