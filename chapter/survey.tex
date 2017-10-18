@@ -1057,6 +1057,27 @@ another that is an arbitrary linear combination of a table-specific
 latent variable. The shared feature $\xi^{s}$ is the object of
 interest, and is what PLS implictly estimates.
 
+\subsection{Sparse PLS}
+\label{subsec:spls}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/spls/coef_heatmap}
+  \caption{\label{fig:spls_coef_heatmap} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/spls/total_lm_species}
+  \caption{\label{fig:spls_total_lm_species} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/spls/total_fm_species}
+  \caption{\label{fig:spls_total_fm_species} }
+\end{figure}
+
 \subsection{CCpnA}
 \label{subsec:canonical-correspondence}
 
@@ -1398,6 +1419,33 @@ Multiple CCA can also be described in this framework, by replacing the objective
 with the sum over all pairwise covariances, $\sum_{l, l^{\prime} = 1}^{L}
 c_{1}^{(l) T}X^{(l) T}X^{(l^{\prime})}c_{1}^{(l)^{\prime}}$, and introducing
 constraints for each of the $c_{1}^{(l)}$.
+
+\subsubsection{Example}
+\label{subsec:sparse_cca_example}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/loadings}
+  \caption{\label{fig:pmd_loadings} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/scores_lm}
+  \caption{\label{fig:pmd_scores_lm} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/total_lm_species}
+  \caption{\label{fig:pmd_total_lm_species}}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/pmd/total_fm_species}
+  \caption{\label{fig:pmd_total_fm_species}}
+\end{figure}
 
 \subsection{Multitable Mixed-Membership}
 \label{subsec:multitable_mixed_membership}
@@ -1937,5 +1985,15 @@ data $Y$ according to the canonical directions, then projects the shrunk data
 onto the subspace defined by the columns of $X$. In any case, we see that C\&W
 pools across regression problems through a soft shrinkage weighted along
 canonical response directions.
+
+\subsection{Graph-Fused Lasso}
+\label{subsec:graph_fused_lasso}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
+  \caption{\label{fig:graph_lasso_coef_heatmap} }
+\end{figure}
+
 
 \end{document}
