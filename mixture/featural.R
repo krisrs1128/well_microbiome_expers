@@ -16,8 +16,9 @@
 library("phyloseq")
 library("rstan")
 library("tidyverse")
+library("ggrepel")
+library("GGally")
 library("reshape2")
-library("viridis")
 source("../dimension_red/prep_tables.R")
 
 rstan_options(auto_write = TRUE)
@@ -55,7 +56,7 @@ theme_update(
 ###############################################################################
 raw <- read_data()
 opts <- list(
-  "filt_k" = 0.02,
+  "filt_k" = 0.07,
   "rlog" = FALSE,
   "outdir" = "../chapter/figure/featural/"
 )
@@ -76,18 +77,16 @@ pc_res <- princomp(scale(processed$bc_full))
 
 ## lda on counts data
 m <- stan_model("lda_counts.stan")
-
 stan_data <- list(
   K = 5,
   V = ncol(processed$x_seq),
   N = nrow(processed$x_seq),
   x = processed$x_seq,
   alpha = rep(1, 5),
-  gamma = rep(0.1, ncol(processed$x_seq))
+  gamma = rep(100, ncol(processed$x_seq))
 )
 
-
-lda_fit <- vb(m, stan_data, adapt_engaged = FALSE, eta = 0.1)
+lda_fit <- vb(m, stan_data, adapt_engaged = FALSE, eta = 1)
 lda_res <- rstan::extract(lda_fit)
 rm(lda_fit)
 
@@ -122,10 +121,67 @@ ggplot(cross_df) +
   geom_tile(
     aes(x = id, y = axis, fill = score)
   ) +
-  scale_fill_gradient2(low = "darkpurple", high = "darkgreen")
+  scale_fill_gradient2(low = "purple", high = "darkgreen") +
+  theme(
+    axis.text.x = element_text(hjust = 0, angle = 90, size = 4.5)
+  )
 
-pairs(cross_scores[, 1:5], cross_scores[, 5:10])
 
 ###############################################################################
 ## Can we interpret loadings / clusters associated with these scores?
 ###############################################################################
+## plot loadings
+mloadings <- pc_res$loadings
+class(mloadings) <- "matrix"
+mloadings <- data.frame(mloadings) %>%
+  rownames_to_column("variable")
+mloadings$type <- "body_comp"
+mloadings$family <- NA
+colnames(mloadings) <- gsub("Comp", "Axis", colnames(mloadings))
+
+plot_loadings(mloadings, pc_res$sdev)
+plot_loadings(mloadings, pc_res$sdev, plot_dims = c(3, 4, 5))
+
+## plot LDA topics
+seq_families <- processed$mseqtab %>%
+  select(seq_num, family) %>%
+  unique()
+
+mbeta <- lda_res$beta %>%
+  melt(
+    varnames = c("iteration", "k", "row"),
+    value.name = "beta"
+  ) %>%
+  mutate(
+    seq_num = colnames(processed$x_seq)[row]
+  ) %>%
+  left_join(seq_families) %>%
+  mutate(
+    seq_num = factor(seq_num, names(sort(colSums(processed$x_seq), decreasing = TRUE)))
+  )
+
+mbeta_summary <- mbeta %>%
+  group_by(k, seq_num) %>%
+  dplyr::summarise(
+           family = family[1],
+           lower = quantile(beta, 0.05),
+           upper = quantile(beta, 0.95),
+           med = median(beta)
+         )
+
+ggplot(mbeta_summary) +
+  geom_crossbar(
+    aes(x = seq_num, ymin = lower, ymax = upper, y = med, col = family, fill = family),
+    ## fatten = 1.2,
+    size = 1.1,
+    width = 0.5
+  ) +
+  scale_y_continuous(trans = "log", breaks = c(0.001, 0.01, 0.1)) +
+  facet_grid(k ~ family, scale = "free_x", space = "free_x") +
+  theme(
+    panel.spacing.x = unit(0, "cm"),
+    panel.grid.major.y = element_line(size = 0.05),
+    axis.text.x = element_blank(),
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
+  )
