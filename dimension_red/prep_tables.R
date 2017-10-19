@@ -19,7 +19,7 @@ library("reshape2")
 ###############################################################################
 merge_default_opts <- function(opts = list()) {
   default_opts <- list(
-    gender = "Male",
+    gender = "Female", ## has more data
     sf_quantile = 0.95,
     filt_k = 0.5,
     filt_a = 0,
@@ -31,20 +31,34 @@ merge_default_opts <- function(opts = list()) {
 read_data <- function(data_dir = "../data/") {
   seqtab <- readRDS(file.path(data_dir, "seqtab.rds"))
   bc <- readRDS(file.path(data_dir, "sample_data_bc.rds"))
+  colnames(bc) <- tolower(colnames(bc))
   colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
+  bc_full <- read_csv(file.path(data_dir, "WELL_China_1969_7.25.2017.csv")) %>%
+    rename(
+      gender_it = "gender",
+      age_it = "age",
+      height = "height_dxa",
+      weight = "weight_dxa"
+    ) %>%
+    mutate(
+      aoi = android_fm / gynoid_fm
+    ) %>%
+    select_at(
+      .vars = setdiff(tolower(colnames(bc)), c("number", "aoi"))
+    )
 
   taxa <- readRDS(file.path(data_dir, "taxa.rds")) %>%
     data.frame() %>%
     rownames_to_column("seq")
   taxa$seq_num <- colnames(seqtab)
-  list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc)
+  list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc, "bc_full" = bc_full)
 }
 
-process_data <- function(seqtab, bc, taxa, opts = list()) {
+process_data <- function(seqtab, bc, bc_full, taxa, opts = list()) {
   opts <- merge_default_opts(opts)
 
   ## filter counts
-  seqtab <- seqtab[bc$Number, ]
+  seqtab <- seqtab[bc$number, ]
   seqtab <- seqtab[bc$gender == opts$gender, ]
   seqtab <- seqtab %>%
     filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
@@ -59,7 +73,7 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   )
 
   mseqtab <- seqtab %>%
-    melt(varnames = c("Number", "seq_num")) %>%
+    melt(varnames = c("number", "seq_num")) %>%
     left_join(bc) %>%
     left_join(taxa)
 
@@ -74,25 +88,41 @@ process_data <- function(seqtab, bc, taxa, opts = list()) {
   ##
   ## code copied from here: https://support.bioconductor.org/p/76548/
   if (opts$rlog) {
-    fname <- paste0(c("rlog_data_", opts[!grep("dir", names(opts))], ".rda"), collapse = "")
-    fpath <- file.path("..", "data", fname)
-    ## if (file.exists(fpath)) {
-    ##   dds <- get(load(fpath))
-    ## } else {
+    fname <- paste0(as.character(opts), collapse = "")
+    fpath <- file.path("..", "data", digest::digest(fname))
+    if (file.exists(fpath)) {
+      dds <- get(load(fpath))
+    } else {
       qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
       sizeFactors(dds) <- qs / exp(mean(log(qs)))
       dds <- rlog(dds, fitType = "local", betaPriorVar = 0.5)
       save(dds, file = fpath)
-    ## }
+    }
   }
 
   x_seq <- t(assay(dds))
   bc_mat <- data.frame(bc) %>%
     filter(gender == opts$gender) %>%
     select(-id, -gender)
-  rownames(bc_mat) <- bc_mat$Number
-  bc_mat$Number <- NULL
-  list("x_seq" = x_seq, "bc" = bc_mat, "mseqtab" = mseqtab)
+  rownames(bc_mat) <- bc_mat$number
+  bc_mat$number <- NULL
+
+  bc_full <- data.frame(bc_full) %>%
+    mutate(
+      gender = recode(gender, `1` = "Male", `2` = "Female")
+    ) %>%
+    filter(gender == opts$gender) %>%
+    select( -gender) %>%
+    na.omit()
+  rownames(bc_full) <- bc_full$id
+  bc_full$id <- NULL
+
+  list(
+    "x_seq" = x_seq,
+    "bc" = bc_mat,
+    "bc_full" = bc_full,
+    "mseqtab" = mseqtab
+  )
 }
 
 family_means <- function(mseqtab) {

@@ -111,34 +111,48 @@ plot_topics <- function(loadings) {
     )
 }
 
-plot_loadings <- function(loadings, eigs, size_breaks = c(-5, 5), a = 1) {
+plot_loadings <- function(loadings,
+                          eigs,
+                          size_breaks = c(-5, 5),
+                          a = 1,
+                          plot_dims = c(1, 2, 3)) {
   ggplot(loadings) +
     geom_hline(yintercept = 0, size = 0.5) +
     geom_vline(xintercept = 0, size = 0.5) +
     geom_point(
       data = loadings %>%
         filter(type == "seq"),
-      aes(x = Axis.1, y = Axis.2, size = Axis.3, col = family),
+      aes_string(
+        x = paste0("Axis.", plot_dims[1]),
+        y = paste0("Axis.", plot_dims[2]),
+        size = paste0("Axis.", plot_dims[3]),
+        col = "family"
+      ),
       alpha = a
     ) +
     geom_text_repel(
       data = loadings %>%
         filter(type == "body_comp"),
-      aes(x = Axis.1, y = Axis.2, label = variable, size = Axis.3),
+      aes_string(
+        x = paste0("Axis.", plot_dims[1]),
+        y = paste0("Axis.", plot_dims[2]),
+        size = paste0("Axis.", plot_dims[3]),
+        label = "variable"
+      ),
       segment.size = 0.3,
       segment.alpha = 0.5,
       force = 0.05
     ) +
     labs(
-      "x" = perc_label(eigs, 1),
-      "y" = perc_label(eigs, 2),
+      "x" = perc_label(eigs, plot_dims[1]),
+      "y" = perc_label(eigs, plot_dims[2]),
       "col" = "Family"
     ) +
     scale_size_continuous(
-      range = c(0, 4),
+      range = c(1, 3.5),
       breaks = size_breaks
     ) +
-    coord_fixed(sqrt(eigs[2] / eigs[1]))
+    coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]]))
 }
 
 plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)) {
