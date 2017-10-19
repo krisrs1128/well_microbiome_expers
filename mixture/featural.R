@@ -126,6 +126,25 @@ ggplot(cross_df) +
     axis.text.x = element_text(hjust = 0, angle = 90, size = 4.5)
   )
 
+pairs_fn <- function(data, mapping, method="loess", ...){
+  ggplot(data = data, mapping = mapping) +
+    geom_point(alpha = 0.3, size = 0.2) +
+    geom_smooth(
+      method = method,
+      size = 0.1,
+      span = 0.5,
+      col = "royalblue",
+      ...
+    )
+}
+
+ggpairs(
+  data.frame(cross_scores),
+  columns = c(1:3, 6:10),
+  lower = list(
+    continuous = pairs_fn
+  )
+)
 
 ###############################################################################
 ## Can we interpret loadings / clusters associated with these scores?
