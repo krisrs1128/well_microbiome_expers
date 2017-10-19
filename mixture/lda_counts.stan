@@ -47,16 +47,16 @@ model {
 
 }
 
-generated quantities {
-  int<lower=0> x_sim[N, V]; // simulated species counts, for posterior checking
+/* generated quantities { */
+/*   int<lower=0> x_sim[N, V]; // simulated species counts, for posterior checking */
 
-  for (i in 1:N) {
-    vector[V] eta;
-    eta = beta[1] * theta[i, 1];
+/*   for (i in 1:N) { */
+/*     vector[V] eta; */
+/*     eta = beta[1] * theta[i, 1]; */
 
-    for (k in 2:K) {
-      eta = eta + beta[k] * theta[i, k];
-    }
-    x_sim[i] = multinomial_rng(eta, sum(x[i]));
-  }
-}
+/*     for (k in 2:K) { */
+/*       eta = eta + beta[k] * theta[i, k]; */
+/*     } */
+/*     x_sim[i] = multinomial_rng(eta, sum(x[i])); */
+/*   } */
+/* } */
