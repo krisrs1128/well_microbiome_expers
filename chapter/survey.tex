@@ -1989,28 +1989,23 @@ canonical response directions.
 \subsection{Graph-Fused Lasso}
 \label{subsec:graph_fused_lasso}
 
-\cite{chen2010graph} describe an approach to multitask learning that
-incorporates a priori knowledge on the relationship between different
-regression problems. Specifically, they use a correlation network between
-the responses of interest to induce a structured regularization on the
-regression parameters across tasks.
+\citep{chen2010graph} describe an approach to multiresponse learning that
+incorporates prior knowledge about the relationship between responses.
+Specifically, they use the correlation network between the responses to induce
+structured regularization on the regression parameters across tasks.
 
-In this setup, we will assume the features $x_{i}$ are shared across all
-tasks, so that the data can be arranged in two matrices,
-$Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times p_{2}}$, as in
-the reduced-rank regression and C\&W procedure setup. We also assume a
-correlation network between the $p_{2}$ tasks; this is denoted
-$G = \left(V, E\right)$, where $V = \{1, \dots, p_{1}\}$. Each edge $e$ is
-associated with a weight, $r\left(e\right)$, specifying the correlation between
-the linked regression problems. This is assumed given, and is not learned by
-this procedure.
+In this setup, $Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times
+  p_{2}}$, as in the reduced-rank regression and C\&W procedure setup. We also
+assume a correlation network between the $p_{2}$ tasks. This is denoted $G =
+\left(V, E\right)$, where $V = \{1, \dots, p_{1}\}$. Each edge $e$ is associated
+with a weight, $r\left(e\right)$, specifying the correlation between the pair of
+responses.
 
-The graph-fused lasso proposal is to obtain a coefficient matrix $B
-\in \reals^{p_{2} \times p_{1}}$ whose columns $\beta^{(r)}$ are the
-regression coefficients across each task, but which have been pooled
-together, with the strength of the pooling depending on the
-independently measured strength of the relationship between
-tasks. This is formalized by defining $\hat{B}^{gf}$ as the solution
+The graph-fused lasso idea is to estimate a coefficient matrix $B \in
+\reals^{p_{2} \times p_{1}}$ whose columns $\beta^{(r)}$ are the regression
+coefficients across tasks, but which have been pooled together, with the
+strength of the pooling depending on the separately computed strength of the
+relationship between tasks. Formally, $\hat{B}^{gf}$ is defined as the solution
 to the optimization,
 o\begin{align}
 \minimize_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
@@ -2018,22 +2013,20 @@ o\begin{align}
     1}^{p_{2}} \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} -
       \sign\left(r_{e}\right) \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
 \end{align}
-where $\|B\|_{1}$ is the sum of the absolute values of all entries of
-$B$ and $e^{-}$ and $e^{+}$ denote the nodes at the ends of the edge
-$e$. The last regularization term in the objective is called the
-graph fused-lasso penalty, and it is the element that encourages
-pooling of information across regression problems.
+where $\|B\|_{1}$ is the sum of the absolute values of all entries of $B$ while
+$e^{-}$ and $e^{+}$ denote the nodes at either end of the edge $e$. The last
+regularization term in the objective is called the graph fused-lasso penalty,
+and it is this element that encourages pooling of information across regression
+problems.
 
-To write the graph fused-lasso penalty in matrix form, define a matrix
-$\tilde{H} \in \reals^{p_{1} \times \absarg{E}}$, whose columns index
-edges. For each column, place a 1 at the row corresponding to one
-endpoint of the edge, and place a -1 at the edge corresponding to the
+To write the graph fused-lasso penalty in matrix form, define $\tilde{H} \in
+\reals^{p_{1} \times \absarg{E}}$, whose columns index edges. For each column,
+place a 1 at the row corresponding to one endpoint of the edge and a -1 at the
 other. Then, $B\tilde{H}$ has $jl^{th}$ entry $\sum_{j = 1}^{p_{2}} \sum_{e :
-  e^{+} = l}\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}$. In a similar
-spirit, defining $H \in \reals^{p_{1} \times \absarg{E}}$ by, for each
-edge (column of $H$), placing $\absarg{r_{e}}$ at the row
-corresponding to one endpoint of that edge and
-$-\sign\left(r_{e}\right)\absarg{r_{e}}$ gives
+  e^{+} = l}\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}$. Similarly, define $H \in
+\reals^{p_{1} \times \absarg{E}}$ by, for each edge (column of $H$), placing
+$\absarg{r_{e}}$ at the row corresponding to one endpoint of that edge and
+$-\sign\left(r_{e}\right)\absarg{r_{e}}$ at the other. This yields,
 \begin{align}
 \|BH\|_{1} &= \sum_{e \in E}\sum_{j = 1}^{p_{2}}
 \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}},
@@ -2044,15 +2037,14 @@ and in particular we can write the objective \ref{eq:gflasso_obj} as
 \end{align}
 where $C = \left(\lambda I_{p_{1}}, \gamma H\right)$.
 
-At this point, the main question is how to recover the optimal
-$\hat{B}^{\text{gf}}$. There are many ways to solve $\ell^{1}$
-regularization problems -- for example, quadratic programming,
-iterative soft-thresholding, coordinate descent, proximal smoothing,
-and ADMM -- but \cite{chen2010graph} advocates a proximal smoothing
-approach. That is, they apply gradient descent on a smooth surrogate
-loss function; this is similar in spirit to optimizing a Huber loss
-instead of an $\ell^{1}$-penalty. Rather than directly smoothing the
-loss \ref{eq:gflasso_reform}, they first reformulate it as
+We next describe estimation of $\hat{B}^{\text{gf}}$. There are many ways to
+solve $\ell^{1}$ regularization problems -- for example, quadratic programming,
+iterative soft-thresholding, coordinate descent, proximal smoothing, and ADMM --
+but \cite{chen2010graph} advocates a proximal smoothing approach. That is, they
+apply gradient descent on a smooth surrogate loss function; this is similar in
+spirit to optimizing a Huber loss instead of an $\ell^{1}$-penalty. Rather than
+directly smoothing the loss \ref{eq:gflasso_reform}, they first reformulate it
+as
 \begin{align}
   \frac{1}{2}\|Y - XB\|_{F}^{2} + \max_{\|A\|_{\infty} \leq 1}
   \left<A, BC\right>,
@@ -2068,25 +2060,23 @@ and the new objective is to minimize
 \frac{1}{2}\|Y - XB\|_{F}^{2} + f_{\mu}\left(B\right).
 \end{align}
 
-When $\mu$ is 0, we recover the objective
-\ref{eq:gflasso_reform}. When $\mu > 0$, the problem is smooth, and
-its gradient can be found in closed form. Towards this, let
-$g\left(X\right) = \frac{1}{2}\|X\|_{F}^{2}$ with domain restricted to
-$\|X\|_{\infty} \leq 1$. Then $g$ has fenchel conjugate
-$g^{\ast}\left(Y\right) = \max_{\|X\|_{\infty}\leq 1}\left<Y,
-  X\right> - \frac{1}{2}\|X\|_{F}^{2}$. In particular,
+When $\mu$ is 0, we recover the objective \ref{eq:gflasso_reform}. When $\mu >
+0$, the problem is smooth, and its gradient can be found in closed form. Towards
+this, let $g\left(X\right) = \frac{1}{2}\|X\|_{F}^{2}$ with domain restricted to
+$\|X\|_{\infty} \leq 1$. Then $g$ has Fenchel conjugate $g^{\ast}\left(Y\right)
+= \max_{\|X\|_{\infty}\leq 1}\left<Y, X\right> - \frac{1}{2}\|X\|_{F}^{2}$. In
+particular,
 \begin{align}
 f_{\mu}\left(B\right) &=  \mu \max_{\|A\|_{\infty} \leq 1}
 \left[\left<A, \frac{1}{\mu}BC\right> - \frac{1}{2}\|A\|_{F}^{2}\right] \\
 &= \mu g^{\ast}\left(BC\right)
 \end{align}
-Using the fact that the derivative of a fenchel conjugate function is
-given by the argmax of the maximization that defines it, we note
-$\nabla g^{\ast}\left(Y\right) = P_{\ell^{\infty}}\left(Y\right)$ the
-projection of $Y$ onto the $\ell^{\infty}$ ball\footnote{This is
-  achieved by taking all entries larger than one and setting them to 1
-  (and setting all entries smaller than -1 to -1).}. Together with the
-  chain rule, this gives
+Using the fact that the derivative of a Fenchel conjugate function is given by
+the argmax of the maximization that defines it, we note $\nabla
+g^{\ast}\left(Y\right) = P_{\ell^{\infty}}\left(Y\right)$ the projection of $Y$
+onto the $\ell^{\infty}$ ball\footnote{This is achieved by taking all entries
+  larger than one and setting them to 1, and setting all entries smaller than -1
+  to -1).}. Together with the chain rule, this gives
 \begin{align}
   \nabla f_{\mu}\left(B\right) &= P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
 \end{align}
@@ -2094,18 +2084,58 @@ and so the gradient of the objective \ref{eq:gflasso_reform} has the form
 \begin{align}
  X^{T}\left(Y - XB\right) + P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
 \end{align}
-which be input to any number of gradient-based routines;
-\cite{chen2010graph} uses Nesterov's accelerated method, a version of
-gradient descent with a momentum term.
+which be input to any number of gradient-based routines. \cite{chen2010graph}
+uses Nesterov's accelerated method, a version of gradient descent with a
+momentum term, and this is what we use in our examples below.
 
 \subsection{Example}
 \label{subsec:graph_fused_example}
 
+Next, we apply the graph-fused lasso to the body composition problem and compare
+it to a naive version of lasso that doesn't share any information across
+responses. We consider predicting the body composition variables, many of which
+are strongly correlated witih one another, using $\text{rlog}$ transformed
+bacterial abundances.
+
+We filter away species that do not appear in at least 7\% of samples,
+as in the original PCA approach. We set the conjugate smoothing parameter to
+$\mu = 0.01$, while the $\ell^{1}$ and graph-regularization parameters are set
+to $\lambda = 0.1$ and $\gamma = 0.01$, respectively, as they were heuristically
+found to provide interpretable levels of sparsity and smoothness in the fitted
+coefficients.
+
+The graph-fused lasso requires a correlation graph between response variables.
+We estimate such a graph using the usual graphical lasso
+\citep{friedman2008sparse}, since there are only $\sim 100$ samples on which to
+base the covariance matrix estimate. The resulting graph has two major
+components, corresponding to the lean and fat mass variables, respectively. This
+is displayed in Figure \ref{fig:graph_lasso_graph}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figure/graph_lasso/graph}
+  \caption{Correlation matrix used as the input graph $R$ for the graph-fused
+    lasso, estimated itself according to the graphical
+    lasso. The two main blocks correspond to lean and fat mass variables,
+    respectively. \label{fig:graph_lasso_graph} }
+\end{figure}
+
+The fitted coefficients from the graph-fused lasso are given in Figure
+\ref{fig:graph_lasso_coef_heatmap}. For reference, the analogous display when
+the problem is decoupled into independent lasso regressions, with $\lambda$
+chosen according to cross-validation, is given in Figure
+\ref{fig:graph_lasso_multitask_lasso_hm}.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
   \caption{\label{fig:graph_lasso_coef_heatmap} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
+  \caption{\label{fig:graph_lasso_multitask_lasso_hm} }
 \end{figure}
 
 
