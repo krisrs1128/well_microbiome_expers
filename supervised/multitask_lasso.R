@@ -19,13 +19,13 @@ source("../dimension_red/prep_tables.R")
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
   scale_color_manual(
-    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
-    na.value = "black"
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#ffc100"),
+    na.value = "#464646"
   )
 scale_fill_discrete <- function(...)
   scale_fill_manual(
-    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6', "#464646"),
-    na.value = "black"
+    values = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6',"#ffc100"),
+    na.value = "#464646"
   )
 
 theme_set(theme_bw())
@@ -114,6 +114,11 @@ ggplot(mbeta) +
   geom_tile(
     aes(x = seq_num, y = lambda, fill = value)
   ) +
+  geom_rect(
+    aes(col = family),
+    fill = "transparent", size = 2,
+    xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+  ) +
   scale_fill_gradient2(
     guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
     low = "#40004b",
@@ -132,6 +137,6 @@ ggplot(mbeta) +
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm.png",
-  height = 11.3,
-  width = 8.01
+  width = 6.86,
+  height = 3.78
 )
