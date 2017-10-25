@@ -48,7 +48,7 @@ theme_update(
 ###############################################################################
 raw <- read_data()
 opts <- list("filt_k" = 0.07)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, opts)
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
 
@@ -131,7 +131,7 @@ ggplot(mbeta) +
   )
 
 ggsave(
-  "../chapter/figure/multitask_lasso_hm.png",
+  "../chapter/figure/graph_lasso/multitask_lasso_hm.png",
   height = 11.3,
   width = 8.01
 )

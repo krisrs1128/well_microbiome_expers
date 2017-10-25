@@ -49,7 +49,7 @@ theme_update(
 ###############################################################################
 raw <- read_data()
 opts <- list("filt_k" = 0.07)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, opts)
 
 y <- scale(processed$bc)
 x <- scale(processed$x_seq)
@@ -73,17 +73,38 @@ seq_families <- processed$mseqtab %>%
 
 site_ordered <- c(
   "aoi", "age", "height_dxa", "weight_dxa",
-  "bmi", "Android_FM", "Android_LM", "Gynoid_FM", "Gynoid_LM", "L_Trunk_FM",
-  "L_Trunk_LM", "R_Trunk_FM", "R_Trunk_LM", "Trunk_FM", "Trunk_LM",
-  "L_Total_FM", "L_Total_LM", "R_Total_FM", "R_Total_LM", "Total_FM",
-  "Total_LM", "L_Leg_FM", "L_Leg_LM", "R_Leg_FM", "R_Leg_LM", "Legs_FM",
-  "Legs_LM", "L_Arm_FM", "L_Arm_LM", "R_Arm_FM", "R_Arm_LM", "Arms_FM",
-  "Arms_LM"
+  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
+  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
+  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
+  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
+  "arms_lm"
 )
 mass_type_ordered <- c(
-  site_ordered[!grepl("FM|LM", site_ordered)],
-  site_ordered[grepl("FM", site_ordered)],
-  site_ordered[grepl("LM", site_ordered)]
+  site_ordered[!grepl("fm|lm", site_ordered)],
+  site_ordered[grepl("fm", site_ordered)],
+  site_ordered[grepl("lm", site_ordered)]
+)
+
+mR <- melt(
+  R$w,
+  varnames = c("x", "y"),
+  value.name = "fill"
+)
+mR$x <- colnames(y)[mR$x]
+mR$y <- colnames(y)[mR$y]
+mR$x <- factor(mR$x, mass_type_ordered)
+mR$y <- factor(mR$y, mass_type_ordered)
+ggscaffold::ggheatmap(mR) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 0),
+    axis.title = element_blank(),
+    legend.position = "bottom"
+  )
+ggsave(
+  "../chapter/figure/graph_lasso/graph.png",
+  width = 3.17,
+  height = 3.07
 )
 
 species_order <- colnames(x)[hclust(dist(fit$B))$order]
