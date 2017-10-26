@@ -59,14 +59,14 @@ fits <- list()
 
 for (r in seq_len(ncol(y))) {
   message("tuning response ", r)
-  fit[[r]] <- cv.glmnet(x, y[, r], lambda = lambdas, alpha = 0.3)
-  beta_hats[r,, ] <- as.matrix(coef(fit[[r]]$glmnet.fit))
+  fits[[r]] <- cv.glmnet(x, y[, r], lambda = lambdas, alpha = 0.3)
+  beta_hats[r,, ] <- as.matrix(coef(fits[[r]]$glmnet.fit))
 }
 
 ###############################################################################
 ## Plot the cross validation errors
 ###############################################################################
-cv_err <- do.call(cbind, sapply(fits, function(x) x$cvm))
+cv_err <- sapply(fits, function(x) x$cvm)
 cv_err[cv_err > 1.4] <- NA
 colnames(cv_err) <- colnames(y)
 rownames(cv_err) <- lambdas
@@ -96,11 +96,12 @@ site_ordered <- c(
   "arms_lm"
 )
 mass_type_ordered <- c(
-  site_ordered[!grepl("FM|LM", site_ordered)],
-  site_ordered[grepl("FM", site_ordered)],
-  site_ordered[grepl("LM", site_ordered)]
+  site_ordered[!grepl("fm|lm", site_ordered)],
+  site_ordered[grepl("fm", site_ordered)],
+  site_ordered[grepl("lm", site_ordered)]
 )
 
+species_order <- colnames(x)[hclust(dist(t(beta_hats[, -1, 25])))$order]
 rownames(beta_hats) <- colnames(y)
 colnames(beta_hats) <- c("intercept", colnames(x))
 mbeta <- beta_hats %>%
@@ -108,30 +109,73 @@ mbeta <- beta_hats %>%
     varnames = c("feature", "seq_num", "lambda")
   ) %>%
   left_join(seq_families) %>%
-  mutate(feature = factor(feature, mass_type_ordered))
+  mutate(
+    feature = factor(feature, mass_type_ordered),
+    seq_num = factor(seq_num, c("intercept", species_order))
+  )
 
 ggplot(mbeta) +
-  geom_tile(
-    aes(x = seq_num, y = lambda, fill = value)
-  ) +
   geom_rect(
     aes(col = family),
-    fill = "transparent", size = 1,
+    fill = "transparent", size = 0.2,
     xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
+  geom_tile(
+    aes(x = seq_num, y = lambda, fill = value),
+    alpha = 0.7
+  ) +
   scale_fill_gradient2(
-    guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
-    low = "#40004b",
-    high = "#00441b"
+    guide = guide_colorbar(ticks = FALSE, barheight = 0.5),
+    mid = "#F8F8F8", low = "#40004b", high = "#00441b"
+  ) +
+  guides(
+    col = guide_legend(override.aes = list(alpha = 1, size = 1.0))
   ) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   facet_grid(feature ~ family, scale = "free", space = "free") +
   theme(
+    panel.border = element_blank(),
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
     strip.text.y = element_text(size = 7, angle = 0, hjust = 0),
-    strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
+    strip.text.x = element_blank(),
+    legend.position = "bottom"
+  )
+
+ggsave(
+  "../chapter/figure/graph_lasso/multitask_lasso_hm_lambdas.png",
+  width = 6.86,
+  height = 3.78
+)
+
+## coefficient plot at just a single lambda
+mbeta_sub <- mbeta %>%
+  filter(lambda == 25)
+
+ggplot(mbeta_sub) +
+  geom_tile(
+    aes(x = seq_num, y = feature, fill = value)
+  ) +
+  geom_rect(
+    aes(col = family),
+    fill = "transparent", size = 2,
+    xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+  ) +
+  scale_fill_gradient2(
+    guide = guide_colorbar(ticks = FALSE, barheight = 0.6),
+    mid = "#F8F8F8", low = "#40004b", high = "#00441b"
+  ) +
+  scale_colour_discrete() +
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  facet_grid(. ~ family, scale = "free", space = "free") +
+  theme(
+    axis.text = element_blank(),
+    panel.border = element_blank(),
+    panel.spacing = unit(0, "cm"),
+    axis.text.y = element_text(size = 5, angle = 0, hjust = 0),
+    strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 

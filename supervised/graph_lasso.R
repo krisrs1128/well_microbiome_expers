@@ -129,8 +129,7 @@ ggplot(mbeta) +
   ) +
   scale_fill_gradient2(
     guide = guide_colorbar(ticks = FALSE, barheight = 0.6),
-    low = "#40004b",
-    high = "#00441b"
+    mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
   scale_colour_discrete() +
   scale_x_discrete(expand = c(0, 0)) +
