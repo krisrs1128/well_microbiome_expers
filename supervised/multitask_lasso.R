@@ -138,7 +138,7 @@ ggplot(mbeta) +
     panel.border = element_blank(),
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
-    strip.text.y = element_text(hjust = 0, angle = 90),
+    strip.text.y = element_text(hjust = 0, angle = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
