@@ -34,12 +34,12 @@ theme_update(
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
-  legend.title = element_text(size = 8),
-  legend.text = element_text(size = 6),
-  axis.text = element_text(size = 6),
-  axis.title = element_text(size = 8),
+  legend.title = element_text(size = 12),
+  legend.text = element_text(size = 10),
+  axis.text = element_text(size = 10),
+  axis.title = element_text(size = 10),
   strip.background = element_blank(),
-  strip.text = element_text(size = 8),
+  strip.text = element_text(size = 10),
   legend.key = element_blank()
 )
 
@@ -76,7 +76,7 @@ ggplot(melt(cv_err)) +
     aes(x = Var1, y = Var2, fill = value)
   ) +
   scale_fill_gradient2(midpoint = 1, low = "blue", high = "red") +
-  scale_x_continuous(expand = c(0, 0))
+  scale_x_continuous(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0))
 
 ###############################################################################
@@ -101,7 +101,7 @@ mass_type_ordered <- c(
   site_ordered[grepl("lm", site_ordered)]
 )
 
-species_order <- colnames(x)[hclust(dist(t(beta_hats[, -1, 25])))$order]
+species_order <- read_csv("species_order.csv") %>% unlist()
 rownames(beta_hats) <- colnames(y)
 colnames(beta_hats) <- c("intercept", colnames(x))
 mbeta <- beta_hats %>%
@@ -138,14 +138,14 @@ ggplot(mbeta) +
     panel.border = element_blank(),
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
-    strip.text.y = element_text(size = 7, angle = 0, hjust = 0),
+    strip.text.y = element_text(hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm_lambdas.png",
-  width = 6.86,
+  width = 8,
   height = 3.78
 )
 
@@ -181,6 +181,6 @@ ggplot(mbeta_sub) +
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm.png",
-  width = 6.86,
+  width = 8,
   height = 3.78
 )

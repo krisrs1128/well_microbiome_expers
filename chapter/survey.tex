@@ -1668,7 +1668,7 @@ strength of the pooling depending on the separately computed strength of the
 relationship between tasks. Formally, $\hat{B}^{gf}$ is defined as the solution
 to the optimization,
 o\begin{align}
-\minimize_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
+\text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
   XB\|_{F}^{2} + \lambda \|B\|_{1} + \gamma \sum_{e \in E} \sum_{j =
     1}^{p_{2}} \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} -
       \sign\left(r_{e}\right) \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
@@ -1768,8 +1768,9 @@ The graph-fused lasso requires a correlation graph between response variables.
 We estimate such a graph using the usual graphical lasso
 \citep{friedman2008sparse}, since there are only $\sim 100$ samples on which to
 base the covariance matrix estimate. The resulting graph has two major
-components, corresponding to the lean and fat mass variables, respectively. This
-is displayed in Figure \ref{fig:graph_lasso_graph}.
+components, corresponding to the lean and fat mass variables, respectively,
+though arm and leg mass does deviate somewhat from trunk and total mass. The
+full correlation matrix is displayed in Figure \ref{fig:graph_lasso_graph}.
 
 \begin{figure}[ht]
   \centering
@@ -1782,23 +1783,53 @@ is displayed in Figure \ref{fig:graph_lasso_graph}.
 
 The fitted coefficients from the graph-fused lasso are given in Figure
 \ref{fig:graph_lasso_coef_heatmap}. For reference, the analogous display when
-the problem is decoupled into independent lasso regressions, with $\lambda$
-chosen according to cross-validation, is given in Figure
-\ref{fig:graph_lasso_multitask_lasso_hm}.
+the problem is decoupled into independent lasso regressions, is given in Figure
+\ref{fig:graph_lasso_multitask_lasso_hm}. A version of this multitask-lasso
+figure across a range of $\lambda$ regularization values is given in
+Supplementary Figure \ref{fig:graph_lasso_multitask_lasso_hm_lambdas}.
+
+Generally, both approaches highlight the same directions and size
+of association between individual species and the response variables, though
+those returned by the graph-fused lasso are smoother across responses. This
+smoothing may obscure true variation -- for example, the stronger association
+between \texttt{height\_dxa} and a few Ruminoccocus species -- that appears in
+the multitask-lasso approach. On the other hand, regularization reduces the
+number of one-off nonzero coefficients.
+
+There appear to be real associations between Lachnospiraceae and Ruminoccocaceae
+and the body composition measurements. The strongest negative association
+between species abundance and fat mass occurs among a few species of
+Ruminoccocaceae. Most species that have any association tend to have the same
+direction and magnitude of association across all body composition variables,
+not just those restricted to one mass type. This seems to be the case even in
+the multitask-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
-  \caption{\label{fig:graph_lasso_coef_heatmap} }
+  \caption{Coefficients for the graph-fused lasso highlight groups of species
+    with similar profiles across response
+    variables. Colored rectangles demarcate taxonomic families. Individual give
+    the coefficient for a particular species (column) for a given response
+    variable (row). Purple and green denote negative and positive coefficients,
+    respectively. Note that coefficients have been smoothed according to
+    correlation network between variables, as given in Figure
+    \ref{fig:graph_lasso_graph}. Further, species so that those with similar
+    coefficients are placed near one
+    another. \label{fig:graph_lasso_coef_heatmap} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
-  \caption{\label{fig:graph_lasso_multitask_lasso_hm} }
+  \caption{The analog of Figure \ref{fig:graph_lasso_coef_heatmap} when there is
+    no sharing across response problems. Note that coefficients nonetheless seem
+    to be similar within lean and fat mass response groups, respectively, but
+    are not as smooth as in the graph-fused lasso. As there is some consistency
+    within these groups of variables, the form of structured regularization
+    imposed by the graph seems
+    appropriate. \label{fig:graph_lasso_multitask_lasso_hm} }
 \end{figure}
-
-
 
 %% \bibliographystyle{plainnat}
 %% \bibliography{refs.bib}

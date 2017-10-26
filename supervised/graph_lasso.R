@@ -35,12 +35,12 @@ theme_update(
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
-  legend.title = element_text(size = 8),
-  legend.text = element_text(size = 6),
-  axis.text = element_text(size = 6),
-  axis.title = element_text(size = 8),
+  legend.title = element_text(size = 12),
+  legend.text = element_text(size = 10),
+  axis.text = element_text(size = 10),
+  axis.title = element_text(size = 10),
   strip.background = element_blank(),
-  strip.text = element_text(size = 8),
+  strip.text = element_text(size = 10),
   legend.key = element_blank()
 )
 
@@ -108,6 +108,7 @@ ggsave(
 )
 
 species_order <- colnames(x)[hclust(dist(fit$B))$order]
+write.csv(species_order, file = "species_order.csv", row.names = FALSE)
 
 colnames(fit$B) <- colnames(y)
 mbeta <- fit$B %>%
@@ -139,13 +140,13 @@ ggplot(mbeta) +
     axis.text = element_blank(),
     panel.border = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(size = 5, angle = 0, hjust = 0),
+    axis.text.y = element_text(angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
 ggsave(
   "../chapter/figure/graph_lasso/coef_heatmap.png",
-  width = 6.86,
+  width = 8,
   height = 3.78
 )
