@@ -66,7 +66,7 @@ for (r in seq_len(ncol(y))) {
 ###############################################################################
 ## Plot the cross validation errors
 ###############################################################################
-cv_err <- sapply(fits, function(x) x$cvm)
+cv_err <- do.call(cbind, sapply(fits, function(x) x$cvm))
 cv_err[cv_err > 1.4] <- NA
 colnames(cv_err) <- colnames(y)
 rownames(cv_err) <- lambdas
@@ -138,15 +138,15 @@ ggplot(mbeta) +
     panel.border = element_blank(),
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
-    strip.text.y = element_text(hjust = 0),
+    strip.text.y = element_text(hjust = 0, angle = 90),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm_lambdas.png",
-  width = 8,
-  height = 3.78
+  width = 9.5,
+  height = 6.5
 )
 
 ## coefficient plot at just a single lambda
@@ -174,13 +174,13 @@ ggplot(mbeta_sub) +
     axis.text = element_blank(),
     panel.border = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(size = 5, angle = 0, hjust = 0),
+    axis.text.y = element_text(angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm.png",
-  width = 8,
-  height = 3.78
+  width = 11.5,
+  height = 6.5
 )

@@ -147,6 +147,6 @@ ggplot(mbeta) +
 
 ggsave(
   "../chapter/figure/graph_lasso/coef_heatmap.png",
-  width = 8,
-  height = 3.78
+  width = 9.5,
+  height = 6.5
 )
