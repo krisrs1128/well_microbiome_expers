@@ -1645,6 +1645,326 @@ automatically, without assuming the form \ref{eq:cw_yhat} a priori. This
 derivation is provided in Supplementary Section
 \ref{subsec:derivation_curds_and_whey}.
 
+\subsection{Graph-Fused Lasso}
+\label{subsec:graph_fused_lasso}
+
+\citep{chen2010graph} describe an approach to multiresponse learning that
+incorporates prior knowledge about the relationship between responses.
+Specifically, they use the correlation network between the responses to induce
+structured regularization on the regression parameters across tasks.
+
+In this setup, $Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times
+  p_{2}}$, as in the reduced-rank regression and C\&W procedure setup. We also
+assume a correlation network between the $p_{2}$ tasks. This is denoted $G =
+\left(V, E\right)$, where $V = \{1, \dots, p_{1}\}$. Each edge $e$ is associated
+with a weight, $r\left(e\right)$, specifying the correlation between the pair of
+responses.
+
+The graph-fused lasso idea is to estimate a coefficient matrix $B \in
+\reals^{p_{2} \times p_{1}}$ whose columns $\beta^{(r)}$ are the regression
+coefficients across tasks, but which have been pooled together, with the
+strength of the pooling depending on the separately computed strength of the
+relationship between tasks. Formally, $\hat{B}^{gf}$ is defined as the solution
+to the optimization,
+o\begin{align}
+\text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
+  XB\|_{F}^{2} + \lambda \|B\|_{1} + \gamma \sum_{e \in E} \sum_{j =
+    1}^{p_{2}} \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} -
+      \sign\left(r_{e}\right) \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
+\end{align}
+where $\|B\|_{1}$ is the sum of the absolute values of all entries of $B$ while
+$e^{-}$ and $e^{+}$ denote the nodes at either end of the edge $e$. The last
+regularization term in the objective is called the graph fused-lasso penalty,
+and it is this element that encourages pooling of information across regression
+problems.
+
+To write the graph fused-lasso penalty in matrix form, define $\tilde{H} \in
+\reals^{p_{1} \times \absarg{E}}$, whose columns index edges. For each column,
+place a 1 at the row corresponding to one endpoint of the edge and a -1 at the
+other. Then, $B\tilde{H}$ has $jl^{th}$ entry $\sum_{j = 1}^{p_{2}} \sum_{e :
+  e^{+} = l}\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}$. Similarly, define $H \in
+\reals^{p_{1} \times \absarg{E}}$ by, for each edge (column of $H$), placing
+$\absarg{r_{e}}$ at the row corresponding to one endpoint of that edge and
+$-\sign\left(r_{e}\right)\absarg{r_{e}}$ at the other. This yields,
+\begin{align*}
+\|BH\|_{1} &= \sum_{e \in E}\sum_{j = 1}^{p_{2}}
+\absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}},
+\end{align*}
+and in particular we can write the objective \ref{eq:gflasso_obj} as
+\begin{align}
+  \frac{1}{2}\|Y - XB\|_{F}^{2} + \|BC\|_{1}, \label{eq:gflasso_reform}
+\end{align}
+where $C = \left(\lambda I_{p_{1}}, \gamma H\right)$.
+
+We next describe estimation of $\hat{B}^{\text{gf}}$. There are many ways to
+solve $\ell^{1}$ regularization problems -- for example, quadratic programming,
+iterative soft-thresholding, coordinate descent, proximal smoothing, and ADMM --
+but \cite{chen2010graph} advocates a proximal smoothing approach. That is, they
+apply gradient descent on a smooth surrogate loss function; this is similar in
+spirit to optimizing a Huber loss instead of an $\ell^{1}$-penalty. Rather than
+directly smoothing the loss \ref{eq:gflasso_reform}, they first reformulate it
+as
+\begin{align*}
+  \frac{1}{2}\|Y - XB\|_{F}^{2} + \max_{\|A\|_{\infty} \leq 1}
+  \left<A, BC\right>,
+\end{align*}
+using the duality between the $l^{1}$ and $\ell^{\infty}$ norms. It is
+for this objective that a family of smooth surrogates is introduced,
+\begin{align*}
+f_{\mu}\left(B\right) &:= \max_{\|A\|_{\infty} \leq 1}
+\left[\left<A, BC\right> - \frac{\mu}{2}\|A\|_{F}^{2}\right],
+\end{align*}
+and the new objective is to minimize
+\begin{align*}
+\frac{1}{2}\|Y - XB\|_{F}^{2} + f_{\mu}\left(B\right).
+\end{align*}
+
+When $\mu$ is 0, we recover the objective \ref{eq:gflasso_reform}. When $\mu >
+0$, the problem is smooth, and its gradient can be found in closed form. Towards
+this, let $g\left(X\right) = \frac{1}{2}\|X\|_{F}^{2}$ with domain restricted to
+$\|X\|_{\infty} \leq 1$. Then $g$ has Fenchel conjugate $g^{\ast}\left(Y\right)
+= \max_{\|X\|_{\infty}\leq 1}\left<Y, X\right> - \frac{1}{2}\|X\|_{F}^{2}$. In
+particular,
+\begin{align*}
+f_{\mu}\left(B\right) &=  \mu \max_{\|A\|_{\infty} \leq 1}
+\left[\left<A, \frac{1}{\mu}BC\right> - \frac{1}{2}\|A\|_{F}^{2}\right] \\
+&= \mu g^{\ast}\left(BC\right)
+\end{align*}
+Using the fact that the derivative of a Fenchel conjugate function is given by
+the argmax of the maximization that defines it, we note $\nabla
+g^{\ast}\left(Y\right) = P_{\ell^{\infty}}\left(Y\right)$ the projection of $Y$
+onto the $\ell^{\infty}$ ball\footnote{This is achieved by taking all entries
+  larger than one and setting them to 1, and setting all entries smaller than -1
+  to -1).}. Together with the chain rule, this gives
+\begin{align*}
+  \nabla f_{\mu}\left(B\right) &= P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
+\end{align*}
+and so the gradient of the objective \ref{eq:gflasso_reform} has the form
+\begin{align*}
+ X^{T}\left(Y - XB\right) + P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
+\end{align*}
+which be input to any number of gradient-based routines. \cite{chen2010graph}
+uses Nesterov's accelerated method, a version of gradient descent with a
+momentum term, and this is what we use in our examples below.
+
+\subsection{Example}
+\label{subsec:graph_fused_example}
+
+Next, we apply the graph-fused lasso to the body composition problem and compare
+it to a naive version of lasso that doesn't share any information across
+responses. We consider predicting the body composition variables, many of which
+are strongly correlated witih one another, using $\text{rlog}$ transformed
+bacterial abundances.
+
+We filter away species that do not appear in at least 7\% of samples,
+as in the original PCA approach. We set the conjugate smoothing parameter to
+$\mu = 0.01$, while the $\ell^{1}$ and graph-regularization parameters are set
+to $\lambda = 0.1$ and $\gamma = 0.01$, respectively, as they were heuristically
+found to provide interpretable levels of sparsity and smoothness in the fitted
+coefficients.
+
+The graph-fused lasso requires a correlation graph between response variables.
+We estimate such a graph using the usual graphical lasso
+\citep{friedman2008sparse}, since there are only $\sim 100$ samples on which to
+base the covariance matrix estimate. The resulting graph has two major
+components, corresponding to the lean and fat mass variables, respectively,
+though arm and leg mass does deviate somewhat from trunk and total mass. The
+full correlation matrix is displayed in Figure \ref{fig:graph_lasso_graph}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figure/graph_lasso/graph}
+  \caption{Correlation matrix used as the input graph $R$ for the graph-fused
+    lasso, estimated itself according to the graphical
+    lasso. The two main blocks correspond to lean and fat mass variables,
+    respectively. \label{fig:graph_lasso_graph} }
+\end{figure}
+
+The fitted coefficients from the graph-fused lasso are given in Figure
+\ref{fig:graph_lasso_coef_heatmap}. For reference, the analogous display when
+the problem is decoupled into independent lasso regressions, is given in Figure
+\ref{fig:graph_lasso_multitask_lasso_hm}. A version of this multitask-lasso
+figure across a range of $\lambda$ regularization values is given in
+Supplementary Figure \ref{fig:graph_lasso_multitask_lasso_hm_lambdas}.
+
+Generally, both approaches highlight the same directions and size
+of association between individual species and the response variables, though
+those returned by the graph-fused lasso are smoother across responses. This
+smoothing may obscure true variation -- for example, the stronger association
+between \texttt{height\_dxa} and a few Ruminoccocus species -- that appears in
+the multitask-lasso approach. On the other hand, regularization reduces the
+number of one-off nonzero coefficients.
+
+There appear to be real associations between Lachnospiraceae and Ruminoccocaceae
+and the body composition measurements. The strongest negative association
+between species abundance and fat mass occurs among a few species of
+Ruminoccocaceae. Most species that have any association tend to have the same
+direction and magnitude of association across all body composition variables,
+not just those restricted to one mass type. This seems to be the case even in
+the multitask-lasso context, where such structure has not been directly imposed.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
+  \caption{Coefficients for the graph-fused lasso highlight groups of species
+    with similar profiles across response
+    variables. Colored rectangles demarcate taxonomic families. Individual give
+    the coefficient for a particular species (column) for a given response
+    variable (row). Purple and green denote negative and positive coefficients,
+    respectively. Note that coefficients have been smoothed according to
+    correlation network between variables, as given in Figure
+    \ref{fig:graph_lasso_graph}. Further, species so that those with similar
+    coefficients are placed near one
+    another. \label{fig:graph_lasso_coef_heatmap} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
+  \caption{The analog of Figure \ref{fig:graph_lasso_coef_heatmap} when there is
+    no sharing across response problems. Note that coefficients nonetheless seem
+    to be similar within lean and fat mass response groups, respectively, but
+    are not as smooth as in the graph-fused lasso. As there is some consistency
+    within these groups of variables, the form of structured regularization
+    imposed by the graph seems
+    appropriate. \label{fig:graph_lasso_multitask_lasso_hm} }
+\end{figure}
+
+\subsection{Bayesian multitask learning}
+
+\cite{zhang2005learning} formulates a general probabilistic approach to
+multitask learning. Their framework encapsulates both regression and
+classification, though for simplicity we specialize to regression only. The main
+idea is to pool the coefficients across otherwise separate regression problems
+via careful prior specification.
+
+The data come from $p_{1}$ tasks. Within the $r^{th}$ task, we have features
+$x_{i}^{(r)} \in \reals^{p_{2}}$ and responses responses $y_{i}^{(r)} \in
+\reals$ for the $i^{th}$ sample. Note that the features $x_{i}^{(r)}$ are
+allowed to vary across the regression problems. We use the shorthand $D =
+\left\{\left(x_{i}^{(r)}, y_i^{(r)}\right)_{i = 1}^{n_{r}}\right\}_{r =
+  1}^{p_{1}}$.
+
+The responses are assumed drawn i.i.d. from a linear model with problem-specific
+coefficient $\beta^{(r)}$,
+\begin{align*}
+  y_{i}^{(r)} \sim \Gsn\left(x_{i}^{(r) T}\beta^{(r)}, \sigma^{2}\right).
+\end{align*}
+To tie problems together, the $\beta^{(r)}$ are modeled using $K$-dimensional
+latent factors,
+\begin{align}
+  \beta^{(r)} \sim \Gsn\left(S w^{(r)}, \Psi\right), \label{eq:beta_r_zhang}
+\end{align}
+for some latent source matrix $S \in \reals^{p_{2} \times K}$ and mixing weights
+$w^{(r)}$. Different models come from choosing different priors on $w^{(r)}$;
+for now suppose the $w^{(r)}$ are drawn jointly from
+\begin{align*}
+w^{(1)}, \dots, w^{(r)} \sim  p_{\Phi}\left(\left(w^{\left(r\right)}\right)_{r = 1}^{j_{1}}\right).
+\end{align*}
+
+The nonrandom parameters in this model are $\theta := \{\sigma^{2}, S, \Psi,
+\Phi\}$. The weights and coefficients $w^{(r)}$ and $\beta^{(r)}$ are random
+parameters; for inference they will be treated as latent data.
+
+Note that the form of the $\beta^{(r)}$ in equation \ref{eq:beta_r_zhang} can
+equivalently be written as
+\begin{align*}
+\beta^{(r)} &= Sw^{(r)} + \eta^{(r)},
+\end{align*}
+where $\eta^{(r)} \sim \Gsn\left(0, \Psi\right)$. This clarifies what the latent
+factor model form of $\beta^{(r)}$ does: it decomposes the slope into a part
+shared across all models, via $Sw^{(r)}$, and a part specific to individual
+regression problems. Different priors on $\left(w^{(r)}\right)$ allow the
+modeler to trade-off the degree of sharing across regression problems: setting
+$w^{(r)} \equiv 0$ decomposes the model into independent regression problems,
+while enforcing that they have large variance will ensure that they dominate the
+problem-specific component $\eta^{(r)}$.
+
+The authors propose special cases corresponding to particular choices for the
+prior $p_{\Phi}\left(\left(w^{(r)}\right)_{r = 1}^{j_{1}}\right)$.
+\begin{itemize}
+  \item $w^{(r)} \equiv 0$ decomposes the problem into independent regressions.
+  \item $w^{(r)} = 1$ turns the model into a ``contaminated-signal'' model of
+    the form $\beta^{(r)} \sim \Gsn\left(\mu, \Psi\right)$.
+  \item Drawing $w^{(r)} \sim \Mult\left(1, \Phi\right)$ clusters the regression
+    problem into subproblems that each share the same coefficient.
+  \item Drawing $w^{(r)} \sim \text{Lap}\left(0, \Phi\right)$ encourages sparse
+    weights. Though not technically a part of the specification above, it is
+    possible to put a similar prior on $S$ to induce sparsity on the shared
+    sources.
+  \item Drawing $w^{(r)} \sim DP\left(\alpha, G_{0}\right)$ has a similar effect
+    as the clustered-regressions model, though now the number of clusters does
+    does not need to be explicitly specified in advance\footnote{The parameter
+      $\alpha$ does modulate the general number of clusters identified,
+      however.}.
+  \item Drawing the $w^{(r)}$ jointly according to a dynamical system, for
+    example $w^{(r)} = \Phi w^{(r - 1)} + \eps_{r}$, can be used to model the
+    evolution of the regression coefficients. In general, prior information on
+    how the coefficients should be related can be incorporated by correlating
+    the $w^{(r)}$ across regression problems.
+\end{itemize}
+
+To perform inference, the author employ a variational strategy. While inference
+of the true posterior jointly over $\left(z^{(r)}\right)_{r = 1}^{p_{1}} :=
+\left(\beta^{(r)}, w^{(r)}\right)_{r = 1}^{p_{1}}$ is generally
+intractable\footnote{An exception is when $w^{(r)}$ are given standard
+  multivariate normal priors, in which case normal-normal conjugacy can be
+  used.}. However, we can find a point $q^{\ast}$ in a variational family
+$\left(q_{\gamma}\left(\cdot\right)\right)_{\gamma \in \Gamma}$ such that the
+expected complete data likelihood is large and this $q^{\ast}$ can be serve as a
+proxy for the true posterior.
+
+The loglikelihood assuming that the latent $z^{(r)}$ are known is called the
+complete-data loglikelihood. In our multitask setting, this has the form
+\begin{align*}
+  \ell_{c}\left(\theta\right) = &\sum_{r = 1}^{p_{1}}\left[\sum_{i = 1}^{n_{r}} \log p\left(y_{i}^{(r)} \mid \beta^{(r)} ; X^{(r)}, \sigma^{2}\right)\right] + \log p\left(\beta^{(r)} \mid w^{(r)}; \Lambda, \Psi\right) + \log p\left(w^{(r)}; \Phi\right) \\
+  = &\sum_{r = 1}^{p_{1}}\sum_{i = 1}^{n} \log \Gsn\left(y_{i}^{(r)} \mid x_{i}^{(r) T}\beta^{(r)}; \sigma^{2}\right) + \sum_{r = 1}^{p_{1}}\log \Gsn\left(\beta^{(r)} \mid S w^{(r)}; \Psi\right) + \log p_{\Phi}\left(w^{(r)}\right),
+\end{align*}
+where, we have assumed that the $w^{(r)}$ are independent in the prior across
+problems -- this covers most cases described in \citep{zhang2005learning},
+though variations can be implemented in the case that they are not.
+
+Since the $\beta^{(r)}$ and $w^{(r)}$ are unknown, $\ell_{c}\left(\theta\right)$
+cannot actually be evaluated. However, for different choices of $q_{\gamma}$, it
+may be possible to evaluate $\Esubarg{z^{(r)} \sim
+  q_{\gamma}}{\ell_{c}\left(\theta\right)}$. Further, it can be shown that this
+expected complete data loglikelihood is maximized when the $z^{(r)}$ are drawn
+from the posterior $p_{\theta}\left(\left(z^{r}\right) \vert \left(x_{i}\right),
+y_{i}\right)$. Since the posterior is intractable, we instead search for the
+element $q_{\gamma^{\ast}}$ that is closest to the posterior in KL-divergence
+sense,
+\begin{align*}
+q_{\gamma^{\ast}}:= \arg\min_{\gamma \in \Gamma} KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
+p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]\right).
+\end{align*}
+
+This is a convenient measure to use, because it can be rewritten as
+\begin{align*}
+&KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
+p_{\theta}\left[\left(z^{r}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]\right) \\
+= &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right)\right]}{p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]}} \\
+= &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right]\right)}{p_{\theta}\left[\left(z^{(r)}\right), \left(x_{i}\right), \left(y_{i}\right)\right]}} + \log p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right] \\
+= &\Esubarg{q_{\gamma}}{\log q_{\gamma}\left[\left(z^{(r)}\right)\right]} - \Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)} + \log p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right],
+\end{align*}
+so we can equivalently choose the $q_{\gamma^{\ast}}$ to maximize
+\begin{align*}
+\F\left(\gamma, \theta\right) := -\Esubarg{q_{\gamma}}{\log q_{\gamma}\left(z^{(r)}\right)} + \Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)},
+\end{align*}
+which can be interpreted as a regularized complete data loglikelihood.
+
+Note that this expression only involves the expected complete data
+loglikelihood, which is usually simple to compute. In particular, in many cases
+it is easy to find a $\gamma$ to maximize this quantity, when $\theta$ is kept
+fixed.
+
+Further, for a fixed choice of $\theta$, it may be possible to choose $\gamma$
+to maximize this quantity, and vice versa. This is the variational  strategy
+adopted by \citep{zhang2005learning} -- initialize $\theta^{0}$, then choose
+$\gamma^{1}$ to minimize $\F\left(\gamma, \theta^{0}\right)$, then
+find a $\theta^{1}$ to maximize $\F\left(\gamma^{(1)}, \theta\right)$, and
+so forth. The final posterior is approximated by $q_{\gamma^{t}}$ for some
+large $t$.
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
@@ -1742,6 +2062,22 @@ derivation is provided in Supplementary Section
      microbiome structure.
  \label{fig:lda_cca_shared_scores_lm_posterior} }
  \end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm_lambdas}
+  \caption{ Inspecting coefficients from multitask lasso across $\lambda$
+    regularization parameters highlights species with different directions and
+    strengths of association with body composition variables. Different panel
+    columns indicate different taxonomic families, while rows correspond to
+    different response variables. Individual tiles give the coefficients of an
+    individual species (column) against a response at a particular $\lambda$
+    (row). Within panels, the $\lambda$s are sorted from least to most
+    regularization. Species have been clustered according to their lasso
+    coefficients, revealing groups of species with similar coefficient profiles
+    across groups of responses.
+    \label{fig:graph_lasso_multitask_lasso_hm_lambdas} }
+\end{figure}
 
 \subsection{Derivation details for PCA-IV}
 \label{subsec:pca_iv_derivation}
@@ -1985,15 +2321,4 @@ data $Y$ according to the canonical directions, then projects the shrunk data
 onto the subspace defined by the columns of $X$. In any case, we see that C\&W
 pools across regression problems through a soft shrinkage weighted along
 canonical response directions.
-
-\subsection{Graph-Fused Lasso}
-\label{subsec:graph_fused_lasso}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
-  \caption{\label{fig:graph_lasso_coef_heatmap} }
-\end{figure}
-
-
 \end{document}
