@@ -54,7 +54,13 @@ read_data <- function(data_dir = "../data/") {
     rownames_to_column("seq")
   taxa$seq_num <- colnames(seqtab)
   tree <- readRDS(file.path(data_dir, "phylo_tree.rds"))
-  list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc, "bc_full" = bc_full, "tree" = tree)
+  list(
+    "taxa" = taxa,
+    "seqtab" = seqtab,
+    "bc" = bc,
+    "bc_full" = bc_full,
+    "tree" = tree
+  )
 }
 
 #' Prepare sample data
@@ -109,13 +115,10 @@ prepare_taxa <- function(taxa) {
     taxa$family,
     levels = names(sort(table(taxa$family), decreasing = TRUE))
   )
-  tax_cols <- colnames(taxa)
-  taxa <- tax_table(taxa)
-  colnames(taxa) <- tax_cols
+  taxa <- tax_table(as.matrix(taxa))
   taxa_names(taxa) <- taxa[, "seq_num"]
   taxa
 }
-
 
 #' scaling that ignores NAs
 safe_scale <- function(x) {
@@ -128,8 +131,7 @@ process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
   opts <- merge_default_opts(opts)
 
   ## preparing taxa and survey data
-  taxa <- prepare_taxa(taxa) %>%
-    filter(seq_num %in% colnames(seqtab))
+  taxa <- prepare_taxa(taxa)
   taxa_names(tree) <- taxa[, "seq_num"]
 
   bc_full <- prep_sample(bc_full, opts$scale_sample_data) %>%
@@ -142,23 +144,27 @@ process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
     sample_data(bc),
     taxa,
     phy_tree(tree)
-  ) %>%
-    subset_samples(gender == opts$gender) %>%
+  )
+
+  subset_txt <- sprintf("gender == '%s'", opts$gender)
+  ps <- ps %>%
+    subset_samples(eval(parse(text = txt))) %>%
     filter_taxa(
       function(x) {
         mean(x > opts$filter_a) > opts$filter_k
       },
       prune = TRUE
-    )
+    ) %>%
+    transform_sample_counts(opts$transform_fun)
 
-  if (opts$rlog$rlog) {
+  if (opts$rlog) {
     fname <- paste0(as.character(opts), collapse = "")
     dir.create("..", "data")
     fpath <- file.path(opts$outdir, digest::digest(fname))
     if (file.exists(fpath)) {
       rlog_dds <- get(load(fpath))
     } else {
-      rlog_dds <- do.call(rlog_ps, c(fpath, ps, opts$rlog))
+      rlog_dds <- do.call(rlog_ps, c(fpath, ps, opts$rlog_opts))
     }
     otu_table(ps)@.Data <- t(assay(rlog_dds))
   }
