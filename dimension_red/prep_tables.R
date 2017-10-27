@@ -146,9 +146,15 @@ process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
     phy_tree(tree)
   )
 
-  subset_txt <- sprintf("gender == '%s'", opts$gender)
+  if (opts$gender == "Male") {
+    ps <- ps %>%
+      subset_samples(gender == "Male")
+  } else if (opts$gender == "Female") {
+    ps <- ps %>%
+      subset_samples(gender == "Female")
+  }
+
   ps <- ps %>%
-    subset_samples(eval(parse(text = txt))) %>%
     filter_taxa(
       function(x) {
         mean(x > opts$filter_a) > opts$filter_k
