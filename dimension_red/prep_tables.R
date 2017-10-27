@@ -20,50 +20,88 @@ library("reshape2")
 merge_default_opts <- function(opts = list()) {
   default_opts <- list(
     gender = "Female", ## has more data
-    sf_quantile = 0.95,
+    rlog = c("rlog" = TRUE, "sf_quantile" = 0.95),
     filt_k = 0.5,
     filt_a = 0,
-    rlog = TRUE
+    outdir = "../data"
   )
   modifyList(default_opts, opts)
 }
 
 read_data <- function(data_dir = "../data/") {
   seqtab <- readRDS(file.path(data_dir, "seqtab.rds"))
-  bc <- readRDS(file.path(data_dir, "sample_data_bc.rds"))
+  bc <- readRDS(file.path(data_dir, "sample_data_bc.rds")) %>%
+    mutate(id = as.character(id))
   colnames(bc) <- tolower(colnames(bc))
   colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
   bc_full <- read_csv(file.path(data_dir, "WELL_China_1969_7.25.2017.csv")) %>%
     rename(
-      gender_it = "gender",
-      age_it = "age",
-      height = "height_dxa",
-      weight = "weight_dxa"
+      gender = gender_it,
+      age = age_it,
+      height_dxa = height,
+      weight_dxa = weight
     ) %>%
     mutate(
-      aoi = android_fm / gynoid_fm
+      aoi = android_fm / gynoid_fm,
+      id = as.character(id)
     ) %>%
     select_at(
-      .vars = setdiff(tolower(colnames(bc)), c("number", "aoi"))
+      .vars = setdiff(tolower(colnames(bc)), "number")
     )
 
   taxa <- readRDS(file.path(data_dir, "taxa.rds")) %>%
     data.frame() %>%
     rownames_to_column("seq")
   taxa$seq_num <- colnames(seqtab)
-  list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc, "bc_full" = bc_full)
+  tree <- readRDS(file.path(data_dir, "phylo_tree.rds"))
+  list("taxa" = taxa, "seqtab" = seqtab, "bc" = bc, "bc_full" = bc_full, "tree" = tree)
 }
 
-process_data <- function(seqtab, bc, bc_full, taxa, opts = list()) {
-  opts <- merge_default_opts(opts)
+#' Prepare sample data
+#'
+#' reorder columns and convert to ratios.
+prep_sample <- function(survey, scale_sample_data = FALSE) {
+  sample <- data.frame(survey) %>%
+    mutate(
+      id = as.character(id),
+      gender = as.factor(gender)
+    ) %>%
+    select( ## reorder columns
+      id, age, gender, height_dxa, weight_dxa,
+      bmi, aoi, ends_with("_fm"), ends_with("_lm"),
+      starts_with("diet_")
+    )%>%
+    mutate_at( ## fm ratios
+      vars(ends_with("fm"), -total_fm),
+      .funs = funs(. / total_fm)
+    ) %>%
+    mutate_at( ## lm ratios
+      vars(ends_with("lm"), -total_lm),
+      .funs = funs(. / total_lm)
+    ) %>%
+    mutate_at(
+      vars(starts_with("diet_")),
+      .funs = log
+    ) %>%
+    mutate( ## new variables
+      fat_lean_ratio = total_fm / total_lm,
+      total_fm = total_fm / (weight_dxa * 1000),
+      total_lm = total_lm / (weight_dxa * 1000)
+    )
 
-  ## filter counts
-  seqtab <- seqtab[bc$number, ]
-  seqtab <- seqtab[bc$gender == opts$gender, ]
-  seqtab <- seqtab %>%
-    filter_taxa(function(x) mean(x > opts$filt_a) > opts$filt_k, prune = TRUE)
+  ## scale body measurements by gender
+  if (scale_sample_data) {
+    sample <- sample %>%
+      group_by(gender) %>%
+      mutate_if(is.numeric, safe_scale) %>%
+      ungroup()
+  }
+
+  as.data.frame(sample)
+}
+
+prepare_taxa <- function(taxa) {
   taxa <- taxa %>%
-    filter(seq_num %in% colnames(seqtab)) %>%
     mutate(
       family = fct_lump(Family, n = 9, ties.method = "first")
     )
@@ -71,58 +109,72 @@ process_data <- function(seqtab, bc, bc_full, taxa, opts = list()) {
     taxa$family,
     levels = names(sort(table(taxa$family), decreasing = TRUE))
   )
+  tax_cols <- colnames(taxa)
+  taxa <- tax_table(taxa)
+  colnames(taxa) <- tax_cols
+  taxa_names(taxa) <- taxa[, "seq_num"]
+  taxa
+}
 
-  mseqtab <- seqtab %>%
-    melt(varnames = c("number", "seq_num")) %>%
-    left_join(bc) %>%
-    left_join(taxa)
 
-  dds <- DESeqDataSetFromMatrix(
-    countData = t(get_taxa(seqtab)),
-    colData = data.frame("unused" = rep(1, nrow(seqtab))),
-    design = ~1
-  )
+#' scaling that ignores NAs
+safe_scale <- function(x) {
+  x[!is.finite(x)] <- NA
+  z <- x - mean(x, na.rm = TRUE)
+  z / sd(x, na.rm = TRUE)
+}
 
-  ## are quantiles for one sample systematically larger than those for others (if
-  ## so, give it a large size factor). Basically related to sequencing depth.
-  ##
-  ## code copied from here: https://support.bioconductor.org/p/76548/
-  if (opts$rlog) {
+process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
+  opts <- merge_default_opts(opts)
+
+  ## preparing taxa and survey data
+  taxa <- prepare_taxa(taxa) %>%
+    filter(seq_num %in% colnames(seqtab))
+  taxa_names(tree) <- taxa[, "seq_num"]
+
+  bc_full <- prep_sample(bc_full, opts$scale_sample_data) %>%
+    left_join(bc %>% select(id, number))
+  rownames(bc) <- bc$number
+
+  ## combine into ps
+  ps <- phyloseq(
+    otu_table(seqtab, taxa_are_rows = FALSE),
+    sample_data(bc),
+    taxa,
+    phy_tree(tree)
+  ) %>%
+    subset_samples(gender == opts$gender) %>%
+    filter_taxa(
+      function(x) {
+        mean(x > opts$filter_a) > opts$filter_k
+      },
+      prune = TRUE
+    )
+
+  if (opts$rlog$rlog) {
     fname <- paste0(as.character(opts), collapse = "")
-    fpath <- file.path("..", "data", digest::digest(fname))
+    dir.create("..", "data")
+    fpath <- file.path(opts$outdir, digest::digest(fname))
     if (file.exists(fpath)) {
-      dds <- get(load(fpath))
+      rlog_dds <- get(load(fpath))
     } else {
-      qs <- apply(counts(dds), 2, quantile, opts$sf_quantile)
-      sizeFactors(dds) <- qs / exp(mean(log(qs)))
-      dds <- rlog(dds, fitType = "local", betaPriorVar = 0.5)
-      save(dds, file = fpath)
+      rlog_dds <- do.call(rlog_ps, c(fpath, ps, opts$rlog))
     }
+    otu_table(ps)@.Data <- t(assay(rlog_dds))
   }
 
-  x_seq <- t(assay(dds))
-  bc_mat <- data.frame(bc) %>%
-    filter(gender == opts$gender) %>%
-    select(-id, -gender)
-  rownames(bc_mat) <- bc_mat$number
-  bc_mat$number <- NULL
-
-  bc_full <- data.frame(bc_full) %>%
-    mutate(
-      gender = recode(gender, `1` = "Male", `2` = "Female")
-    ) %>%
-    filter(gender == opts$gender) %>%
-    select( -gender) %>%
-    na.omit()
-  rownames(bc_full) <- bc_full$id
-  bc_full$id <- NULL
-
   list(
-    "x_seq" = x_seq,
-    "bc" = bc_mat,
+    "ps" = ps,
     "bc_full" = bc_full,
-    "mseqtab" = mseqtab
+    "mseqtab" = melt_ps(ps)
   )
+}
+
+melt_ps <- function(ps) {
+  get_taxa(ps) %>%
+    melt(varnames = c("number", "seq_num")) %>%
+    left_join(sample_data(ps)) %>%
+    left_join(data.frame(tax_table(ps)))
 }
 
 family_means <- function(mseqtab) {
