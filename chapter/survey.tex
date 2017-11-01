@@ -1095,12 +1095,13 @@ However, \cite{chun2010sparse} argue that this formulation does not lead to
 \cite{zou2006sparse} to PLS. The resulting objective identifies two sets of
 directions, one set that maximize the PLS-defining covariance and another that
 approximates the first set by a sparser alternative. Formally, the problem is
-\begin{align*}
+\begin{align}
+  \label{eq:spls_obj}
   \text{minimize}_{z_k, a_k} &-\kappa \|a_k\|_M^2 + \left(1 - \kappa\right) \|z_k - a_k\|_M^2 \\
   \text{ such that } & \|a_k\|_2^2 = 1 \\
   &\|z_k\|_1 \leq \lambda_1 \\
   &\|z_k\|_2 \leq \lambda_2,
-\end{align*}
+\end{align}
 where we have defined $\|x\|_M = \sqrt{x^T M x}$. The first term in the
 objective is the PLS-defining covariance, the second ensures that the solutions
 $z_k$ and $a_k$ are similar, and the constraints induce sparsity and stability
@@ -1109,8 +1110,66 @@ objective. Note that while this objective is not convex, for fixed $a_k$, it is
 an elastic-net regression, while for fixed $z_k$, it is a type of eigenvalue
 problem.
 
-To develop some intuition for this criterion, it is useful to consider
+To develop some intuition for this optimization problem, we review the
+motivation behind the analogous sparse PCA objective. Suppose we have the SVD,
+$X = UDV^T$. It is a simple observation that the $k^{th}$ principal component is
+proportional to the solution of a ridge regression onto $y_k = u_k d_k$,
+\begin{align*}
+  \hat{v}_k &\propto \arg \min_{v_k} \|y_k - X v_k\|_2^2 + \lambda \|v_k \|_2.
+\end{align*}
+Indeed, according to the usual ridge regression formula, the minimizer is
+\begin{align*}
+  \left(X^TX + \lambda I\right)^{-1} X^T y_k &= \left(V^T D^2 V + \lambda I\right)^{-1} V D U^T u_k d_k \\
+  &= V\left(D^2 + \lambda I\right)^{-1} D e_k d_k \\
+  &= \frac{d_k^2}{d_k^2 + \lambda}v_k.
+\end{align*}
 
+A less obvious fact is that we can still develop this connection between PCA and
+regression without access to the $u_k$ and $d_k$ directly. Indeed, it turns out
+that in the problem
+\begin{align}
+  \label{eq:spca_obj_reform}
+  \text{minimize}_{A, V} &\sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 +
+  \lambda \sum_{k = 1}^{K} \|v_k\|_2 \\
+  \text{subject to } & A^T A &= I_K,
+\end{align}
+the optimal $\hat{V}$ again corresponds exactly to the top $K$ right singular
+vectors of $X$. The idea of \cite{zou2006sparse} is to induce sparsity on $v_k$
+by constraining their $\ell^1$ norm, resulting in a sparse principle component
+directions. The objective \ref{eq:spls_obj} is the analog of this problem when
+setting $z_k = v_k$, $\kappa = \frac{1}{2}$ and $M = X^T X$.
+
+Reformulating the optimization \ref{eq:spca_obj_reform} suggests a simple
+algorithm for solving it. First, notice that if we define $\tilde{A} = \left(A
+A^{\perp}\right)$ so that it is orthonormal, then since norms are preserved
+under orthonormal rotations,
+
+\begin{align*}
+  \sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 &= \|X - XVA\|_{F}^2 \\
+  &= \|\begin{pmatrix} XA - XV \\ XA^{\perp} \|_{F}^2 \\
+  &= \sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + C
+\end{align*}
+where $C$ is a constant in $A$, and hence the sparse PCA objective can be
+written as
+\begin{align*}
+  \text{minimize}_{A, V} &\sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + \sum_{k = 1}^{K} \|v_k\|_2 \\
+  \text{such that }&\|a_k\|_2 = 1 \\
+  & \|v_k\|_1 \leq \lambda_1 \\
+  & \|v_k\|_2 \leq \lambda_2 \\
+  A^TA = I_K.
+\end{align*}
+For a fixed $A$, this is an elastic-net regression. For fixed $V$, considering
+that $\sum_{k = 1}^{K} \|Xa_k - Xv_k\|^2_2 = \|XA - XV\|_F^2$, this is a
+Procrustes rotation problem. Hence, a local minimum can be found by alternating
+these two steps until convergence.
+
+\subsubsection{Example}
+\label{subsubsec:spls_example}
+
+Next we apply SPLS to the WELL China body composition data set. We use the
+implementation provided by \cite{chung2012spls}.
+
+We treat the variables 
 
 \begin{figure}[ht]
   \centering
