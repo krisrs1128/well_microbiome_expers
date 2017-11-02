@@ -1030,11 +1030,11 @@ $\P^{X}$, they found that the $k^{th}$ PLS direction $z_{k}$ is the $z$ that
 solves the optimization
 \begin{align}
   \label{eq:pls_obj}
-\maximize_{z} & \Corrsubarg{\P^{X} \times \P^{y}}{x_{i}^{T}z_{k},
+\text{maximize }_{z} & \Corrsubarg{\P^{X} \times \P^{y}}{x_{i}^{T}z_{k},
 y_{i}}\Varsubarg{\P^{X}}{z^{T}x_i} \\
-\text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j
-\leq k - 1 \text{ and }
-\|z\|_2 = 1.
+\text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j \nonumber
+\leq k - 1 \nonumber \\
+\|z\|_2 = 1. \nonumber
 \end{align}
 If the covariance term is omitted, the optimization is identical to the maximum
 variance problem that gives the principal component directions based on $X$.
@@ -1050,9 +1050,9 @@ that PLS fits a particular latent variable model. Suppose $\xi_{i} =
 K$ dimensional spherical normal. PLS assumes the observed tables $Y$ and $X$
 have rows drawn i.i.d. from
 \begin{align*}
-y_{i} \mid \xi_{i} \sim \Gsn\left(W_{Y}\xi_{i}^{s} +
+y_{i} \mid \xi_{i} &\sim \Gsn\left(W_{Y}\xi_{i}^{s} +
 \mu_{Y}, \sigma^{2}I_{p_{1}}\right) \\
-x_{i} \mid \xi_{i} \sim \Gsn\left(W_{X} \xi_{i}^{s} + B_{X}\xi_{i}^{X} +
+x_{i} \mid \xi_{i} &\sim \Gsn\left(W_{X} \xi_{i}^{s} + B_{X}\xi_{i}^{X} +
 \mu_{X}, \sigma^{2}I_{p_{2}}\right).
 \end{align*}
 That is, each table is the sum of two components, one that is a
@@ -1080,9 +1080,8 @@ we briefly review this method here.
 Directly regularizing the multiresponse version of the
 optimization \label{eq:pls_obj} leads to the problem
 \begin{align*}
-  \text{maximize}_{z_k} &\sum_{j = 1}^{p1} \Covsubarg{P^X \times P^{y_j}}{x_i^T z_k, y_{ij}} \\
-  \text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j
-  \leq k - 1 \text{ and } \\
+  \text{maximize }_{z_k} &\sum_{j = 1}^{p1} \Covsubarg{P^X \times P^{y_j}}{x_i^T z_k, y_{ij}} \\
+  \text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j \leq k - 1 \\
   &\|z_k\|_2 = 1 \\
   &\|z_k\|_1 \leq \lambda,
 \end{align*}
@@ -1098,9 +1097,9 @@ approximates the first set by a sparser alternative. Formally, the problem is
 \begin{align}
   \label{eq:spls_obj}
   \text{minimize}_{z_k, a_k} &-\kappa \|a_k\|_M^2 + \left(1 - \kappa\right) \|z_k - a_k\|_M^2 \\
-  \text{ such that } & \|a_k\|_2^2 = 1 \\
-  &\|z_k\|_1 \leq \lambda_1 \\
-  &\|z_k\|_2 \leq \lambda_2,
+  \text{ such that } & \|a_k\|_2^2 = 1 \nonumber \\
+  &\|z_k\|_1 \leq \lambda_1 \nonumber \\
+  &\|z_k\|_2 \leq \lambda_2, \nonumber
 \end{align}
 where we have defined $\|x\|_M = \sqrt{x^T M x}$. The first term in the
 objective is the PLS-defining covariance, the second ensures that the solutions
@@ -1131,7 +1130,7 @@ that in the problem
   \label{eq:spca_obj_reform}
   \text{minimize}_{A, V} &\sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 +
   \lambda \sum_{k = 1}^{K} \|v_k\|_2 \\
-  \text{subject to } & A^T A &= I_K,
+  \text{subject to } &A^T A = I_K, \nonumber
 \end{align}
 the optimal $\hat{V}$ again corresponds exactly to the top $K$ right singular
 vectors of $X$. The idea of \cite{zou2006sparse} is to induce sparsity on $v_k$
@@ -1146,11 +1145,11 @@ under orthonormal rotations,
 
 \begin{align*}
   \sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 &= \|X - XVA\|_{F}^2 \\
-  &= \|\begin{pmatrix} XA - XV \\ XA^{\perp} \|_{F}^2 \\
+  &= \|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \|_{F}^2 \\
   &= \sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + C
 \end{align*}
-where $C$ is a constant in $A$, and hence the sparse PCA objective can be
-written as
+where $C$ is constant in $A$, and hence the sparse PCA objective can be written
+as
 \begin{align*}
   \text{minimize}_{A, V} &\sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + \sum_{k = 1}^{K} \|v_k\|_2 \\
   \text{such that }&\|a_k\|_2 = 1 \\
@@ -1167,9 +1166,28 @@ these two steps until convergence.
 \label{subsubsec:spls_example}
 
 Next we apply SPLS to the WELL China body composition data set. We use the
-implementation provided by \cite{chung2012spls}.
+implementation provided by \cite{chung2012spls}. We use the body composition
+variables as the response $Y$ and the microbiome community composition as $X$.
+We subset to female subjects and filter species according to a $K$-over-$A$
+filter with $K$ = 7\% of samples and $A = 5$. This leaves 372 species over 119
+participants. All species abundances are variance stabilized using the approach
+of \cite{anders2010differential}. We cross-validate with 5 folds, searching
+through a grid over $K \in \{4, \dots, 8\}$ and $\lambda_1 \in \{0, 0.05, \dots,
+0.7\}$. This grid is used to prevent the model from regularizing to the point
+that there is no information to visualize. For example, if we set $K = 1$, every
+row of Figure \ref{fig:spls_coef_heatmap} would look identical. The predictive
+accuracy is poor, which is unsurprising considering the bimodality in abundances
+-- the held out error is $\approx 1.29$, after having scaled and centered the
+body composition variables.
 
-We treat the variables 
+Figure \ref{fig:spls_coef_heatmap} displays fitted coefficients relating body
+composition variables with species abundances. By fitted coefficients, we mean
+we display $\hat{B} = ZQ^T$, where $Z$ are the SPLS directions and a
+multiresponse linear regression model is used, $Y = XB + E = XZQ^T + E$. It
+seems that, positive associations tend to occur across all responses
+simultaneously, while negative associations can unique to either lean or fat
+mass. Most taxonomic families seem to have slightly more negative than positive
+associations, with the possible exception of Porphyromonodaceae.
 
 \begin{figure}[ht]
   \centering
@@ -1177,16 +1195,45 @@ We treat the variables
   \caption{\label{fig:spls_coef_heatmap} }
 \end{figure}
 
+To interpret these coefficients more carefully, we can visualize individual
+species with strong associations to body composition. Specifically, we study
+associations with the total lean and fat mass variables, since within lean or
+fat mass types, coefficients tend to be quite correlated (as the raw data are).
+In Figures \ref{fig:spls_total_lm_species} and \ref{fig:spls_total_fm_species},
+we display the abundances $X$ for species against total lean and fat mass,
+respectively. The species are chosen according to whether the two-dimensional
+coefficient across lean and fat mass has large norm\footnote{Specifically,
+  $\| \begin{pmatrix} \beta_{fm} \\ \beta_{lm} \end{pmatrix} \|_{2} > 0.065$.}.
+The main associations that are visible are those between the average body
+composition values when a species is present or absent. That is, there don't
+seem to be any cases where a body composition feature varies as a species
+becomes more or less abundant. Instead, SPLS has identified sequences whose
+samples have lower or higher body fat or lean mass, depending on whether that
+sequence is present or absent. This suggests that a logistic regression version
+of SPLS, see for example \citep{chung2010sparse}, applied to the
+presence-absence transformed version of this data may fit the data well, with
+the advantage of being somewhat more interpretable.
+
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/spls/total_lm_species}
-  \caption{\label{fig:spls_total_lm_species} }
+  \caption{A subset of the species whose coefficients for total lean and fat
+    mass are high in magnitude. Each panel represents one species, and each
+    point is a samples $\times$ species combination. The $x$-axis gives the
+    abundance of that species across samples, and the $y$-axis gives total lean
+    mass of the associated sample. Colors indicate taxonomic family membership.
+    Panels are sorted from most positive to most negative association. Within
+    each panel, a linear smooth is given, independent of the estimated
+    coefficient.
+    \label{fig:spls_total_lm_species} }
 \end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{figure/spls/total_fm_species}
-  \caption{\label{fig:spls_total_fm_species} }
+  \caption{The analog of Figure \ref{fig:spls_total_lm_species}, but with fat,
+    rather than lean, mass along the $y$-axis. \label{fig:spls_total_fm_species}
+  }
 \end{figure}
 
 %% \subsection{CCpnA}
@@ -2076,8 +2123,8 @@ We treat the variables
 %% so forth. The final posterior is approximated by $q_{\gamma^{t}}$ for some
 %% large $t$.
 
-%% \bibliographystyle{plainnat}
-%% \bibliography{refs.bib}
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
 
 %% \section{Appendix}
 

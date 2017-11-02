@@ -16,6 +16,7 @@ library("reshape2")
 library("tidyverse")
 source("../dimension_red/prep_tables.R")
 source("../dimension_red/plot.R")
+set.seed(20171101)
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -70,7 +71,7 @@ keep_ix <- apply(y_df, 1, function(x) all(!is.na(x)))
 rm_cols <- which(colnames(y_df) %in% c("batch", "operator", "gender", "number", "id"))
 y <- scale(y_df[keep_ix, -rm_cols])
 x <- get_taxa(processed$ps)
-cv_eval <- cv.spls(x, y, K = 4:8, eta = seq(0, 0.7, 0.05), scale.x = FALSE, fold = 5)
+cv_eval <- cv.spls(x, y, K = 4:8, eta = seq(0, 0.6, 0.05), scale.x = FALSE, fold = 5)
 cv_eval
 
 train_ix <- sample(1:nrow(x), 80)
