@@ -11,10 +11,12 @@
 ## Libraries and setup
 ###############################################################################
 library("phyloseq")
-library("tidyverse")
-library("reshape2")
-source("../dimension_red/prep_tables.R")
 library("spls")
+library("reshape2")
+library("tidyverse")
+source("../dimension_red/prep_tables.R")
+source("../dimension_red/plot.R")
+set.seed(20171101)
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -47,51 +49,57 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.07, "filt_a" = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+opts <- list(
+  "filter_k" = 0.07,
+  "filter_a" = 5,
+  "scale_sample_data" = TRUE,
+  "gender" = "Female",
+  "transform_fun" = identity,
+  "vst" = TRUE
+)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
 
-y <- scale(processed$bc)
-x <- scale(processed$x_seq)
-cv_eval <- cv.spls(x, y, K = 1:6, eta = seq(0, 0.9, 0.05), scale.x = FALSE, fold = 5)
+y_df <- sample_data(processed$ps)
+keep_ix <- apply(y_df, 1, function(x) all(!is.na(x)))
+rm_cols <- which(colnames(y_df) %in% c("batch", "operator", "gender", "number", "id"))
+y <- scale(y_df[keep_ix, -rm_cols])
+x <- get_taxa(processed$ps)
+cv_eval <- cv.spls(x, y, K = 4:8, eta = seq(0, 0.6, 0.05), scale.x = FALSE, fold = 5)
 cv_eval
 
-## train_ix <- sample(1:nrow(x), 80)
-#fit <- spls(x[train_ix, ], y[train_ix, ], cv_eval$K.opt, cv_eval$eta.opt)
-fit <- spls(x[train_ix, ], y[train_ix, ], 4, 0.7)
+train_ix <- sample(1:nrow(x), 80)
+fit <- spls(x[train_ix, ], y[train_ix, ], cv_eval$K.opt, cv_eval$eta.opt)
 y_hat <- x %*% fit$betahat
 plot(y[train_ix, 24], y_hat[train_ix, 24])
 points(y[-train_ix, 24], y_hat[-train_ix, 24], col = "blue")
 abline(a = 0, b = 1, col = "red")
 
 ## refit on full data
-fit <- spls(x, y, 4, 0.7)
+fit <- spls(x, y, cv_eval$K.opt, cv_eval$eta.opt)
 
 ###############################################################################
 ## plot fitted coefficients
 ###############################################################################
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+seq_fam <- seq_families(processed$mseqtab)
+mass_type_ordered <- mass_ordering()
 
-site_ordered <- c(
-  "aoi", "age", "height_dxa", "weight_dxa",
-  "bmi", "Android_FM", "Android_LM", "Gynoid_FM", "Gynoid_LM", "L_Trunk_FM",
-  "L_Trunk_LM", "R_Trunk_FM", "R_Trunk_LM", "Trunk_FM", "Trunk_LM",
-  "L_Total_FM", "L_Total_LM", "R_Total_FM", "R_Total_LM", "Total_FM",
-  "Total_LM", "L_Leg_FM", "L_Leg_LM", "R_Leg_FM", "R_Leg_LM", "Legs_FM",
-  "Legs_LM", "L_Arm_FM", "L_Arm_LM", "R_Arm_FM", "R_Arm_LM", "Arms_FM",
-  "Arms_LM"
-)
-mass_type_ordered <- c(
-  site_ordered[!grepl("FM|LM", site_ordered)],
-  site_ordered[grepl("FM", site_ordered)],
-  site_ordered[grepl("LM", site_ordered)]
-)
-species_order <- colnames(x)[hclust(dist(fit$betahat))$order]
+dend <- as.dendrogram(hclust(dist(coef(fit))))
+hc <- as.hclust(reorder(dend, coef(fit), mean))
+species_order <- colnames(x)[hc$order]
 
-mbeta <- fit$betahat %>%
-  melt(varnames = c("seq_num", "feature")) %>%
-  left_join(seq_families) %>%
+mbeta <- coef(fit) %>%
+  melt(
+    varnames = c("seq_num", "feature"),
+    value.name = "coef"
+  ) %>%
+  left_join(seq_fam) %>%
   mutate(
     feature = factor(feature, mass_type_ordered),
     seq_num = factor(seq_num, species_order)
@@ -99,7 +107,12 @@ mbeta <- fit$betahat %>%
 
 ggplot(mbeta) +
   geom_tile(
-    aes(x = seq_num, y = feature, fill = value)
+    aes(x = seq_num, y = feature, fill = coef)
+  ) +
+  geom_rect(
+    aes(col = family),
+    fill = "transparent", size = 2,
+    xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
   scale_fill_gradient2(
     guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
@@ -113,7 +126,7 @@ ggplot(mbeta) +
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
     axis.text.y = element_text(size = 7, angle = 0, hjust = 0),
-    strip.text.x = element_text(size = 7, angle = 90, hjust = 0),
+    strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
@@ -125,69 +138,79 @@ ggsave(
 
 large_species <- mbeta %>%
   filter(
-    feature %in% c("Total_LM", "Total_FM")
+    feature %in% c("total_lm", "total_fm")
   ) %>%
   group_by(seq_num) %>%
-  mutate(norm = sqrt(sum(value ^ 2))) %>%
-  filter(norm > 0.085) %>%
+  mutate(norm = sqrt(sum(coef ^ 2))) %>%
+  filter(norm > 0.065) %>%
   arrange(desc(norm))
 
 mlarge_species <- melt(
   data.frame(
     "Number" = rownames(x),
-    x[, unique(large_species$seq_num)],
-    y[, c("Total_FM", "Total_LM")]
+    x[, unique(as.character(large_species$seq_num))],
+    y[, c("total_fm", "total_lm")]
   ),
-  id.vars = c("Number", "Total_FM", "Total_LM"),
+  id.vars = c("Number", "total_fm", "total_lm"),
   variable.name = "seq_num"
 ) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
-  mbeta %>%
-    filter(feature == "Total_LM") %>%
-    arrange(desc(value)) %>%
+  large_species %>%
+    filter(feature == "total_lm") %>%
+    arrange(desc(coef)) %>%
     .[["seq_num"]]
 )
 
 ggplot(mlarge_species) +
   geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
+  stat_smooth(
+    aes(x = value, y = total_lm, col = family),
+    alpha = 0.8, size = 0.5, method = "lm", fill = "#dfdfdf"
+  ) +
   geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
   geom_point(
-    aes(x = value, y = Total_LM, col = family),
+    aes(x = value, y = total_lm, col = family),
     size = 0.7, alpha = 0.8
   ) +
   facet_wrap(~seq_num, ncol = 8) +
   theme(
     legend.position = "bottom"
   )
+
 ggsave(
   "../chapter/figure/spls/total_lm_species.png",
   width = 7.4,
   height = 6.3
 )
 
-## same plot for Total FM
+## same plot for total fm
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
-  mbeta %>%
-    filter(feature == "Total_FM") %>%
-    arrange(desc(value)) %>%
+  large_species %>%
+    filter(feature == "total_fm") %>%
+    arrange(desc(coef)) %>%
     .[["seq_num"]]
 )
 
 ggplot(mlarge_species) +
   geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
   geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  stat_smooth(
+    aes(x = value, y = total_lm, col = family),
+    alpha = 0.8, size = 0.5, method = "lm", fill = "#dfdfdf"
+  ) +
   geom_point(
-    aes(x = value, y = Total_FM, col = family),
+    aes(x = value, y = total_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
   facet_wrap(~seq_num, ncol = 8) +
   theme(
     legend.position = "bottom"
   )
+
 ggsave(
   "../chapter/figure/spls/total_fm_species.png",
   width = 7.4,
