@@ -48,11 +48,18 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.07)
-processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, opts)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree
+)
 
-y <- scale(processed$bc)
-x <- scale(processed$x_seq)
+y <- sample_data(processed$ps) %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
+x <- scale(get_taxa(processed$ps))
 
 R <- glasso(cov(y), rho = 1e-1)
 opts <- list(
