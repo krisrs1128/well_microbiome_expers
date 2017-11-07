@@ -1298,14 +1298,14 @@ and define row and column scores $Z$ and $Q$ by
 
 There are several ways to interpret this procedure. CCpnA was originally
 proposed as the solution to a fixed-point iteration called reciprocal averaging
-\citep{ter1986canonical}. Later, \citep{greenacre1987geometric,
+\citep{ter1986canonical}. Later, \cite{greenacre1987geometric,
   greenacre1984theory}, provided a geometric view and \cite{zhu2005constrained}
 gave an exact probabilistic interpretation.
 
-The intuition for the reciprocal averaging procedure is simple: the
-scores for different sites should be a weighted average of the species
-scores, with larger weights for the species that are more common at
-those sites. That is,
+The intuition for the reciprocal averaging procedure is simple: the scores for
+different sites should be a weighted average of the species scores, with larger
+weights for the species that are more common at those sites. Similarly, species
+scores can be defined according to a weighted average of site scores. That is,
 \begin{align*}
   z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\
   q_{j} \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
@@ -1315,7 +1315,7 @@ or, in matrix form,
 Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\
 Q \propto \diag\left(F^{T} 1_{n}\right)^{-1} Z.
 \end{align*}
-This formulation suggests a method to obtain $Z$ and $Q$ -- arbitrarily
+This formulation suggests an algorithm for finding $Z$ and $Q$ -- arbitrarily
 initialize one and iterate these calculations until convergence.
 
 As is, this is not yet the setup that yields CCpnA\footnote{It in fact gives the
@@ -1328,29 +1328,29 @@ needs to be inserted before the calculation of row scores,
 \item While not converged,
 \begin{enumerate}
 \item Solve $Q^{\prime} \propto \diag\left(F^{T}1_{n}\right)^{-1}F^{T}Z$.
-\item Project $Q = P_{X^{(2)}}Q^{\prime}$.
+\item Project $Q = P_{X}Q^{\prime}$.
 \item Solve $Z \propto \diag\left(Z 1_{p}\right)^{-1} F Q^{T}$.
 \end{enumerate}
 \end{enumerate}
 
 The fixed point of this iteration is the previously described CCpnA solution.
 
-A second interpretation, is due to \citep{zhu2005constrained}. Suppose first
-that we are only interested in a one-dimensional score for rows and columns. Let
+A second interpretation is due to \cite{zhu2005constrained}. Suppose first that
+we are only interested in a one-dimensional score for rows and columns. Let
 $\alpha$ be a latent environmental gradient, for example, between warm-dry and
 cold-wet sites. For each of the $p_{1}$ species, define a normal density over
-the environmental variables, $f_{j}\left(x_{i}\right) =
-\Gsn_{p^{(2)}}\left(\mu_{j}, \Sigma_{j}\right)$. The mode of this density
-represents the preferred environmental conditions for species $j$. Next, project
-these densities onto the environmental gradient, giving a univariate
-$f_{j}^{\alpha}\left(z_{i}\right) = \Gsn\left(\alpha^{T}\mu_{j}, \alpha^{T}
-\Sigma_{j}\alpha\right)$ for each species. The $z_{i}$'s represent the scores
-for species $i$ along the environmental gradient $\alpha$.
+the environmental variables, $f_{j}\left(x_{i}\right) = \Gsn\left(x_i \vert
+\mu_{j}, \Sigma_{j}\right)$. The mode of this density represents the preferred
+environment for species $j$. Next, project these densities onto the
+environmental gradient, giving a univariate $f_{j}^{\alpha}\left(z_{i}\right) =
+\Gsn\left(z_i \vert \alpha^{T}\mu_{j}, \alpha^{T} \Sigma_{j}\alpha\right)$ for
+each species. The $z_{i}$ represent the scores for species $i$ along the
+environmental gradient $\alpha$.
 
 The generative model views species-site pairs one at a time. For each pair
 involving site $i$ and species $j$, draw a score according to
-$f_{j}^{\alpha}\left(z_{i}\right)$. That is, for each site $i$, draw a species
-according to a $p_{1}$-class LDA model.
+$f_{j}^{\alpha}\left(z_{i}\right)$. Hence, each site $i$ draws species according
+to a $p_{1}$-class LDA model.
 
 To use this idea to compute scores, we need to estimate the environmental
 gradient $\alpha$, which is also of interest in its own right. This is done by
@@ -1363,50 +1363,52 @@ species,
 where
 \begin{align*}
   \Sigma_{B} = \sum_{j = 1}^{p_{1}} f_{\cdot j}\left(\mu_{j} -
-    \bar{\mu}\right)\left(\mu_{j} - \bar{\mu}\right)^{T}.
+  \bar{\mu}\right)\left(\mu_{j} - \bar{\mu}\right)^{T}
 \end{align*}
-Estimating $\hat{\alpha}$ in this way and writing $z_{i} =
-\hat{\alpha}^{T}x_{i}$ gives the original site scores from CCpnA.
+is a between species covariance matrix. Estimating $\hat{\alpha}$ in this way
+and writing $z_{i} = \hat{\alpha}^{T}x_{i}$ gives the original site scores from
+CCpnA.
 
 \subsection{Kernel CCA}
 \label{subsec:kernel_cca}
 
 Since CCA is based on correlation, it can only summarize linear relationships
-across tables -- KCCA is a modification that is sensitive to nonlinear
-associations \citep{akaho2006kernel, bach2003kernel, lanckriet2004statistical}.
-It does this by implicitly lifting the original data to a richer feature space,
-with the hope that nonlinear associations in the original data become linear
-associations in the richer space -- this is often called the ``kernel trick''
-\citep{scholkopf2001kernel}. Informaly, KCCA is the algorithm that emerges after
-applying the kernel trick to CCA.
+across tables -- Kernel CCA (KCCA) is a modification that is sensitive to
+nonlinear associations \citep{akaho2006kernel, bach2003kernel,
+  lanckriet2004statistical}. It does this by implicitly lifting the original
+data into a richer feature space, with the hope that nonlinear associations in
+the original data become linear associations in the richer space -- this is
+often called the ``kernel trick'' \citep{scholkopf2001kernel}. Informaly, KCCA
+is the algorithm that emerges after applying the kernel trick to CCA.
 
 More precisely, let $\varphi^{Y}: \reals^{p_{1}} \to H^{Y}$ and $\varphi^{X}:
 \reals^{p_{2}} \to H^{X}$ be mappings from the features directly measured by $X$
-and $Y$ into richer spaces $H^{Y}$ and $H^{X}$. For example, the $\varphi$'s
-might map vectors into an expansion of all polynomial products of original
-feature values, up to some fixed degree (this is mapping is called the
-polynomial kernel). As in CCA, let $\P^{X}$ and $\P^{Y}$ denote the sampling
-distributions associated with the two tables, and write $x_{i}$ and $y_{i}$ for
-generic draws from these distribution.
+and $Y$ into richer spaces $H^{Y}$ and $H^{X}$. For example, the $\varphi$ might
+map vectors into an expansion of all polynomial products of original feature
+values, up to some fixed degree, this mapping is called the polynomial kernel.
+As in CCA, let $\P^{YX}$ denote the sampling distributions associated with the
+two tables, and write $x_{i}$ and $y_{i}$ for generic draws from these
+distribution.
 
 In the same way that the first CCA direction maximizes the covariance between
-linear combinations $u^{T}x_{i}$ and $v^{T}y_{i}$ (subject to a variance
-constraint), KCCA maximizes the correlation between the more general inner
-products, $z_{i}\left(u\right) = \left<u, x_{i}\right>$ and $z_{i}\left(v\right)
-= \left<v, y_{i}\right>$,
+linear combinations $u^{T}x_{i}$ and $v^{T}y_{i}$, KCCA maximizes the
+correlation between the more general inner products, $z_{i}\left(u\right) =
+\left<u, \varphi\left(x_{i}\right)\right>$ and $z_{i}\left(v\right) = \left<v,
+\varphi\left(y_{i}\right)\right>$,
 \begin{align}
   \argmax_{u \in H^{X}, v \in H^{Y}}
-  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} \label{eq:optim_kcca}\\
-\text{subject to } &\Varsubarg{P^{X}}{z_{i}\left(u\right)} = \Varsubarg{P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
+  &\Covsubarg{\P^{YX}}{z_{i}\left(u\right), z_{i}\left(v\right)} \label{eq:optim_kcca}\\
+\text{subject to } &\Varsubarg{\P^{X}}{z_{i}\left(u\right)} = \Varsubarg{\P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
 \end{align}
 
 As is, the problem is not well-posed, and it is necessarily to regularize. The
-regularized Lagrangian associated with the optimization \ref{eq:optim_kcca} is
+regularized Lagrangian associated with the optimization in equation
+\ref{eq:optim_kcca} is
 \begin{align}
-  &\Covsubarg{\P^{X} \times \P^{Y}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
-  \frac{\rho^{X}}{2}\Varsubarg{P^{X}}{z_{i}\left(u\right)} -
-  \frac{\rho^{Y}}{2}\Varsubarg{P^{Y}}{z_{i}\left(v\right)} + \label{eq:lagrangian_kcca}\\
-  &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right) + \frac{\lambda^{(Y)}}{2}\text{Pen}\left(v\right), \nonumber
+  &\Covsubarg{\P^{YX}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
+  \frac{\rho^{X}}{2}\Varsubarg{\P^{X}}{z_{i}\left(u\right)} -
+  \frac{\rho^{Y}}{2}\Varsubarg{\P^{Y}}{z_{i}\left(v\right)} + \label{eq:lagrangian_kcca}\\
+  &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right) + \frac{\lambda^{Y}}{2}\text{Pen}\left(v\right), \nonumber
 \end{align}
 where $\text{Pen}\left(x\right)$ is some regularizer, the $\ell^{1}$ or
 $\ell^{2}$ norm, for example.
@@ -1424,13 +1426,13 @@ for some $\alpha^{X}, \alpha^{Y}$, where $\Phi^{X} \in \reals^{n \times
   \text{dim}\left(H^{X}\right)}$ has $i^{th}$ row
 $\varphi^{Y}\left(x_{i}\right)$ and $\Phi^{Y}$ is defined similarly.
 
-Substituting this into the Lagrangian \ref{eq:lagrangian_kcca}, it becomes clear
-that only the cross-products $\Phi^{X T}\Phi^{X}$ and $\Phi^{Y T}\Phi^{Y}$
-appear. Since these inner products can be written as kernel matrices -- call
-them $K^{X}$ and $K^{Y}$ -- the optimization can be fully expressed in terms of
-kernels, without reference to the original $X$ or $Y$. It can then be shown that
-the optimal $\alpha^{X}$ and $\alpha^{Y}$ are the solutions to the generalized
-eigenvalue problem,
+Substituting this into the Lagrangian in equation \ref{eq:lagrangian_kcca}, it
+becomes clear that only the cross-products ${\Phi^X}^{T}\Phi^{X}$ and
+${\Phi^{Y}}^{T} \Phi^{Y}$ appear. Since these inner products can be written as
+kernel matrices -- call them $K^{X}$ and $K^{Y}$ -- the optimization can be
+fully expressed in terms of kernels, without reference to the original $X$ or
+$Y$. It can then be shown that the optimal $\alpha^{X}$ and $\alpha^{Y}$ are the
+solutions to the generalized eigenvalue problem,
 \begin{align*}
   \begin{pmatrix}
     0 & K^{X}K^{Y} \\
@@ -1446,17 +1448,17 @@ eigenvalue problem,
   0 & \left(K^{Y} + \lambda^{Y}I_{p_{2}}\right)^{2}
 \end{pmatrix}
 \begin{pmatrix}
-  \alpha^{(1)} \\
-  \alpha^{(2)}
+  \alpha^{X} \\
+  \alpha^{Y}
 \end{pmatrix}.
 \end{align*}
-A geometric interpretation of Kernel CCA was described in
-\citep{kuss2003geometry}. The core idea is to translate the Euclidean picture
-associated with CCA to the more general RKHS setting. Often, however, KCCA
-results can be difficult to study, because only sample scores are provided.
-Eigenvectors are never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not
-possible to make a biplot. Consequently, KCCA scores are typically interpreted
-using supplementary characteristics of the samples.
+A geometric interpretation of Kernel CCA is given in \cite{kuss2003geometry},
+which translates the Euclidean picture associated with CCA to the more general
+RKHS setting. Often, however, KCCA results can be difficult to use in
+exploratory analysis, because only sample scores are provided. Eigenvectors are
+never computed in the spaces $H^{X}$ and $H^{Y}$, so it's not possible to make a
+biplot. Consequently, KCCA scores are typically interpreted using supplementary
+characteristics of the samples.
 
 \subsection{Penalized Matrix Decomposition}
 \label{subsec:pmd}
@@ -1465,8 +1467,8 @@ In high-dimensional settings, sparsity is a desirable property, both for
 qualitative interpretability and statistical stability. A regression model using
 only a few features is easier to understand than one involving a linear
 combination of all possible features. Further, regularized models typically
-outperform their non-regularized counterparts, and in fact, it is impossible to
-fit a non-regularized linear regression when the number of features is greater
+outperform their unregularized counterparts, and in fact, it is impossible to
+fit a unregularized linear regression when the number of features is greater
 than the number of samples.
 
 The Penalized Matrix Decomposition (PMD) is a general approach to adapting the
@@ -1478,11 +1480,11 @@ PMD have been particularly well-studied \citep{witten2009penalized,
 The general setup is as follows. Suppose we want a one-dimensional
 representation of the samples (rows) in $X \in \reals^{n \times p}$. Recall that
 the first $k$-eigenvectors recovered by PCA span a subspace that minimizes the
-$\ell^{2}$ distance from the original data to their projections onto that
+$\ell^{2}$-distance from the original data to their projections onto that
 subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
 \reals^{n}$ and eigenvector $v$ are the optimal values in the problem
 \begin{align*}
-  \text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
+  \minimize_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
   \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1.
 \end{align*}
 
@@ -1511,12 +1513,14 @@ The PMD generalizes this formulation of rank-one PCA to enforce additional
 structure on $u$ and $v$. The PMD solutions $u$ and $v$ are defined as the
 optimizers of
 \begin{align}
-\label{eq:pmd_opt} \text{minimize}_{u \in \reals^{n}, v \in \reals^{p}, d
+\label{eq:pmd_opt} \minimize_{u \in \reals^{n}, v \in \reals^{p}, d
   \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
   \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\
-  & \text{Pen}_{1}\left(u\right) \leq \mu_{1} \nonumber \\
-  & \text{Pen}_{2}\left(v\right) \leq \mu_{2}. \nonumber
+  & \text{Pen}_{u}\left(u\right) \leq \mu_{1} \nonumber \\
+  & \text{Pen}_{v}\left(v\right) \leq \mu_{2}, \nonumber
 \end{align}
+where $\text{Pen}_u$ and $\text{Pen}_v$ are arbitrary constraints on $u$ and
+$v$.
 
 To choose the regularization parameters $\mu_{1}$ and $\mu_{2}$,
 \citep{witten2009penalized} applied cross-validation to the reconstruction
@@ -1524,23 +1528,22 @@ errors after holding out random entries in $X$. To obtain a sequence of scores
 and eigenvectors $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
   1}^{K}$ for $K > 1$, define $u_{k}$ and $v_{k}$ as the optimizers of the
 problem \ref{eq:pmd_opt} on the residual: $X^{k} := X^{k - 1} - d_{k - 1}u_{k -
-  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$. An
-illustration of the effect that regularization has on estimation is provided in
-Figure \ref{fig:pmd_illustration_sequence}.
+  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$.
+The effect of regularization is illustrated in Figure
+\ref{fig:pmd_illustration_sequence}.
 
 %% (todo: geometric interpretation)
 %% (todo: generalized least squares / probabilistic interpretation
 %% \cite{allen2014generalized})
 
 This view can be specialized to develop regularized versions of a number of
-multivariate analysis problems. We consider applications to the CCA and
-MultiCCA problems.
-
-Recalling that $\|A\|_{F}^{2} = \tr\left(A^{T}A\right)$ along with the linearity
-and the cyclic properties of the trace, the objective in \ref{eq:pmd_opt} can be
-rewritten, using $\equiv$ to mean equality up to terms constant in $u$ and $v$,
+multivariate analysis problems. We consider applications to the CCA and MultiCCA
+problems. Recalling that $\|A\|_{F}^{2} = \tr\left(A^{T}A\right)$ along with the
+linearity and the cyclic properties of the trace, the objective in
+\ref{eq:pmd_opt} can be rewritten, using $\equiv$ to mean equality up to terms
+constant in $u$ and $v$,
 \begin{align*}
-  \|X - duv^{T}\|_{F}^{2} &\equiv \tr\left(\left(X -
+  \|X - duv^{T}\|_{F}^{2} &= \tr\left(\left(X -
       duv^{T}\right)^{T}\left(X - duv^{T}\right)\right) \\
   &\equiv -2d\tr\left(X^{T}uv^{T}\right) + d^{2}tr\left(uv^{T}vu^{T}\right) \\
   &\equiv -2d v^{T}X^{T}u + d^{2}
@@ -1552,9 +1555,9 @@ that the PMD solutions $u$ and $v$ in \ref{eq:pmd_opt} can be found as the
 optimizers of
 \begin{align}
 \label{eq:pmd_reform}  \maximize_{u \in \reals^{n}, v \in \reals^{p}} \medspace &u^{T}X^{T}v \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} \nonumber \\
-  &\text{Pen}_{1}\left(u\right) \leq \mu_{1}\nonumber \\
-  &\text{Pen}_{2}\left(v\right) \leq \mu_{2} \nonumber
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\
+  &\text{Pen}_{u}\left(u\right) \leq \mu_{1}\nonumber \\
+  &\text{Pen}_{v}\left(v\right) \leq \mu_{2} \nonumber
 \end{align}
 
 Notice that, as long as the penalties are convex in $u$ and $v$, the
@@ -1564,23 +1567,22 @@ alternately maximizing over $u$ and $v$.
 From this form, we can derive a sparsity-inducing version of
 CCA. Recall the maximal-covariance interpretation of CCA,
 \begin{align*}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}\hat{\Sigma}_{12}v \\
-  \text{subject to } &u^{T}\hat{\Sigma}_{11} u = v^{ T}\hat{\Sigma}_{22}v = 1.
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} \medspace &u^{T}\hat{\Sigma}_{XY}v \\
+  \text{subject to } &u^{T}\hat{\Sigma}_{XX} u = v^{ T}\hat{\Sigma}_{YY}v = 1.
 \end{align*}
 
 \citep{witten2009penalized} argues for diagonalized CCA, in which the variance
 constraints are replaced by unit norm constraints, and sparsity-inducing
-$\ell^{1}$ constraints are added,
+$\ell^{1}$-constraints are added,
 \begin{align*}
-  \maximize_{c_{1}^{(1)} \in \reals^{p_{1}}, c_{1}^{(2)} \in
-    \reals^{p_{2}}} & c_{1}^{(1) T}\hat{\Sigma}_{12}
-  c_{1}^{(2)} \\
-  \text{subject to } &\|c_{1}^{(1)}\|_{2}^{2} = \|c_{1}^{(2)}\|_{2}^{2} = 1 \\
-  &\|c_{1}^{(1)}\|_{1} \leq \mu_{1} \\
-  &\|c_{1}^{(2)}\|_{1} \leq \mu_{2}
+  \maximize_{u \in \reals^{p_{1}}, v \in
+    \reals^{p_{2}}} & u^T\hat{\Sigma}_{XY}v  \\
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \\
+  &\|u\|_{1} \leq \mu_{1} \\
+  &\|v\|_{1} \leq \mu_{2}
 \end{align*}
-which is exactly of the form \ref{eq:pmd_reform} where $X =
-\hat{\Sigma}_{12}$.
+which is exactly of the form of equation \ref{eq:pmd_reform} where $X =
+\hat{\Sigma}_{XY}$.
 
 Multiple CCA can also be described in this framework, by replacing the objective
 with the sum over all pairwise covariances, $\sum_{l, l^{\prime} = 1}^{L}
@@ -1620,12 +1622,12 @@ constraints for each of the $c_{1}^{(l)}$.
 In Section \ref{subsec:cca}, a latent variable interpretation of CCA was
 provided as an alternative to the standard covariance maximization perspective.
 Since likelihood based methods are easily adapted to different data types, it is
-natural to consider versions of CCA designed for non-Gaussian data, using the
-setup of Section \ref{subsec:cca} as a starting point. We are particularly
-interested in data with the same structure as the WELL-China body composition
-and microbiome data, namely two table data sets where one table is continuous
-with Gaussian marginals and correlated columns and the other is a
-high-dimensional collection of counts, where many entries are exactly zero.
+natural to consider versions of CCA designed for non-Gaussian data, using
+Section \ref{subsec:cca} as a starting point. We are particularly interested in
+data with the same structure as the WELL-China body composition and microbiome
+data, namely two table data sets where one table is continuous with Gaussian
+marginals and correlated columns and the other is a high-dimensional collection
+of counts, where many entries are exactly zero.
 
 As before, define a set of shared scores $\xi_{i}^{s} \in \reals^{K}$, and two
 sets of within-table scores, $\xi_{i}^{X} \in \reals^{L_{1}}$ and $\xi_{i}^{Y}
@@ -1637,28 +1639,31 @@ essentially a Gaussian factor analysis model, $y_{i} \vert \xi_{i}^{X},
 approaches,
 
 \begin{itemize}
-\item Exponential Family PCA \citep{mohamed2009bayesian}: By requiring low-rank
-  structure on the natural parameters of an exponential family model, we could
-  naturally model high-dimensional count data, using a Poisson or Multinomial
-  likelihood, for example.
+\item Bayesian Exponential Family PCA \citep{mohamed2009bayesian}: By requiring
+  low-rank structure on the natural parameters of an exponential family model,
+  we could naturally model high-dimensional count data, using a Poisson or
+  multinomial likelihood, for example.
 \item Nonnegative Matrix Factorization \citep{lee2001algorithms}: A variant of
-  the exponential family approach is to directly model the counts matrix as a
-  Poisson likelihood with a product of Gamma matrix priors.
+  the exponential family approach is to model the counts matrix as a Poisson
+  likelihood over a low-rank product of Gamma random matrices.
 \item Latent Dirichlet Allocation (LDA) \citep{blei2003latent}: We can model the
-  observed samples as Dirichlet mixtures of a few underlying ``topics.''
+  observed samples as Dirichlet mixtures of a few underlying ``topics,'' which
+  are themselves drawn from a Dirichlet prior.
 \end{itemize}
 
 Here, we focus on the LDA approach, though we suspect the other two approaches
-are potentially interesting as well. Formally, this model supposes the counts
+are potentially interesting as well. Formally, this model supposes that counts
 are drawn according to
 \begin{align*}
   x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
   \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\
-  \theta_{i} &\sim \Dir\left(\alpha\right),
+  \theta_{i} &\sim \Dir\left(\alpha\right)\\
+  \beta_k &\sim \Dir\left(\gamma\right),
 \end{align*}
-which has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k
-  =1}^{K}$ are scores for the $i^{th}$ sample and $\left(\beta_{k}\right)$ are
-$K$ underlying topics.
+where $N_i = \sum_{j = 1}^{p_1} x_{ij}$ is the total count in sample $i$. This
+has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k =1}^{K}$
+are scores for the $i^{th}$ sample and $\left(\beta_{k}\right)$ are $K$
+underlying topics.
 
 The only complexity with using LDA model of $X$ together with a Gaussian factor
 analysis on $Y$ is that the shared scores $\xi_{i}^{s}$ typically have different
@@ -1669,30 +1674,29 @@ scores, $\xi_{i}^s, \xi_{i}^x$, and $\xi_{i}^y$. While the model for the
 Gaussian data is no longer exactly traditional factor analysis, it has a similar
 interpretation. Alternatively, we could use a spherical Gaussian prior on all
 scores and then recover probability vectors by applying the softmax function,
-$\left[\S\left(v\right)\right]_{k} =
+$\left[\simplex\left(v\right)\right]_{k} =
 \frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
 \begin{align*}
   x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
-  \S\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right) \\
-  \xi_{i}^{s} \sim \Gsn\left(0, \tau^{2}\right).
+  \simplex\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right) \\
+  \xi_{i}^{s} &\sim \Gsn\left(\xi_i^s \vert 0, \tau^{2}\right).
 \end{align*}
 It is this second model that we use in our experiments below.
 
 \subsubsection{Example}
 \label{subsubsec:lda_cca_example}
 
-We illustrate this formulation of the multitable mixed membership approach on
-the WELL-China data. We choose $K = 3$ for the number of shared topics and
-$L_{1} = L_{2} = 3$ for the number of unshared topics per table. While the use
-of shared ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives
-more flexibility in modeling, it also leads to additional complexity in
-interpretation -- there are both more scores and more loadings that need to be
-visualized.
+We illustrate this multitable mixed-membership approach on the WELL-China data.
+We choose $K = 3$ for the number of shared topics and $L_{1} = L_{2} = 3$ for
+the number of unshared topics per table. While the use of shared ($\xi_{i}^{s}$)
+and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives more flexibility in
+modeling, it also leads to additional complexity in interpretation -- there are
+both more scores and more loadings that need to be visualized.
 
 Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
 \ref{fig:lda_cca_within_loadings_seq_boxplots} and
 \ref{fig:lda_cca_within_loadings_body_comp_boxplots}. Note that there is no
-sense of variance explained by different axes, and we use an aspect ratio of $1$
+notion of variance explained by different axes, and we use an aspect ratio of $1$
 throughout.
 
 \begin{figure}
@@ -1722,8 +1726,8 @@ bacterial abundances. Invariance under rotation and reflection complicates
 interpretation of these loadings. If we flip the sign of the second row of
 loadings, it appears that the main difference between the first and second
 loadings is the rate of decay in frequencies from more to less abundant species.
-However, no clear distinction between taxa among the first two loadings. The
-main characteristic of the third loading is that it differentiates
+However, no clear distinction appears between taxa among the first two loadings.
+The main characteristic of the third loading is that it differentiates
 Ruminococcaceae, which mostly have positive loadings, from Bacteroidaceae, which
 mostly have negative loadings.
 
