@@ -1,4 +1,4 @@
-\documentclass[14pt]{extreport}
+\documentclass[14pt]{extarticle}
 \usepackage[a4paper, margin=0.2in]{geometry}
 \usepackage{natbib}
 \usepackage{amssymb, amsmath, amsfonts}
@@ -11,6 +11,8 @@
 
 \begin{document}
 \maketitle
+
+\tableofcontents
 
 The simultaneous study of multiple measurement types is a frequently encountered
 problem in practical data analysis. It is especially common in microbiome
@@ -550,13 +552,13 @@ high-dimensional setting, where covariance estimation may be unreliable.
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
 a PCA scores plot, as in Figure \ref{fig:scores_total_fm}. For example, Figures
 \ref{fig:cca_scores_total_fm} and \ref{fig:cca_scores_rl_ratio} display the
-samples shaded in by and Ruminococcaceae vs. Lachnospiraceae ratios,
-respectively, as in Figures \ref{fig:scores_total_fm} and
+samples shaded in by total fat mass and Ruminococcaceae vs. Lachnospiraceae
+ratios, respectively, as in Figures \ref{fig:scores_total_fm} and
 \ref{fig:cca_scores_rl_ratio}. The association between these variables and the
 sample positions is not as strong as when performing PCA on the combined table.
-This is to be expected, however, as PCA maximizes variance without any
-requirements on covariance, and the body composition table alone has a large
-portion of its variance related to .
+This is to be expected, however, as PCA maximizes variance without any thought
+to on covariance, and the body composition table alone has a large portion of
+its variance related to total fat mass.
 
 \begin{figure}
   \centering
@@ -588,20 +590,19 @@ portion of its variance related to .
 
 Co-Inertia Analysis (CoIA) emerged in ecology to facilitate analysis of
 variation in species abundance as a function of environmental conditions
-\cite{doledec1994co}. It can be viewed as a slight modification -- perhaps even
-a simplification -- of CCA. Again, we seek sets of orthonormal directions
-$\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k = 1}^{K}$ such that
-the associated projections $Xu_{k}$ and $Yv_{k}$ explain most of the covariation
-between the tables. Unlike CCA, CoIA finds directions that maximize the
-covariance -- not the correlation -- between scores,
+\citep{doledec1994co}. It can be viewed as a slight modification of CCA. Again,
+we seek sets of orthonormal directions $\left(u_{k}\right)_{k = 1}^{K}$ and
+$\left(v_{k}\right)_{k = 1}^{K}$ such that the associated projections $Xu_{k}$
+and $Yv_{k}$ explain most of the covariation between the tables. Unlike CCA,
+CoIA finds its first directions by maximizing the covariance -- not the
+correlation -- between scores,
 \begin{align*}
-\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} &u^{T}X^{T}Yv \\
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace &u^{T}X^{T}Yv \\
 \text{ such that}\medspace &\|u\| = 1\\
 &\|v\| = 1,
 \end{align*}
-and subsequent directions by the same optimization, with the
-additional constraint that they are orthogonal to the previously
-derived directions.
+with subsequent directions found by the same optimization, after adding the
+constraint that they are orthogonal to the previously derived directions.
 
 The only difference with the objective in equation \ref{eq:cancor_optim_emp} is
 that norm constraint is imposed on $u$ and $v$ directly, rather than their
@@ -612,7 +613,8 @@ scores, while CoIA maximizes the covariance.
 The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
   1}^{K}$ can be obtained as the first $K$ left and right eigenvectors from the
 SVD of $X^{T}Y$, as opposed to the first $K$ generalized eigenvectors, as in
-CCA, by essentially the same argument as in CCA.
+CCA. The proof of this fact is almost identical to the derivation in Section
+\ref{subsec:cca}, for CCA.
 
 \subsubsection{Example}
 \label{subsubsec:coia_example}
@@ -621,17 +623,20 @@ We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
 as CoIA also needs to estimate the covariance between tables, which is difficult
 when the number of ASVs is large. The loadings are displayed in Supplementary
 Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
-\ref{fig:cca_loadings}. However, the associated scores are quite
-different than those found using CCA, consider Figure
-\ref{fig:coia_scores_total_fm}, which shades samples by total fat mass, or
-Supplemental Figure \ref{fig:coia_scores_rl_ratio}, which shades them by
-Ruminococcaceae / Lachnospiraceae ratios. We find that the scores are not nearly as
-closely aligned as they are for CCA (see Figure \ref{fig:cca_scores_total_fm}), but
-that they are more strongly associated with variation in , as in the
-concatenated-PCA result of Figure \ref{fig:scores_total_fm}. It is not
-clear whether this phenomena -- the CoIA scores being more similar to those from
-PCA than CCA -- holds in general, or what about the change in inner products
-between CoIA and CCA is responsible for this difference.
+\ref{fig:cca_loadings}. However, the associated scores are quite different than
+those found using CCA. Compare Figure \ref{fig:coia_scores_total_fm}, which
+shades samples by total fat mass, or Supplemental Figure
+\ref{fig:coia_scores_rl_ratio}, which shades them by Ruminococcaceae /
+Lachnospiraceae ratios, with Figures \ref{fig:cca_scores_total_fm} and
+\ref{fig:cca_scores_rl_ratio} for CCA. The scores for CoIA are not so closely
+aligned across tables, but they exhibit a clearer gradient across supplemental
+variables. We find that the scores are not nearly as closely aligned as they are
+for CCA (see Figure \ref{fig:cca_scores_total_fm}), but that they are more
+strongly associated with variation in , as in the concatenated PCA result of
+Figure \ref{fig:scores_total_fm}. It is not clear whether this phenomena -- the
+CoIA scores being more similar to those from PCA than CCA -- holds in general,
+or what it is about the change in inner products between CoIA and CCA that is
+responsible for this difference.
 
 \begin{figure}
   \centering
