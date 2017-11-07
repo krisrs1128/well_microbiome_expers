@@ -307,7 +307,11 @@ methods of subsequent sections.
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_total_fm}
   \caption{The scores resulting from PCA applied to the combined body
-    composition and microbial abundance data set.\label{fig:scores_total_fm} }
+    composition and microbial abundance data set. The first two principal
+    components explain about 4\% of the variance. Points are ASVs, shaded in by
+    taxonomic family. Text are columns from the body composition data. Points
+    and text with small angle between one another are more correlated.
+    \label{fig:scores_total_fm} }
 \end{figure}
 
 \begin{figure}[ht]
@@ -341,21 +345,21 @@ coefficients. Like the eigenvalues in PCA, they characterize the amount of
 covariation across tables that can be captured by each additional pair of
 directions.
 
-As in PCA, there are many ways to view this procedure; here we discuss
+As with PCA, there are many ways to view this procedure -- here we discuss
 geometric, statistical, and probabilistic interpretations. Unlike the geometric
-interpretation for PCA, the geometric interpretation for CCA identifies point
+interpretation of PCA, the geometric interpretation for CCA identifies point
 locations with features, not samples. Specifically, the columns of $X$ and $Y$
-are thought of as points in $\reals^{n}$. Consider two subspaces defined as the
-spans of the columns of $X$ and $Y$, respectively. These subspaces correspond to
+are thought of as points in $\reals^{n}$. Consider two subspaces 
+spanning the columns of $X$ and $Y$, respectively. These subspaces correspond to
 the linear combinations of features within each table. Place two ellipses on the
 respective subspaces, centered at the origin and with size and shape depending
 on the within table covariances $\hat{\Sigma}_{XX}$ and $\hat{\Sigma}_{YY}$. The
 first canonical correlation directions are the pair of points, one lying on each
 ellipse, such that the angle from the origin to those two points is smallest. In
 this sense, it finds a pair of variance-constrained linear combinations of
-features within the two tables so that the two combinations appear ``close'' to
+features within the two tables such that the two combinations appear ``close'' to
 one another. The second pair of canonical correlation directions identify a pair
-of points with similar interpretation, except they are required to be orthogonal
+of points with a similar interpretation, except they are required to be orthogonal
 to the first pair, with respect to the inner product induced by the covariances
 in each table.
 
@@ -382,18 +386,18 @@ in each table.
 
 For a statistical interpretation, the idea of CCA is to find the low-dimensional
 representations of the two tables with maximal covariance -- this is analogous
-to the maximum variance interpretation. Formally, let $x_{i}$ and $y_{i}$
-samples from $\P^{\X}$ and $\P^{\Y}$. The rows of the two tables are imagined to
-be i.i.d. draws from $\P^{\X\Y}$. Consider arbitrary linear combinations
-$z_{i}^{(1)}\left(u\right) = u^{T} x_{i}$ and $z_{i}^{(2)}\left(v\right) =
-v^{T}y_{i}$ of samples from the two tables. The first pair of CCA directions
-$u_{1}^{\ast}$ and $v_{1}^{\ast}$ are chosen to optimize
+to the maximum variance interpretation. Formally, rows of the two tables are
+imagined to be i.i.d. draws from $\P^{XY}$, which has marginals $\P^{X}$ and
+$\P^{Y}$. Consider arbitrary linear combinations $z_{i}^{(1)}\left(u\right) =
+u^{T} x_{i}$ and $z_{i}^{(2)}\left(v\right) = v^{T}y_{i}$ of samples from the
+two tables. The first pair of CCA directions $u_{1}^{\ast}$ and $v_{1}^{\ast}$
+are chosen to optimize
 \begin{align}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
-  &\Covsubarg{\P^{\X\Y}}{z_{i}^{(1)}\left(u\right),
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace
+  &\Covsubarg{\P^{XY}}{z_{i}^{(1)}\left(u\right),
     z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\
-\text{subject to } &\Varsubarg{\P^{\X}}{z_{i}^{(1)}\left(u\right)} = 1 \nonumber \\
-&\Varsubarg{\P^{\Y}}{z_{i}^{(2)}\left(v\right)} = 1. \nonumber
+\text{subject to } &\Varsubarg{\P^{X}}{z_{i}^{(1)}\left(u\right)} = 1 \nonumber \\
+&\Varsubarg{\P^{Y}}{z_{i}^{(2)}\left(v\right)} = 1. \nonumber
 \end{align}
 To produce subsequent directions, the same optimization is performed, but with
 the additional constraint that the directions must be orthogonal to all the
@@ -404,23 +408,22 @@ This perspective makes it easy to derive the algorithm given at the start of
 this section. The empirical version of the optimization problem
 \ref{eq:cancor_optim} is
 \begin{align}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace
   &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\
   \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \nonumber \\
   & v^{T}\hat{\Sigma}_{YY}v = 1. \nonumber
 \end{align}
 
-Consider the whitened data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$ and
-$\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
+Consider the transformed data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$
+and $\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
 optimization \label{eq:cancor_emp} can now be expressed as
 \begin{align}
-  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
-    \reals^{p_{2}}}
+  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in \reals^{p_{2}}}\medspace
     &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
     \text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber \\
     &\|\tilde{v}\|_{2}^{2} = 1. \nonumber
 \end{align}
-The optimal $\hat{\tilde{u}}_1$ and $\hat{\tilde{v}}_1$ for this problem are
+The optimal $\tilde{u}_1$ and $\tilde{v}_1$ for this problem are
 well known -- they're exactly the first left and right eigenvectors of
 $\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
 = \tilde{U}D\tilde{V}^{T}$, respectively. The argument is standard\footnote{See
@@ -448,29 +451,27 @@ that $w_{u}$ and $w_{v}$ have zero  on the first columns of $\tilde{U}$
 and $\tilde{V}$.
 
 To recover the solutions to the original problem, we reverse the original
-variable transformation, yielding optimal $\hat{u}_{1} =
-\Sigma_{XX}^{-\frac{1}{2}}\hat{\tilde{u}}_{1}$ and $\hat{v}_{1} =
-\Sigma_{YY}^{-\frac{1}{2}}\hat{\tilde{v}}_{1}$.
+variable transformation, yielding optimal $u_{1} =
+\Sigma_{XX}^{-\frac{1}{2}}\tilde{u}_{1}$ and $v_{1} =
+\Sigma_{YY}^{-\frac{1}{2}}\tilde{v}_{1}$.
 
 A probabilistic interpretation of this procedure views it as estimating the
 factors in an implicit latent variable model. In particular,
 \citep{bach2005probabilistic} supposes that $x_{i}$ and $y_{i}$ are drawn i.i.d.
 from the model,
 \begin{align*}
-  \xi_{i} := \left(\xi_{i}^{s}, \xi_{i}^{X}, \xi_{i}^{Y}\right) &\sim
+  \xi_{i} := \left(\xi_{i}^{s}, \xi_{i}^{x}, \xi_{i}^{y}\right) &\sim
   \Gsn\left(0, I_{d}\right) \\
-  x_{i} \vert \xi_{i} &\sim \Gsn\left(W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{X} + \mu_{X},
-  I_{d} \right) \\
-  y_{i} \vert \xi_{i} &\sim \Gsn\left(W_{Y}\xi_{i}^{s} +
-  B_{Y}\xi_{i}^{Y} + \mu_{Y}, I_{d}\right)
+  x_{i} \vert \xi_{i} &\sim \Gsn\left(\mu_{x} + W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{x}, I_{d} \right) \\
+  y_{i} \vert \xi_{i} &\sim \Gsn\left(\mu_{Y} + W_{Y}\xi_{i}^{s} + B_{Y}\xi_{i}^{y}, I_{d}\right)
 \end{align*}
 That is, each sample is associated with a $d$-dimensional latent variable
 $\xi_{i}$, drawn from a spherical normal prior. A few of the coordinates of
-these latent variables contribute to shared structure, through $W_{X}$ and
-$W_{Y}$. The remaining coordinates model table-specific structure, through
-$B_{X}$ and $B_{Y}$. It can be shown that the posterior expectations of the
-latent $\xi_{i}^{s}$ (assumed $\in \reals^{K}$) given the observed tables must
-lie on the subspace defined by the CCA directions. More precisely,
+these latent variables, $\xi_{i}^{s}$, contribute to shared structure, through
+$W_{X}$ and $W_{Y}$. The remaining coordinates model table-specific structure,
+through $B_{X}$ and $B_{Y}$. It can be shown that the posterior expectations of
+the latent $\xi_{i}^{s}$ (assumed $\in \reals^{K}$) given the observed tables
+must lie on the subspace defined by the CCA directions. More precisely,
 \begin{align*}
   \Earg{\xi_{i} \mid x_{i}^{(1)}} \in \text{span}\left(z_{1}^{(1)},
     \dots, z_{K}^{(1)}\right),
@@ -486,26 +487,26 @@ $L$ of tables, by summing all pairwise covariances. That is, the instead of
 finding directions $c_{k}^{(1)}$ and $c_{k}^{(2)}$ maximizing
 $\Covsubarg{\P^{(1)}, \P^{(2)}}{c_{k}^{(1)T}x_{i}^{(1)},
   c_{k}^{(2)T}x_{i}^{(2)}}$ subject to normalization and orthogonality
-constraints, we seek directions $c_{k}^{(1)}, \dots, c_{k}^{(L)}$ that maximize
-the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L} \Covsubarg{\P^{(l)},
-  \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
+constraints, we can seek directions $c_{k}^{(1)}, \dots, c_{k}^{(L)}$ that
+maximize the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L}
+\Covsubarg{\P^{(l)}, \P^{(l^{\prime})}}{c_{k}^{(l) T}x_{i}^{(l)},
   c_{k}^{(l^{\prime})}x_{i}^{(l^{\prime})}}$.
 
 \subsubsection{Example}
 \label{subsubsec:cca_example}
 
 We next apply CCA to the WELL-China body composition and microbiome data sets,
-with particular interest in how results compare with those of
-Section \ref{subsubsec:pca_example}. To this end, we provide analogous loading and score
-plots in Figures \ref{fig:cca_loadings} through \ref{fig:cca_scores_rl_ratio}.
-However, note that the data are \textit{not} quite the same between the two
-analysis -- we have filtered down to sequence passing a filter\footnote{Presence
-  in at least half of samples}, which reduces the number of sequences to 57,
-from 2565. This very aggressive filtering is necessary because CCA requires
-estimation of covariances matrices $\Sigma_{XX}, \Sigma_{XY}$, and
-$\Sigma_{YY}$, which is impossible for $p > n$ and highly unstable when $p$ a
-large fraction of $n$. Besides this stronger filtering, all preprocessing steps
-remain the same as in Section \ref{subsubsec:pca_example}.
+with particular interest in how the results compare with those of Section
+\ref{subsubsec:pca_example}. To this end, we provide analogous loadings and
+scores plots in Figures \ref{fig:cca_loadings} through
+\ref{fig:cca_scores_rl_ratio}. However, note that the data are \textit{not}
+quite the same between the two analysis -- we have filtered down to ASVs passing
+a filter, which reduces the number of ASVs to 57, from 2565. This very
+aggressive filtering is necessary because CCA requires estimation of covariances
+matrices $\Sigma_{XX}, \Sigma_{XY}$, and $\Sigma_{YY}$, which is impossible for
+$p > n$ and highly unstable when $p$ is a large fraction of $n$. Besides this
+stronger filtering, all preprocessing steps remain the same as in Section
+\ref{subsubsec:pca_example}.
 
 \begin{figure}[ht]
   \centering
@@ -516,35 +517,34 @@ remain the same as in Section \ref{subsubsec:pca_example}.
 
 Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
 precise, let $X \in \reals^{102\times 36}$ be the matrix of body composition
-measurements and $Y \in \reals^{102 \times 57}$ be the variance stabilized
-microbial abundances. As before, write $\hat{u}_{k} \in \reals^{36}, \hat{v}_{k}
-\in \reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
+measurements and $Y \in \reals^{102 \times 57}$ be the variance-stabilized
+microbial abundances. As before, write $u_{k} \in \reals^{36}, v_{k} \in
+\reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
 \ref{fig:cca_loadings} displays text labels for column $j$ of the body
-composition variables at location $\times \left(u_{j1}, u_{j2}\right)_{j =
-  1}^{36}$ and shaded points for the $j^{th}$ species at position
-$\left(\hat{v}_{j1}, \hat{v}_{j2}\right)_{j = 1}^{57}$.
+composition variables at location $\left(u_{j1}, u_{j2}\right)_{j = 1}^{36}$ and
+shaded points for the $j^{th}$ species at position $\left(v_{j1},
+v_{j2}\right)_{j = 1}^{57}$.
 
-As in the joint PCA, we find that the groups of variables occupy separates
-spaces. Our interpretation is that sequences further to the left are correlated
-with the body variables further to the left, which are all in some ay variants
-of . Note that age is negatively correlated with total fat mass, which is why it
-appears on the opposite end. Among the abundant species that remain, there is
-limited clustering according to taxonomic group, though the Bacteroideceae and
-Ruminoccocus do appear restricted to the bottom and top right, respectively.
-Note that the third CCA axis (the size of plotted text and points) distinguishes
-lean and fat mass variables.
+As in the concatenated PCA, we find that the groups of variables occupy
+separates spaces. Our interpretation is that sequences further to the left are
+correlated with the body variables further to the left, which are all in some
+way variants of body mass. Note that age is negatively correlated with total fat
+mass, which is why it appears on the opposite end. Among the abundant species
+that remain, there is limited clustering according to taxonomic group, though
+the Bacteroideceae and Ruminoccocus do appear restricted to the bottom and top
+right, respectively.
 
 In Figure \ref{fig:cca_scores_linked} we plot the corresponding scores. Note
-that in CCA, there are two sets of scores for each $k$, the $X\hat{u}_{k}$ and
-$Y\hat{v}_{k}$. Indeed, the CCA objective finds directions that maximizes the
-correlation between these scores. In this figure, we display both sets of
-scores, colored differently according to the table to which they are associated
-with. The pairs of scores for each individual sample are drawn with small links.
-Since most links are relatively short, linear combinations of the two tables
-could be found that optimized the objective -- indeed, the top two canonical
-correlations are 0.984 adn 0.961. However, some caution is necessary here, and a
-more honest evaluation would be based scores obtained by projecting new samples
-onto the original CCA directions. This is especially important in this nearly
+that in CCA, there are two sets of scores for each $k$, the $Xu_{k}$ and
+$Yv_{k}$. Indeed, the CCA objective finds directions that maximizes the
+correlation between these scores. This figure displays both sets of scores,
+colored differently according to the table to which they are associated. The
+pairs of scores for each individual sample are drawn with small links. Since
+most links are relatively short, linear combinations of the two tables could be
+found that optimized the objective -- indeed, the top two canonical correlations
+are 0.984 adn 0.961. However, some caution is necessary here, and a more honest
+evaluation would be based scores obtained by projecting new samples onto the
+original CCA directions. This is especially important in this nearly
 high-dimensional setting, where covariance estimation may be unreliable.
 
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
