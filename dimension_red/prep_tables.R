@@ -17,12 +17,14 @@ library("reshape2")
 ###############################################################################
 ## Prepare opts and read data
 ###############################################################################
-merge_default_opts <- function(opts = list()) {
+merge_process_opts <- function(opts = list()) {
   default_opts <- list(
     gender = "Female", ## has more data
-    rlog = c("rlog" = TRUE, "sf_quantile" = 0.95),
-    filt_k = 0.5,
-    filt_a = 0,
+    filter_k = 0.07,
+    filter_a = 5,
+    scale_sample_data = TRUE,
+    transform_fun = identity,
+    vst = TRUE,
     outdir = "../data"
   )
   modifyList(default_opts, opts)
@@ -218,6 +220,7 @@ vst_ps <- function(ps, sf_quantile = 0.95, ...) {
 #'        useful for annotated plots.
 process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
   ## preparing taxa and survey data
+  opts <- merge_process_opts(opts)
   taxa <- prepare_taxa(taxa)
   taxa_names(tree) <- taxa[, "seq_num"]
 
