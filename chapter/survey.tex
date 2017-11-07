@@ -2321,9 +2321,9 @@ In particular, any matrix $B$ that satisfies
   XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
 \end{align*}
 solves the reduced rank regression problem, so we can choose
-\begin{align}
-  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}, \label{eq:brr_coef}
-\end{align}
+\begin{align*}
+  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T},
+\end{align*}
 which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
 $V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
 $\hat{Y}^{\ast \text{ols}}$.
@@ -2411,7 +2411,7 @@ Next, we can represent these cross-products in a way that is suggestive of CCA,
   \hat{Y}^{T}\hat{Y} &= Y^{T}P_{X}^2 Y = Y^{T}P_{X}Y=
   n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY},
 \end{align*}
-Substituting this notation into \ref{eq:gcv_mat_form} and ignoring the scaling
+Substituting this into equation \ref{eq:gcv_mat_form} and ignoring the scaling
 $n$ yields
 \begin{align*}
 \left(1 - g\right)\hat{\Sigma}_{YY} + g
@@ -2438,17 +2438,17 @@ directions $V$ can be recovered by setting $V =
 \hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{V}$, where $\tilde{V}$ comes from the SVD
 of $A := \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{XX}^{-\frac{1}{2}} =
 \tilde{U}D\tilde{V}^{T}$. Hence,
-\begin{align}
+\begin{align*}
   Q &= \Sigma_{YY}^{-\frac{1}{2}}A^{T}A\Sigma_{YY}^{\frac{1}{2}} \\
   &= \Sigma_{YY}^{-\frac{1}{2}}\tilde{V}^{2}D^{2}\tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}\\
   &= VD^{2}V^{-1},
-\end{align}
+\end{align*}
 where we are able to write $V^{-1} = \tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}$
 because $\tilde{V}$ is the full (untruncated) matrix of eigenvectors, so
 $\tilde{V}\tilde{V}^{T} = I$ in addition to the usual $\tilde{V}^{T}\tilde{V}
 =I$, which holds even for the truncated SVD.
 
-Therefore, \ref{eq:cca_gcv_id} can be expressed as
+Therefore, equation \ref{eq:cca_gcv_id} can be expressed as
 \begin{align*}
   V^{-T}\left[\left(1 - g\right)I_{p_{1}} + gD^{2}\right]V^{T} &=
   BV^{-T}\left[\left(1 - g\right)I_{p_{1}} + \left(2g -
