@@ -1179,7 +1179,7 @@ body composition data set. We use the body composition variables as the response
 $Y$ and the microbiome community composition as $X$. We subset to female
 subjects and filter species according to a $K$-over-$A$ filter with $K$ = 7\% of
 samples and $A = 5$. This leaves 372 species over 119 participants. All species
-abundances are variance stabilized using the approach of
+abundances are variance-stabilized using the approach of
 \cite{anders2010differential}. We cross-validate with 5 folds, searching through
 a grid over $K \in \{4, \dots, 8\}$ and $\lambda_1 \in \{0, 0.05, \dots, 0.7\}$.
 This grid is used to prevent the model from regularizing to the point that there
@@ -1688,16 +1688,18 @@ It is this second model that we use in our experiments below.
 
 We illustrate this multitable mixed-membership approach on the WELL-China data.
 We choose $K = 3$ for the number of shared topics and $L_{1} = L_{2} = 3$ for
-the number of unshared topics per table. While the use of shared ($\xi_{i}^{s}$)
-and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives more flexibility in
-modeling, it also leads to additional complexity in interpretation -- there are
-both more scores and more loadings that need to be visualized.
+the number of unshared topics per table. We initialize scores and loadings using
+the results from the PMD formulation of sparse CCA. While the use of shared
+($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives more
+flexibility in modeling, it also leads to additional complexity in
+interpretation -- there are both more scores and more loadings that need to be
+visualized.
 
 Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
 \ref{fig:lda_cca_within_loadings_seq_boxplots} and
 \ref{fig:lda_cca_within_loadings_body_comp_boxplots}. Note that there is no
-notion of variance explained by different axes, and we use an aspect ratio of $1$
-throughout.
+notion of variance explained by different axes, and we use an aspect ratio of
+$1$ throughout.
 
 \begin{figure}
   \centering
@@ -1738,24 +1740,24 @@ used to interpret the scores in Supplementary Figure
 variation, while the third axes captures difference between mass in the trunk
 versus arms and legs.
 
-These interpretations could likely have been obtained by analyzing each table
-separately. More interest lies in covariation between the two tables, captured
-by the shared scores $\xi_{i}^{2}$ and loadings $B^{x}, B^{y}$. The shared body
-body composition loadings are given in Figure
-\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The second row of loadings slightly
-differentiates lean and fat mass variables. In the first row of loadings, total
-fat mass, android lean mass, and total lean mass seem to stand out. However, in
-light of Supplementary Figure \ref{fig:lda_cca_shared_scores_lm_posterior}, this
-variation is not clearly visible in the raw data, and may simply be due to
-chance.
+These summaries could have been obtained by analyzing each table separately.
+More interest lies in covariation between the two tables, captured by the shared
+scores $\xi_{i}^{s}$ and loadings $B^{X}, B^{Y}$. The shared body composition
+loadings are given in Figure
+\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The second row of
+loadings slightly differentiates lean and fat mass variables. In the first row
+of loadings, total fat mass, android lean mass, and total lean mass seem to
+stand out. However, in light of Supplementary Figure
+\ref{fig:lda_cca_shared_scores_lm_posterior}, this variation is not clearly
+visible in the raw data, and may simply be due to chance.
 
-The bacterial composition loadings are given in Figures
+The bacterial abundance loadings are given in Figures
 \ref{fig:lda_cca_between_loadings_seq_boxplots}. The most notable observation is
-that unlabeled (``Other'') and Ruminococcaceae species have wider spread in the
+that unlabeled (``Other'') and Ruminococcaceae families have wider spread in the
 second loading than in the first. This could be associated with decreased
 diversity in these species among samples with high weight on the second loading.
 Generally however, taxonomic variation in the shared loadings is not as
-definitive as in the species abundance table specific case.
+definitive as in the table-specific case.
 
 In general, we find the results from the LDA-CCA approach less satisfying than
 those of the sparse CCA of Section \ref{subsec:pmd}. It seems that inference of
@@ -1764,7 +1766,6 @@ optimization of a single set of shared parameters. It may be possible to improve
 this approach through the following strategies,
 
 \begin{itemize}
-\item Initializing LDA-CCA with the results from sparse CCA.
 \item Applying LDA-CCA only to those species that are not sent entirely to zero by
   sparse CCA.
 \item Placing a sparsity-inducing prior the scores $B^{X}, B^{Y}, W^{X}$, and
@@ -1775,7 +1776,7 @@ this approach through the following strategies,
   \centering
   \includegraphics[width=\textwidth]{figure/lda_cca/between_loadings_seq_boxplots}
   \caption{Cross-table loadings for species, as in
-    \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
+    Figure \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
     $B^{X}_{jk}$. \label{fig:lda_cca_between_loadings_seq_boxplots} }
 \end{figure}
 
@@ -1795,9 +1796,9 @@ The Curds \& Whey (C\&W) procedure is a ``soft'' version of reduced-rank
 regression, differentially shrinking the OLS fits with respect to the response
 canonical correlation directions \citep{breiman1997predicting}. This is in
 contrast to reduced-rank regression, whose projection onto the first $K$
-response canonical correlation directions is the hard-thresholding analog. In
-this light, C\&W is to reduced-rank regression what ridge regression is to
-principal component regression.
+response canonical correlation directions is a hard-thresholding analog. Hence,
+C\&W is to reduced-rank regression what ridge regression is to principal
+component regression.
 
 More precisely, the C\&W algorithm fits a table $Y$ according to
 \begin{align}
@@ -1805,30 +1806,28 @@ More precisely, the C\&W algorithm fits a table $Y$ according to
 \end{align}
 where again $V \in \reals^{p_{1} \times p_{1}}$ are the CCA directions
 associated with the response $Y$ and $P_{X}$ is the projection operator onto the
-column space of $X$. $\Lambda$ is defined to be a diagonal matrix the determines
+column space of $X$. $\Lambda$ is defined to be a diagonal matrix that determines
 the degree of shrinkage for the different canonical directions.
 
 The main difficulty in C\&W is the choice of $\Lambda$, and
-\citep{breiman1997predicting} provide several options. One nice choice can be
-derived from a generalized cross-validation point of view. It turns out that
-shrinkage towards the response canonical correlation directions emerges
-automatically, without assuming the form \ref{eq:cw_yhat} a priori. This
-derivation is provided in Supplementary Section
-\ref{subsec:derivation_curds_and_whey}.
+\cite{breiman1997predicting} suggest several possibilities. One choice is
+derived from a generalized cross-validation point of view, and results in
+shrinkage towards the response canonical correlation directions, without
+assuming the form of equation \ref{eq:cw_yhat} a priori. This derivation is
+provided in Supplementary Section \ref{subsec:derivation_curds_and_whey}.
 
 \subsection{Graph-Fused Lasso}
 \label{subsec:graph_fused_lasso}
 
-\citep{chen2010graph} describe an approach to multiresponse learning that
+\cite{chen2010graph} describe an approach to multiresponse regression that
 incorporates prior knowledge about the relationship between responses.
-Specifically, they use the correlation network between the responses to induce
-structured regularization on the regression parameters across tasks.
+Specifically, they use the correlation network between responses to induce
+structured regularization on the regression parameters.
 
-In this setup, $Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times
-  p_{2}}$, as in the reduced-rank regression and C\&W procedure setup. We also
-assume a correlation network between the $p_{2}$ tasks. This is denoted $G =
+Let $Y \in \reals^{n \times p_{1}}$ and $X \in \reals^{n \times p_{2}}$ and
+assume a correlation network between the $p_{2}$ tasks. This is denoted by $G =
 \left(V, E\right)$, where $V = \{1, \dots, p_{1}\}$. Each edge $e$ is associated
-with a weight, $r\left(e\right)$, specifying the correlation between the pair of
+with a weight, $r\left(e\right)$, giving the correlation between the pair of
 responses.
 
 The graph-fused lasso idea is to estimate a coefficient matrix $B \in
@@ -1837,23 +1836,19 @@ coefficients across tasks, but which have been pooled together, with the
 strength of the pooling depending on the separately computed strength of the
 relationship between tasks. Formally, $\hat{B}^{gf}$ is defined as the solution
 to the optimization,
-o\begin{align}
-\text{minimize}_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
+\begin{align}
+\minimize_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
   XB\|_{F}^{2} + \lambda \|B\|_{1} + \gamma \sum_{e \in E} \sum_{j =
     1}^{p_{2}} \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} -
       \sign\left(r_{e}\right) \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
 \end{align}
-where $\|B\|_{1}$ is the sum of the absolute values of all entries of $B$ while
-$e^{-}$ and $e^{+}$ denote the nodes at either end of the edge $e$. The last
-regularization term in the objective is called the graph fused-lasso penalty,
-and it is this element that encourages pooling of information across regression
-problems.
+where $\|B\|_{1}$ is the sum of the absolute values of all entries of $B$,
+$\beta_j$ is the $j^{th}$ column of $B$, and $e^{-}$ and $e^{+}$ denote the
+nodes at either end of the edge $e$. The last regularization term in the
+objective is called the graph fused-lasso penalty, and it is this element that
+encourages pooling of information across regression problems.
 
-To write the graph fused-lasso penalty in matrix form, define $\tilde{H} \in
-\reals^{p_{1} \times \absarg{E}}$, whose columns index edges. For each column,
-place a 1 at the row corresponding to one endpoint of the edge and a -1 at the
-other. Then, $B\tilde{H}$ has $jl^{th}$ entry $\sum_{j = 1}^{p_{2}} \sum_{e :
-  e^{+} = l}\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}$. Similarly, define $H \in
+To write the graph fused-lasso penalty in matrix form, define $H \in
 \reals^{p_{1} \times \absarg{E}}$ by, for each edge (column of $H$), placing
 $\absarg{r_{e}}$ at the row corresponding to one endpoint of that edge and
 $-\sign\left(r_{e}\right)\absarg{r_{e}}$ at the other. This yields,
@@ -1861,25 +1856,25 @@ $-\sign\left(r_{e}\right)\absarg{r_{e}}$ at the other. This yields,
 \|BH\|_{1} &= \sum_{e \in E}\sum_{j = 1}^{p_{2}}
 \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} - \beta_{j}^{(e^{-})}},
 \end{align*}
-and in particular we can write the objective \ref{eq:gflasso_obj} as
+and in particular we can write the objective in equation \ref{eq:gflasso_obj} as
 \begin{align}
   \frac{1}{2}\|Y - XB\|_{F}^{2} + \|BC\|_{1}, \label{eq:gflasso_reform}
 \end{align}
 where $C = \left(\lambda I_{p_{1}}, \gamma H\right)$.
 
 We next describe estimation of $\hat{B}^{\text{gf}}$. There are many ways to
-solve $\ell^{1}$ regularization problems -- for example, quadratic programming,
+solve $\ell^{1}$-regularization problems -- for example, quadratic programming,
 iterative soft-thresholding, coordinate descent, proximal smoothing, and ADMM --
 but \cite{chen2010graph} advocates a proximal smoothing approach. That is, they
-apply gradient descent on a smooth surrogate loss function; this is similar in
+apply gradient descent on a smooth surrogate loss function -- this is similar in
 spirit to optimizing a Huber loss instead of an $\ell^{1}$-penalty. Rather than
-directly smoothing the loss \ref{eq:gflasso_reform}, they first reformulate it
-as
+directly smoothing the loss in equation \ref{eq:gflasso_reform}, they first
+reformulate it as
 \begin{align*}
   \frac{1}{2}\|Y - XB\|_{F}^{2} + \max_{\|A\|_{\infty} \leq 1}
   \left<A, BC\right>,
 \end{align*}
-using the duality between the $l^{1}$ and $\ell^{\infty}$ norms. It is
+using the duality between the $\ell^{1}$ and $\ell^{\infty}$ norms. It is
 for this objective that a family of smooth surrogates is introduced,
 \begin{align*}
 f_{\mu}\left(B\right) &:= \max_{\|A\|_{\infty} \leq 1}
@@ -1890,19 +1885,19 @@ and the new objective is to minimize
 \frac{1}{2}\|Y - XB\|_{F}^{2} + f_{\mu}\left(B\right).
 \end{align*}
 
-When $\mu$ is 0, we recover the objective \ref{eq:gflasso_reform}. When $\mu >
-0$, the problem is smooth, and its gradient can be found in closed form. Towards
-this, let $g\left(X\right) = \frac{1}{2}\|X\|_{F}^{2}$ with domain restricted to
-$\|X\|_{\infty} \leq 1$. Then $g$ has Fenchel conjugate $g^{\ast}\left(Y\right)
-= \max_{\|X\|_{\infty}\leq 1}\left<Y, X\right> - \frac{1}{2}\|X\|_{F}^{2}$. In
-particular,
+When $\mu$ is 0, we recover the objective of equation \ref{eq:gflasso_reform}.
+When $\mu > 0$, the problem is smooth, and its gradient can be found in closed
+form. Towards this, let $g\left(X\right) = \frac{1}{2}\|X\|_{F}^{2}$ with domain
+restricted to $\|X\|_{\infty} \leq 1$. Then $g$ has Fenchel conjugate
+$g^{\ast}\left(Y\right) = \max_{\|X\|_{\infty}\leq 1}\left<Y, X\right> -
+\frac{1}{2}\|X\|_{F}^{2}$. In particular,
 \begin{align*}
 f_{\mu}\left(B\right) &=  \mu \max_{\|A\|_{\infty} \leq 1}
 \left[\left<A, \frac{1}{\mu}BC\right> - \frac{1}{2}\|A\|_{F}^{2}\right] \\
 &= \mu g^{\ast}\left(BC\right)
 \end{align*}
 Using the fact that the derivative of a Fenchel conjugate function is given by
-the argmax of the maximization that defines it, we note $\nabla
+the argmax of the optimization that defines it, we find $\nabla
 g^{\ast}\left(Y\right) = P_{\ell^{\infty}}\left(Y\right)$ the projection of $Y$
 onto the $\ell^{\infty}$ ball\footnote{This is achieved by taking all entries
   larger than one and setting them to 1, and setting all entries smaller than -1
@@ -1914,33 +1909,31 @@ and so the gradient of the objective \ref{eq:gflasso_reform} has the form
 \begin{align*}
  X^{T}\left(Y - XB\right) + P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
 \end{align*}
-which be input to any number of gradient-based routines. \cite{chen2010graph}
-uses Nesterov's accelerated method, a version of gradient descent with a
-momentum term, and this is what we use in our examples below.
+which can be input to any number of gradient-based routines.
+\cite{chen2010graph} uses Nesterov's accelerated method, a version of gradient
+descent with a momentum term, and this is what we use in our examples below.
 
 \subsection{Example}
 \label{subsec:graph_fused_example}
 
-Next, we apply the graph-fused lasso to the body composition problem and compare
-it to a naive version of lasso that doesn't share any information across
-responses. We consider predicting the body composition variables, many of which
-are strongly correlated witih one another, using $\text{rlog}$ transformed
-bacterial abundances.
+We apply the graph-fused lasso to the body composition problem and compare it to
+a naive version of lasso that doesn't share any information across responses. We
+consider predicting the body composition variables, many of which are strongly
+correlated with one another, using variance-stabilized bacterial abundances.
 
-We filter away species that do not appear in at least 7\% of samples,
-as in the original PCA approach. We set the conjugate smoothing parameter to
-$\mu = 0.01$, while the $\ell^{1}$ and graph-regularization parameters are set
-to $\lambda = 0.1$ and $\gamma = 0.01$, respectively, as they were heuristically
-found to provide interpretable levels of sparsity and smoothness in the fitted
-coefficients.
+We filter away species that do not appear in at least 7\% of samples, as in the
+original PCA approach. We set the smoothing parameter to $\mu = 0.01$, while the
+$\ell^{1}$ and graph-regularization parameters are set to $\lambda = 0.1$ and
+$\gamma = 0.01$, respectively, after they were heuristically found to provide
+interpretable levels of sparsity and smoothness in the fitted coefficients.
 
 The graph-fused lasso requires a correlation graph between response variables.
-We estimate such a graph using the usual graphical lasso
-\citep{friedman2008sparse}, since there are only $\sim 100$ samples on which to
-base the covariance matrix estimate. The resulting graph has two major
-components, corresponding to the lean and fat mass variables, respectively,
-though arm and leg mass does deviate somewhat from trunk and total mass. The
-full correlation matrix is displayed in Figure \ref{fig:graph_lasso_graph}.
+We estimate such a graph using the graphical lasso \citep{friedman2008sparse},
+since there are only $\sim 100$ with which to estimate the 36-dimensional
+covariance matrix. The resulting graph has two major components, corresponding
+to the lean and fat mass variables, respectively, though arm and leg mass do
+deviate somewhat from trunk and total mass. The full correlation matrix is
+displayed in Figure \ref{fig:graph_lasso_graph}.
 
 \begin{figure}
   \centering
@@ -1953,18 +1946,18 @@ full correlation matrix is displayed in Figure \ref{fig:graph_lasso_graph}.
 
 The fitted coefficients from the graph-fused lasso are given in Figure
 \ref{fig:graph_lasso_coef_heatmap}. For reference, the analogous display when
-the problem is decoupled into independent lasso regressions, is given in Figure
-\ref{fig:graph_lasso_multitask_lasso_hm}. A version of this multitask-lasso
+the problem is decoupled into parallel lasso regressions, is given in Figure
+\ref{fig:graph_lasso_multitask_lasso_hm}. A version of this parallel-lasso
 figure across a range of $\lambda$ regularization values is given in
 Supplementary Figure \ref{fig:graph_lasso_multitask_lasso_hm_lambdas}.
 
-Generally, both approaches highlight the same directions and size
-of association between individual species and the response variables, though
-those returned by the graph-fused lasso are smoother across responses. This
-smoothing may obscure true variation -- for example, the stronger association
-between \texttt{height\_dxa} and a few Ruminoccocus species -- that appears in
-the multitask-lasso approach. On the other hand, regularization reduces the
-number of one-off nonzero coefficients.
+Generally, both approaches highlight the same directions and size of association
+between individual species and the response variables, though those returned by
+the graph-fused lasso are smoother across responses. This smoothing may obscure
+true variation -- for example, the stronger association between
+\texttt{height\_dxa} and a few Ruminoccocus species -- that appears in the
+parallel-lasso approach. On the other hand, regularization reduces the number of
+one-off nonzero coefficients, which are likely just noise.
 
 There appear to be real associations between Lachnospiraceae and Ruminoccocaceae
 and the body composition measurements. The strongest negative association
@@ -1972,20 +1965,19 @@ between species abundance and fat mass occurs among a few species of
 Ruminoccocaceae. Most species that have any association tend to have the same
 direction and magnitude of association across all body composition variables,
 not just those restricted to one mass type. This seems to be the case even in
-the multitask-lasso context, where such structure has not been directly imposed.
+the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
   \caption{Coefficients for the graph-fused lasso highlight groups of species
-    with similar profiles across response
-    variables. Colored rectangles demarcate taxonomic families. Individual give
-    the coefficient for a particular species (column) for a given response
-    variable (row). Purple and green denote negative and positive coefficients,
-    respectively. Note that coefficients have been smoothed according to
-    correlation network between variables, as given in Figure
-    \ref{fig:graph_lasso_graph}. Further, species so that those with similar
-    coefficients are placed near one
+    with similar profiles across response variables. Colored rectangles
+    demarcate taxonomic families. Individual cells give the coefficient for a
+    particular species (column) for a given response variable (row). Purple and
+    green denote negative and positive coefficients, respectively. Note that
+    coefficients have been smoothed according to correlation network between
+    variables, as given in Figure \ref{fig:graph_lasso_graph}. Further, ASVs
+    with similar coefficients are placed near one
     another. \label{fig:graph_lasso_coef_heatmap} }
 \end{figure}
 
@@ -2010,63 +2002,64 @@ classification, though for simplicity we specialize to regression only. The main
 idea is to pool the coefficients across otherwise separate regression problems
 via careful prior specification.
 
-The data come from $p_{1}$ tasks. Within the $r^{th}$ task, we have features
-$x_{i}^{(r)} \in \reals^{p_{2}}$ and responses responses $y_{i}^{(r)} \in
-\reals$ for the $i^{th}$ sample. Note that the features $x_{i}^{(r)}$ are
-allowed to vary across the regression problems. We use the shorthand $D =
-\left\{\left(x_{i}^{(r)}, y_i^{(r)}\right)_{i = 1}^{n_{r}}\right\}_{r =
-  1}^{p_{1}}$.
+The data come from $p_{1}$ regression problems, which we call tasks. Within the
+$r^{th}$ task, we have features $x_{i}^{(r)} \in \reals^{p_{2}}$ and responses
+$y_{i}^{(r)} \in \reals$ for the $i^{th}$ sample. Note that the features
+$x_{i}^{(r)}$ are allowed to vary across the regression problems. We use the
+shorthand $D = \left\{\left(x_{i}^{(r)}, y_i^{(r)}\right)_{i =
+  1}^{n_{r}}\right\}_{r = 1}^{p_{1}}$.
 
 The responses are assumed drawn i.i.d. from a linear model with problem-specific
 coefficient $\beta^{(r)}$,
 \begin{align*}
-  y_{i}^{(r)} \sim \Gsn\left(x_{i}^{(r) T}\beta^{(r)}, \sigma^{2}\right).
+  y_{i}^{(r)} \sim \Gsn\left(y_i^{(r)} \vert x_{i}^{(r) T}\beta^{(r)}, \sigma^{2}\right).
 \end{align*}
 To tie problems together, the $\beta^{(r)}$ are modeled using $K$-dimensional
 latent factors,
 \begin{align}
-  \beta^{(r)} \sim \Gsn\left(S w^{(r)}, \Psi\right), \label{eq:beta_r_zhang}
+  \beta^{(r)} \sim \Gsn\left(\beta^{(r)} \vert S w^{(r)}, \Psi\right), \label{eq:beta_r_zhang}
 \end{align}
 for some latent source matrix $S \in \reals^{p_{2} \times K}$ and mixing weights
 $w^{(r)}$. Different models come from choosing different priors on $w^{(r)}$;
 for now suppose the $w^{(r)}$ are drawn jointly from
 \begin{align*}
-w^{(1)}, \dots, w^{(r)} \sim  p_{\Phi}\left(\left(w^{\left(r\right)}\right)_{r = 1}^{j_{1}}\right).
+w^{(1)}, \dots, w^{(r)} \sim  p_{\Phi}\left(\left(w^{\left(r\right)}\right)_{r = 1}^{p_{1}}\right).
 \end{align*}
 
 The nonrandom parameters in this model are $\theta := \{\sigma^{2}, S, \Psi,
 \Phi\}$. The weights and coefficients $w^{(r)}$ and $\beta^{(r)}$ are random
-parameters; for inference they will be treated as latent data.
+parameters, and for inference they will be treated as latent data.
 
 Note that the form of the $\beta^{(r)}$ in equation \ref{eq:beta_r_zhang} can
-equivalently be written as
+be reparameterized as
 \begin{align*}
 \beta^{(r)} &= Sw^{(r)} + \eta^{(r)},
 \end{align*}
 where $\eta^{(r)} \sim \Gsn\left(0, \Psi\right)$. This clarifies what the latent
 factor model form of $\beta^{(r)}$ does: it decomposes the slope into a part
 shared across all models, via $Sw^{(r)}$, and a part specific to individual
-regression problems. Different priors on $\left(w^{(r)}\right)$ allow the
-modeler to trade-off the degree of sharing across regression problems: setting
-$w^{(r)} \equiv 0$ decomposes the model into independent regression problems,
-while enforcing that they have large variance will ensure that they dominate the
-problem-specific component $\eta^{(r)}$.
+regression problems, the $\eta^{(r)}$. Different priors on
+$\left(w^{(r)}\right)$ allow the modeler to trade-off the degree of sharing
+across regression problems: setting $w^{(r)} \equiv 0$ decomposes the model into
+independent regression problems, while enforcing that they have large variance
+will ensure that they are more important than the problem-specific component
+$\eta^{(r)}$.
 
 The authors propose special cases corresponding to particular choices for the
-prior $p_{\Phi}\left(\left(w^{(r)}\right)_{r = 1}^{j_{1}}\right)$.
+prior $p_{\Phi}\left(\left(w^{(r)}\right)_{r = 1}^{p_{1}}\right)$.
 \begin{itemize}
   \item $w^{(r)} \equiv 0$ decomposes the problem into independent regressions.
   \item $w^{(r)} = 1$ turns the model into a ``contaminated-signal'' model of
     the form $\beta^{(r)} \sim \Gsn\left(\mu, \Psi\right)$.
-  \item Drawing $w^{(r)} \sim \Mult\left(1, \Phi\right)$ clusters the regression
-    problem into subproblems that each share the same coefficient.
+  \item Drawing $w^{(r)} \sim \Mult\left(1, \Phi\right)$ clusters the overall
+    regression problem into subproblems, each sharing the same coefficient.
   \item Drawing $w^{(r)} \sim \text{Lap}\left(0, \Phi\right)$ encourages sparse
     weights. Though not technically a part of the specification above, it is
     possible to put a similar prior on $S$ to induce sparsity on the shared
     sources.
   \item Drawing $w^{(r)} \sim DP\left(\alpha, G_{0}\right)$ has a similar effect
-    as the clustered-regressions model, though now the number of clusters does
-    does not need to be explicitly specified in advance\footnote{The parameter
+    as the clustered-regressions model, though now the number of clusters need
+    not be explicitly specified in advance\footnote{The concentration parameter
       $\alpha$ does modulate the general number of clusters identified,
       however.}.
   \item Drawing the $w^{(r)}$ jointly according to a dynamical system, for
@@ -2075,36 +2068,34 @@ prior $p_{\Phi}\left(\left(w^{(r)}\right)_{r = 1}^{j_{1}}\right)$.
     how the coefficients should be related can be incorporated by correlating
     the $w^{(r)}$ across regression problems.
 \end{itemize}
-
-To perform inference, the author employ a variational strategy. While inference
-of the true posterior jointly over $\left(z^{(r)}\right)_{r = 1}^{p_{1}} :=
-\left(\beta^{(r)}, w^{(r)}\right)_{r = 1}^{p_{1}}$ is generally
+To perform inference, \cite{zhang2005learning} employ a variational strategy.
+Inference of the true posterior jointly over $\left(z^{(r)}\right)_{r =
+  1}^{p_{1}} := \left(\beta^{(r)}, w^{(r)}\right)_{r = 1}^{p_{1}}$ is generally
 intractable\footnote{An exception is when $w^{(r)}$ are given standard
-  multivariate normal priors, in which case normal-normal conjugacy can be
+  multivariate Gaussian priors, in which case Gaussian-Gaussian conjugacy can be
   used.}. However, we can find a point $q^{\ast}$ in a variational family
-$\left(q_{\gamma}\left(\cdot\right)\right)_{\gamma \in \Gamma}$ such that the
-expected complete data likelihood is large and this $q^{\ast}$ can be serve as a
-proxy for the true posterior.
+$\left(q_{\gamma}\left(z\right)\right)_{\gamma \in \Gamma}$ such that the
+expected complete data likelihood is large, and this $q^{\ast}$ can be serve as
+a proxy for the true posterior.
 
 The loglikelihood assuming that the latent $z^{(r)}$ are known is called the
 complete-data loglikelihood. In our multitask setting, this has the form
 \begin{align*}
-  \ell_{c}\left(\theta\right) = &\sum_{r = 1}^{p_{1}}\left[\sum_{i = 1}^{n_{r}} \log p\left(y_{i}^{(r)} \mid \beta^{(r)} ; X^{(r)}, \sigma^{2}\right)\right] + \log p\left(\beta^{(r)} \mid w^{(r)}; \Lambda, \Psi\right) + \log p\left(w^{(r)}; \Phi\right) \\
+  \ell_{c}\left(\theta\right) = &\sum_{r = 1}^{p_{1}}\left[\sum_{i = 1}^{n_{r}} \log p\left(y_{i}^{(r)} \mid \beta^{(r)} ; X^{(r)}, \sigma^{2}\right)\right] + \log p\left(\beta^{(r)} \mid w^{(r)}; \Lambda, \Psi\right) + \log p_{\Phi}\left(w^{(r)}\right) \\
   = &\sum_{r = 1}^{p_{1}}\sum_{i = 1}^{n} \log \Gsn\left(y_{i}^{(r)} \mid x_{i}^{(r) T}\beta^{(r)}; \sigma^{2}\right) + \sum_{r = 1}^{p_{1}}\log \Gsn\left(\beta^{(r)} \mid S w^{(r)}; \Psi\right) + \log p_{\Phi}\left(w^{(r)}\right),
 \end{align*}
-where, we have assumed that the $w^{(r)}$ are independent in the prior across
-problems -- this covers most cases described in \citep{zhang2005learning},
-though variations can be implemented in the case that they are not.
+where we have assumed that, in the prior, the $w^{(r)}$ are independent across
+problems -- this covers most cases above, though variations are possible in case
+this assumption is not plausible.
 
 Since the $\beta^{(r)}$ and $w^{(r)}$ are unknown, $\ell_{c}\left(\theta\right)$
 cannot actually be evaluated. However, for different choices of $q_{\gamma}$, it
-may be possible to evaluate $\Esubarg{z^{(r)} \sim
-  q_{\gamma}}{\ell_{c}\left(\theta\right)}$. Further, it can be shown that this
-expected complete data loglikelihood is maximized when the $z^{(r)}$ are drawn
-from the posterior $p_{\theta}\left(\left(z^{r}\right) \vert \left(x_{i}\right),
-y_{i}\right)$. Since the posterior is intractable, we instead search for the
-element $q_{\gamma^{\ast}}$ that is closest to the posterior in KL-divergence
-sense,
+may be possible to evaluate $\Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)}$.
+Further, it can be shown that this expected complete data loglikelihood is
+maximized when the $z^{(r)}$ are drawn from the posterior
+$p_{\theta}\left(\left(z^{r}\right) \vert \left(x_{i}\right), y_{i}\right)$.
+Since the posterior is intractable, we instead search for the element
+$q_{\gamma^{\ast}}$ that is closest to the posterior in KL-divergence sense,
 \begin{align*}
 q_{\gamma^{\ast}}:= \arg\min_{\gamma \in \Gamma} KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
 p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]\right).
@@ -2258,16 +2249,16 @@ In this section, we provide the argument for why the generalized
 eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
 \hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
 
-First consider $k = 1$. Then, for any $\tilde{v}$, the objective
-\ref{eq:pca_iv_obj_2} has the form
+First consider $k = 1$. For any $\tilde{v}$, the objective
+in equation \ref{eq:pca_iv_obj_2} has the form
 \begin{align}
   \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
   \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
-  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \label{eq:gev_opt_1}\\
+  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \label{eq:gev_opt_1} \nonumber \\
   &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
 \end{align}
 where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
-to maximize \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
+to maximize equation \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
 eigenvector of
 $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
 which implies that $\tilde{v}$ is the top generalized eigenvector of
