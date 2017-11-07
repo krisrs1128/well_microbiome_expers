@@ -36,7 +36,8 @@ relevant themes across different analysis approaches and (2) provide concrete
 workflows for approaching analysis, as a function of ultimate analysis goals and
 data characteristics (heterogeneity, dimensionality, sparsity, ...) of the data.
 Towards the second goal, we have made code for all analysis and figures
-available online at \url{https://github.com/krisrs1128/well_microbiome_expers}.
+available online at
+\url{https://github.com/krisrs1128/well\_microbiome\_expers}.
 
 First, though, why does anyone bother collecting multiple sources of data, and
 why can't these sources simply be combined into a single, unified table for
@@ -54,8 +55,8 @@ motivates the development of methods distinct from those used to analyze a
 single measurement type at a time.
 
 For more concrete motivation, we consider data from the WELL-China study, which
-is focused on the relationships between various indicators of wellness \citep{wellchina}.
-In this study, 1969 individuals\footnote{Though sampling is
+is focused on the relationships between various indicators of wellness
+\citep{wellchina}. In this study, 1969 individuals\footnote{Though sampling is
   still ongoing.} underwent clinical examinations, filled out wellness surveys
 (covering topics such as exercise, sleep, diet, and mental health, for example),
 and provided stool samples, used for 16s sequencing and metabolomic analysis. To
@@ -71,7 +72,7 @@ DEXA scans use relative X-ray absorption to gauge the amount of lean and fat bod
 mass within a region of the body being scanned. We have access to these
 lean and fat body mass measurements at several body sites -- arms, legs, trunk,
 etc. -- along with related body type variables, like height, age, and android
-and gynoid fat measurements. In total, there are 33 of these variables. 16s
+and gynoid fat measurements. In total, there are 36 of these variables. 16s
 sequencing is a technology for gauging the abundance of differnet bacterial
 species in the gut by counting the alignments of reads to the 16s gene, a
 component of all bacterial genomes with enough variation to allow discimination
@@ -80,48 +81,47 @@ species across 181 genuses, though the vast majority are present in low
 abundances.
 
 This question of the relationship between lean and fat mass distribution
-(informally, body type) and the microbiome follows up findings that certain
-taxonomic groups are over or underrepresented as a function of an individual's
-BMI or obesity \citep{ley2006microbial, turnbaugh2009core, ley2005obesity,
+(informally, ``body type'') and the microbiome is motivated by findings that
+certain taxonomic groups are over or underrepresented as a function of an
+individual's BMI \citep{ley2006microbial, turnbaugh2009core, ley2005obesity,
   ley2010obesity}. Further, since the distribution of fat is often more related
 to underlying biological mechanisms than overall body mass
 \citep{matsuzawa2008role}, and since this distribution is mediated by specific
 metabolic pathways, there is reason to suspect that a joint analysis of DEXA and
 16s microbial abundance data might yield a more complete view of the
-relationship between the microbiome and body type (and the associated disease
-risk factors).
+relationship between the microbiome and body type.
 
 \section{Classical multivariate methods}
 
 Methods from classical multivariate statistics are a mainstay of single-table
-microbiome data analysis, so it is natural to revisit this literature before
-surveying extensions to the multitable setting. Here we describe a few of the
-classically studied multitable methods that fit nicely into the modern
-microbiome data analysis toolbox. We first describe a naive approach based on
-Principal Components Analysis (PCA) -- naive because it lifts a single-table
-method to the multiple table setting without any special considerations --
-before studying approaches that directly characterize covariation across several
-tables: Canonical Correlation Analysis (CCA), Multiple Factor Analysis (MFA),
-and Principal Component Analysis with Instrumental Variables (PCA-IV).
+microbiome data analysis, so it is natural to revisit them before surveying
+extensions to the multitable setting. Here we explore a few of the classically
+studied multitable methods that fit nicely into the modern microbiome data
+analysis toolbox. We first describe a naive approach based on Principal
+Components Analysis (PCA) -- naive because it lifts a single-table method to the
+multiple table setting without any special considerations -- before studying
+approaches that directly characterize covariation across several tables:
+Canonical Correlation Analysis (CCA), Multiple Factor Analysis (MFA), and
+Principal Component Analysis with Instrumental Variables (PCA-IV).
 
 The earliest multitable method (CCA) was published in 1936, where the motivating
 data analysis problem was to relate prices of groups of commodities
 \citep{hotelling1936relations}. There are two notable aspects of data analysis in
-this classical paradigm which no longer hold in modern statistics:
+this classical paradigm which no longer hold in modern statistics,
 \begin{itemize}
   \item Even when many samples could be collected, there were typically only a
     few features for each sample, and it was straightforwards to study all of
-    them simultaneously. In the last few decades, it has become possible to
-    automatically collect a large number of features for each sample.
+    them simultaneously. It is now possible to automatically collect a large
+    number of features for each sample.
   \item Before electronic computers had been invented, it was important that all
     statistical quantities be easy to calculate, typically necessitating
-    analytical formulas for parameter estimates. This is no longer as important
-    a limitation in an environment with richer computational resources.
+    analytical formulas for parameter estimates. This is no longer an important
+    limitation in an environment due to modern computation.
 \end{itemize}
 
-These changes have motivated the need for high-dimensional methods and
+These changes have driven the development of high-dimensional methods and
 facilitated the adoption of iterative, more computationally-intensive
-approaches, respectively, some of which are described later in this review.
+approaches.
 
 Nonetheless, it is worth reviewing these original approaches, both to understand
 the context for many modern techniques, as well as to have an easy starting
@@ -137,11 +137,10 @@ one and apply a single-table method, for example, PCA. That is, write
 \begin{align*}
 X = \left[X^{(1)} \vert \dots \vert X^{(L)}\right] \in \reals^{n \times p},
 \end{align*}
-where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD\footnote{An equivalent
-  procedure is to eigenanalyze the empirical covariance matrix
-  $\frac{1}{n}X^{T}X$.}, $X = UDV^{T}$. The $K$-principal component directions
-are the first $K$ columns $v_{\cdot 1}, \dots, v_{\cdot K}$, while the
-associated scores are $d_{1}u_{\cdot 1}, \dots, d_{K}u_{\cdot K}$.
+where $p = \sum_{l = 1}^{L}p_{l}$, and compute the SVD $X = UDV^{T}$. The
+$K$-principal component directions are the first $K$ columns $v_{1}, \dots,
+v_{K}$, while the associated scores are reweighted rows $d_{1}u_{1}, \dots,
+d_{K}u_{K}$. We call this method concatenated PCA.
 
 While this does not account for the multitable structure of the data, it does
 accomplish two goals,
@@ -164,10 +163,10 @@ However, two drawbacks of this approach are worth noting,
 These limitations are addressed by CCA and MFA, discussed in Sections
 \ref{subsec:cca} and \ref{subsec:mfa}, respectively.
 
-Here we describe one geometric and one statistical motivation for PCA. The
-geometric motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
+We provide one geometric and one statistical motivation for PCA. The geometric
+motivation is that, if each row $x_{i}$ of $X$ is viewed as a point in
 $p$-dimensional space, then the principal component directions provide the best
-$k$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
+$K$-dimensional approximation to the data, see Figure \ref{fig:pca-approx}.
 Formally, recall that $VV^{T}x_{i}$ is the projection of $x_{i}$ onto the
 subspace spanned by the columns of $V$. PCA identifies the orthogonal matrix $V
 \in \reals^{p \times K}$ such that
@@ -178,28 +177,30 @@ is minimized. The principal component scores are then the coordinates of the
 projected points with respect to this subspace.
 
 \begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_1}
+  \centering
+  \includegraphics[width=0.5\textwidth]{figure/pca/proj_plot_1}
   \caption{A geometric motivation for PCA. The first principal component spans
     the one-dimensional subspace $V$ minimizing the squared error between points
     and their projections, $\sum_{i = 1}^{n}\|\left(I -
-    VV^{T}\right)x_{i}\|_{2}^{2}$ projections. The black points represent the
-    scaled values for two of the body composition variables --  and total
-    fat mass -- while the purple points are the projections onto the first
-    principal component when only accounting for these two variables. Contrast
-    this with Figures \ref{fig:pca-approx-2} and \ref{fig:pca-approx-3}, where
-    variables other than  and fat mass are taken into account.}
+    VV^{T}\right)x_{i}\|_{2}^{2}$. The black points represent the scaled values
+    for two of the body composition variables -- weight and total fat mass --
+    while the purple points are the projections onto the first principal
+    component. Contrast this with Figures \ref{fig:pca-approx-2} and
+    \ref{fig:pca-approx-3}, where variables other than and fat mass are taken
+    into account.}
   \label{fig:pca-approx}
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure/pca/var_plot}
+  \centering
+  \includegraphics[width=0.5\textwidth]{figure/pca/var_plot}
   \caption{A statistical motivation for PCA. Each histogram is computed from the
-    linear combinations $\left(c^{j}x_{i}\right)$, for $c^{j}$ equal to the
-    first and second principal components, the vector $\frac{1}{n}\mathbf{1}$,
-    and a normalized random multivariate Gaussian. At least among these four
-    vectors, the scores obtained from the first PC have the largest variance. It
-    is a theorem that its variance is in fact maximal among all linear
-    combinations with orthogonal vectors.}
+    linear combinations $\left(c^{j^{T}}\right)x_{i}\right)$, for $c^{j}$ equal
+    to the first and second principal components, the vector
+    $\frac{1}{n}\mathbf{1}$, and a normalized random multivariate Gaussian. At
+    least among these four vectors, the scores obtained from the first PC have
+    the largest variance. It is a theorem that its variance is in fact maximal
+    among all linear combinations with unit-length vectors.}
   \label{fig:pca-var}
 \end{figure}
 
@@ -210,48 +211,47 @@ preserves most of the variation present in the original data, see Figure
 \ref{fig:pca-var}. In this figure, histograms of the scores associated with four
 linear combinations of the original body composition measurements are displayed
 side by side, to emphasize the fact that the linear combination $x^{T}v_{1}$
-associated with the first principal component $v_{1}$ has the largest variance.
-The comparison combinations are the second principal component, the mean across
-all columns, and a random linear combination $\frac{c^{T}}{\|c\|} x$ where $c \sim
-\Gsn\left(0, I_{p}\right)$.
+associated with the first principal component $v_{1}$ has the largest variance
+among a few natural choices.
 
 Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
 independently from some distribution $\P$, so that the variance is
 $\Covsubarg{\P}{x_{i}} = \Sigma$. Consider an arbitrary linear combination of
 $x_{i}$'s $p$ coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$.
-The first PCA direction gives the $c$ such that the variance of this coordinate,
-$\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second direction gives
-the linear combination that maximizes variance, subject to being orthogonal to
-the first, and so forth.
+The first PCA direction gives the unit-length $c$ such that the variance of this
+coordinate, $\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second
+direction gives the linear combination that maximizes variance, subject to being
+orthogonal to the first, and so forth.
 
 While our description of the method of concatenating multiple tables into a
-single one has focused on PCA, note that other methods could be applied instead.
-For example, it is possible to define a new distance between samples as a
-mixture of distances based on several tables. This can be useful if there are
-different types of data across the different tables: Jaccard, $\chi^{2}$, and
-euclidean distsances can be applied to binary, count, and real valued tables.
-The combined distance can then be input into any distance-based single-table
-procedure, like multidimensional scaling or hierarchical clustering. The primary
-downside of this approach is that the resulting distance only allows a
-comparison between samples, but not across features.
+single one has focused on PCA, note that other single table methods could be
+applied instead. For example, suppose there are multiple data types -- say
+count, categorical, and continuous -- across tables. Then, it is possible to
+define a new distance between samples as a mixture of distances based on several
+tables. For example, Jaccard, $\chi^{2}$, and Euclidean distances can be applied
+to binary, count, and real valued tables. The combined distance can then be
+input into any distance-based single-table procedure, like multidimensional
+scaling or hierarchical clustering. The primary downside of this approach is
+that the resulting distance only allows a comparison between samples, but not
+across features.
 
 PCA is a very widely used technique, and some standard references include
 \citep{friedman2001elements, mardia1980multivariate, pages2014multiple}.
-Nonetheless, it is not ideal in the multitable setting. Its limitations prompt
-us to begin our survey of multitable methods in earnest.
+Nonetheless, it is not ideal in the multitable setting.
 
 \subsubsection{Example}
 \label{subsubsec:pca_example}
 
 Figure \ref{fig:loadings} and \ref{fig:scores_total_fm} illustrate this approach
-on body composition and bacterial abundance data from the WELL-China study.
-Note that we have subsetted to only men, since men and women have very different
-body compositions. Further, the 16s data have been variance stabilized according
-the methodology proposed in \citep{Anders2010} and filtered to only those
-amplicon sequence variants (ASVs) that are nonzero in at least 7\% of samples.
+on body composition and bacterial abundance data from the WELL-China study. Note
+that we have subsetted to only women, since men and women have very different
+body compositions, and we have slightly more data for women. Further, the 16s
+data have been variance stabilized according the methodology proposed in
+\citep{Anders2010} and filtered to only those amplicon sequence variants (ASVs)
+that have count $\geq 5$ in at least 7\% of samples.
 
 Figure \ref{fig:loadings} displays the loadings associated with this
-combined-dataset PCA approach, where body composition (36 columns) and 16s
+concatenated PCA approach, where body composition (36 columns) and 16s
 abundances (368 columns) were combined into one dataset (401 columns). Columns
 associated with bacterial species are displayed as points, shaded by taxonomic
 family, while columns associated with body composition variables are labeled
@@ -259,11 +259,11 @@ with text.
 
 Most body composition variables lie on the top right, in a direction
 approximately orthogonal to the main direction of variation among ASVs. Columns
-that are highly correlated (e.g., right (R) and left (L) Trunk Fat Mass (FM)
+that are highly correlated -- e.g., right (R) and left (L) Trunk Fat Mass (FM) --
 have loadings nearly equal to one another. Age appears in generally negatively
-correlated with the other, more  oriented, variables. Among ASVs, the main
+correlated with the other variables. Among ASVs, the main
 source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
-which appear overrepresented on the left and right, respectively.
+which appear overrepresented on the top and bottom, respectively.
 
 To identify relationships between ASVs and body composition variables, it would
 be of interest to isolate those ASVs with large contributions along the axis
@@ -283,25 +283,25 @@ components does not mean such relationships do not exist.
 We can study individual samples with respect to these loadings, by plotting
 their projections onto the top two principal components. This is the content of
 Figures \ref{fig:scores_total_fm} and \ref{fig:scores_rl_ratio}. These figures
-display samples in the same positions, but shaded by  and Ruminococcaceae
+display samples in the same positions, but shaded by total fat mass and Ruminococcaceae
 / Lachnospiraceae ratio, respectively. This shading confirms the observations
-from the loadings directly using observed data. Indeed, the increasing
+from the loadings directly using observed data. Indeed, the increasing fat mass
 among samples in the top right of Figure \ref{fig:scores_total_fm} exactly
 corresponds to the fact that  related variables lie in the top right in
-Figure \ref{fig:loadings}. A left-to-right Ruminococcaceae /
+Figure \ref{fig:loadings}. A top-to-bottom Ruminococcaceae /
 Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
 which is consistent with the loadings, though we also observe a few samples with
 substantially higher Ruminoccocus ratios.
 
 In this approach, the loadings provide a description of the relationship between
 variables across data sets. Further, scores summarize variation in samples
-across multiple data sets. In this light, this simple heuristic is a natural
-first step in analyzing multiple table data. However, considering the difficulty
-in directly interpreting the covariation across data sets, as well as the
-method's failure to use any sense of covariation in the dimensionality
-reductions trategy, suggests that this method should not be the last step of an
-analysis workflow. Nevertheless, we now have a baseline with which to compare
-the more elaborate methods of subsequent sections.
+across multiple data sets. Hence, this heuristic is a natural first step in
+analyzing multiple table data. However, considering the difficulty in directly
+interpreting the covariation across data sets, as well as the method's failure
+to use any sense of covariation in the dimensionality reductions trategy,
+suggests that this method should not be the last step of an analysis workflow.
+Nevertheless, we now have a baseline with which to compare the more elaborate
+methods of subsequent sections.
 
 \begin{figure}[ht]
   \centering
@@ -322,7 +322,7 @@ the more elaborate methods of subsequent sections.
 \subsection{CCA}
 \label{subsec:cca}
 
-CCA is a close relative of PCA that designed to compare sets of features across
+CCA is a close relative of PCA, designed to compare sets of features across
 tables. Like PCA, it provides low-dimensional representations of samples, but it
 also allows comparisons at the table level. Suppose for now that there are only
 two tables of interest, $X \in \reals^{n \times p_{1}}$ and $Y \in \reals^{n
@@ -515,13 +515,13 @@ remain the same as in Section \ref{subsubsec:pca_example}.
 \end{figure}
 
 Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
-precise, let $X \in \reals^{102\times 33}$ be the matrix of body composition
+precise, let $X \in \reals^{102\times 36}$ be the matrix of body composition
 measurements and $Y \in \reals^{102 \times 57}$ be the variance stabilized
-microbial abundances. As before, write $\hat{u}_{k} \in \reals^{33}, \hat{v}_{k}
+microbial abundances. As before, write $\hat{u}_{k} \in \reals^{36}, \hat{v}_{k}
 \in \reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
 \ref{fig:cca_loadings} displays text labels for column $j$ of the body
 composition variables at location $\times \left(u_{j1}, u_{j2}\right)_{j =
-  1}^{33}$ and shaded points for the $j^{th}$ species at position
+  1}^{36}$ and shaded points for the $j^{th}$ species at position
 $\left(\hat{v}_{j1}, \hat{v}_{j2}\right)_{j = 1}^{57}$.
 
 As in the joint PCA, we find that the groups of variables occupy separates
@@ -2206,7 +2206,7 @@ large $t$.
    \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
      composition variables. These are much more spread out than either the
      $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
-     33 body composition variables, rather than counts for all $\sim 600$
+     36 body composition variables, rather than counts for all $\sim 600$
      species.
      \label{fig:lda_cca_unshared_scores_lm_posterior} }
  \end{figure}
