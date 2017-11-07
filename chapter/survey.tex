@@ -2,7 +2,7 @@
 \usepackage[a4paper, margin=0.2in]{geometry}
 \usepackage{natbib}
 \usepackage{amssymb, amsmath, amsfonts}
-\usepackage{graphicx}
+\usepackage{graphicx, hyperref}
 \input{preamble.tex}
 \linespread{2}
 
@@ -157,9 +157,9 @@ However, two drawbacks of this approach are worth noting,
 \begin{itemize}
   \item It does not provide a summary of the relationship between the sets of
     variables defining the tables -- it can only relate pairs of
-    variables. \label{bullet:pca_drawback_one}
+    variables.
   \item If some tables have many more variables than others, they can dominate
-    the resulting ordination. \label{bullet:pca_drawback_two}
+    the resulting ordination.
 \end{itemize}
 
 These limitations are addressed by CCA and MFA, discussed in Sections
@@ -197,7 +197,7 @@ projected points with respect to this subspace.
   \centering
   \includegraphics[width=0.5\textwidth]{figure/pca/var_plot}
   \caption{A statistical motivation for PCA. Each histogram is computed from the
-    linear combinations $\left(c^{j^{T}}\right)x_{i}\right)$, for $c^{j}$ equal
+    linear combinations $\left(c^{j^{T}}x_{i}\right)$, for $c^{j}$ equal
     to the first and second principal components, the vector
     $\frac{1}{n}\mathbf{1}$, and a normalized random multivariate Gaussian. At
     least among these four vectors, the scores obtained from the first PC have
@@ -351,7 +351,7 @@ As with PCA, there are many ways to view this procedure -- here we discuss
 geometric, statistical, and probabilistic interpretations. Unlike the geometric
 interpretation of PCA, the geometric interpretation for CCA identifies point
 locations with features, not samples. Specifically, the columns of $X$ and $Y$
-are thought of as points in $\reals^{n}$. Consider two subspaces 
+are thought of as points in $\reals^{n}$. Consider two subspaces
 spanning the columns of $X$ and $Y$, respectively. These subspaces correspond to
 the linear combinations of features within each table. Place two ellipses on the
 respective subspaces, centered at the origin and with size and shape depending
@@ -646,28 +646,27 @@ responsible for this difference.
     \ref{fig:cca_scores_total_fm} from CCA. \label{fig:coia_scores_total_fm} }
 \end{figure}
 
-
 \subsection{MFA}
 \label{subsec:mfa}
 
 MFA gives an alternative approach to producing scores and relating features
 across multiple tables \citep{pages2014multiple}. It can be understood as a
-reed version of the concatenated PCA described in Section \ref{subsec:pca}
+refined version of the concatenated PCA described in Section \ref{subsec:pca}
 that res tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
 \begin{align*}
 X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots
   \vert \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
 \end{align*}
-which res each table by its largest eigenvalue. This procedure is the
-multitable analog of the standard practice of standardizing variables before
+which reweights each table by its largest eigenvalue. This procedure is the
+multitable analog of the common practice of standardizing variables before
 performing PCA.
 
 The resulting MFA directions and scores can be interpreted in the same
 way as those from PCA -- the MFA directions still specify the
 relationship between measured features, and the position of each
-sample's projection describes the relative  of each feature for
-that sample. Moreover, MFA gives a way of comparing full tables to
+sample's projection describes the relative value of each feature for
+that sample. Moreover, MFA gives a way of comparing entire tables to
 each other, called a ``canonical analysis'' \citep{pages2004multiple}. A
 $K$-dimensional representation of the $l^{th}$ group is given by
 \begin{align*}
@@ -686,27 +685,29 @@ component scores and
 is a measure of aggregate similarity between the coordinates in the $l^{th}$
 table and the $k^{th}$ column of scores. According to this definition, if the
 samples, as represented by the $l^{th}$ table, have high correlation with the
-$k^{th}$ dimension of scores, then the canonical analysis display positions the
-$l^{th}$ table far in the $k^{th}$ direction.
+$k^{th}$ dimension of scores, then the canonical analysis displays positions the
+$l^{th}$ table far in the $k^{th}$ direction. Plotting these table-level
+coordinates helps resolve which tables measure similar underlying variation.
 
 \subsection{PCA-IV}
 
-PCA-IV adapts the dimension reduction ideas of PCA to the multivariate
+PCA-IV adapts the dimensionality reduction ideas of PCA to the multivariate
 regression setting \citep{rao1964use}. It can also be viewed as a version of PCA
-that chooses a dimension reduction of $X$ depending on its ability to predict
-$Y$. In this sense, it anticipates methods like Partial Least Squares (PLS),
-Canonical Correspondence Analysis (CCpnA), the Curds \& Whey procedure, and
-multitask learning, which are described in Sections \ref{subsec:PLS},
-\ref{subsec:canonical-correspondence}, \ref{subsec:cw}, and
-\ref{subsec:multitask}, respectively.
+that chooses a dimension reduction of $X$ based on its ability to predict $Y$.
+In this sense, it anticipates methods like Partial Least Squares, Canonical
+Correspondence Analysis, the Curds \& Whey procedure, the Graph-Fused Lasso and
+Bayesian multitask learning, which are described in Sections \ref{subsec:PLS},
+\ref{subsec:canonical-correspondence}, \ref{subsec:cw},
+\ref{subsec:graph_fused_lasso}, and \ref{subsec:bayesian_multitask}
+respectively.
 
 Formally, suppose we are predicting $y_{i} \in \reals^{p_{1}}$ from $x_{i} \in
 \reals^{p_{2}}$. Since $p_{2}$ may be large, it might be useful to work with a
 lower-dimensional representation $z_{i} = V^{T}x_{i} \in \reals^{K}$, that is
-potentially more interpretable and still as (or more) predictive of $y_{i}$. As
+potentially more interpretable but still as (or more) predictive of $y_{i}$. As
 in PCA, we require that $V$ be orthonormal.
 
-The criterion that PCA-IV uses to identify the s $V$ and scores $Z$
+The criterion that PCA-IV uses to identify the loadings $V$ and scores $Z$
 mirrors the maximum variance criterion for PCA. Instead of choosing $V$ to
 maximize the variance of the $z_{i}$, we choose it to minimize the residual
 covariance of $y_{i}$ given $z_{i}$. That is, suppose that $y_{i}$ and $x_{i}$
@@ -727,7 +728,7 @@ If $z_{i} = V^{T}x_{i}$, then the joint covariance of $y_{i}$ and $z_{i}$ is
     V^{T}\Sigma_{XY} & V^{T}\Sigma_{XX}V
   \end{pmatrix},
 \end{align*}
-and the residual covariance of $x_{i}^{(1)}$ given $z_{i}$ is
+so the residual covariance of $y_i$ given $z_{i}$ is
 \begin{align}
   \Sigma_{YY} -
   \Sigma_{YX}V\left(V^{T}\Sigma_{XX}V\right)^{-1}V^{T}\Sigma_{XY}. \label{eq:pca_iv_resid_cov}
@@ -736,7 +737,7 @@ and the residual covariance of $x_{i}^{(1)}$ given $z_{i}$ is
 true population covariances are unknown to us, so we replace them by their
 empirical estimates. The formal optimization for PCA-IV then becomes
 \begin{align}
-  \text{minimize}_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
+  \minimize_{V\in \reals^{p_{2} \times K} \text{ orthonormal}}
   \tr\left(\hat{\Sigma}_{YY} -
   \hat{\Sigma}_{YX}V\left(V^{T}\hat{\Sigma}_{XX}V\right)^{-1}V^{T}\hat{\Sigma}_{XY}\right) \label{eq:pca_iv_obj},
 \end{align}
@@ -760,22 +761,19 @@ or more concisely,
   \lambda_{k}\hat{\Sigma}_{XX}v_{k}\right) =
 \hat{\Sigma}_{XX}V\Lambda,
 \end{align*}
-where $\Lambda = \diag\left(\lambda_{k}\right) \in \reals^{K \times K}$. In
-particular, $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}$ has generalized
-eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} = \hat{\Sigma}_{XX}
-V\Lambda V^{T}$. A derivation for why this choice is optimal is provided in
-Supplemental Section \ref{subsec:pca_iv_derivation}.
+where $\Lambda = \diag\left(\lambda_{k}\right) \in \reals^{K \times K}$. A
+derivation for why this choice is optimal is provided in Supplemental Section
+\ref{subsec:pca_iv_derivation}.
 
-For a geometric interpretation of PCA-IV, view each column $y_{\cdot j}$ in $Y$
-and $x_{\cdot j}$ in $X$ as a point in $\reals^{n}$. Assuming $X$ and $Y$ are
-full rank, the collections $\left(y_{ \cdot j}\right)$ and $\left(x_{\cdot
-  j}\right)$ span $p_{1}$ and $p_{2}$-dimensional subspaces. A set of
-independent regressions of $X$ onto the $y_{\cdot j}$ projects the $y_{\cdot j}$
-onto the span of $\left(x_{\cdot j}\right)$, and the residuals are the distance
-to this span. The PCA-IV procedure is an attempt to find a further
-$K$-dimensional subspace within the span of the $\left(x_{\cdot j}\right)$ such
-that the residuals of the regressions from $x_{\cdot j}^{(1)}$ onto this further
-subspace is not much worse. This is displayed in Figure
+For a geometric interpretation of PCA-IV, view each column $y_{j}$ in $Y$ and
+$x_{j}$ in $X$ as a point in $\reals^{n}$. Assuming $X$ and $Y$ are full rank,
+the collections $\left(y_{j}\right)$ and $\left(x_{j}\right)$ span $p_{1}$ and
+$p_{2}$-dimensional subspaces. A set of independent regressions of $X$ onto the
+$y_{j}$ projects the $y_{j}$ onto the span of $\left(x_{j}\right)$, and the
+squared residuals are the distance to this subspace. The PCA-IV procedure is an
+attempt to find a further $K$-dimensional subspace within the span of the
+$\left(x_{j}\right)$ such that the residuals of the regressions from $y_j$ onto
+this further subspace is not much worse. This is displayed in Figure
 \ref{fig:pca_iv_geometry}.
 
 \begin{figure}
@@ -799,8 +797,8 @@ can be expressed
 \begin{align*}
   &\frac{1}{n}\left[Y^{T}Y -
     Y^{T}XV\left(V^{T}X^{T}XV\right)^{-1}V^{T}X^{T}Y\right] \\
-  = &\frac{1}{n}\left[Y^{T}Y^{(T)} - Y^{T}Z\left(Z^{T}Z\right)^{-1}Z^{T}Y\right] \\
-  = &Y\left(I - P_{Z}\right)Y,
+  = &\frac{1}{n}\left[Y^{T}Y - Y^{T}Z\left(Z^{T}Z\right)^{-1}Z^{T}Y\right] \\
+  = &Y^T \left(I - P_{Z}\right)Y,
 \end{align*}
 where $P_{Z} = Z\left(Z^{T}Z\right)^{-1}Z^{T}$ is the projection operator onto
 the columns of $Z$. Minimizing the trace of this matrix is equivalent to
@@ -813,32 +811,35 @@ minimizing
   &= \sum_{j = 1}^{p_{1}}\|\left(I - P_{j}\right)y_{\cdot j}\|^{2}_{2},
 \end{align*}
 which is exactly the sum of squared residuals from the columns of $Y$ onto the
-span of the PCA-IV subspace, justifying geometric picture.
+span of the PCA-IV subspace, justifying the earlier geometric picture.
 
 \subsubsection{Example}
 \label{subsec:pcaiv_example}
 
-Continuing our tour of methods applied to the WELL-China data, we now illustrate
-results from PCA-IV. The idea of scores and loadings requires some
-clarification. By PCA-IV scores, we mean the coordinates of projections $z_{i}$
-of samples onto the subspace defined by $V$, and by loadings, we mean the
-correlation between columns\footnote{Geometrically, the angle between original
-  columns and the subspace, in the sense of Figure \ref{fig:pca_iv_geometry}.}
-of $X$ and $Y$ with the PCA-IV axes defining $V$.
+Continuing our WELL-China case study, we now illustrate results from PCA-IV. The
+idea of scores and loadings in this context requires some clarification. By
+PCA-IV scores, we mean the coordinates of projections $z_{i}$ of samples onto
+the subspace defined by $V$, and by loadings, we mean the correlation between
+columns\footnote{Geometrically, the angle between original columns and the
+  subspace, in the sense of Figure \ref{fig:pca_iv_geometry}.} of $X$ and $Y$
+with the PCA-IV axes defining $V$.
 
 We find that the scores, displayed in Supplementary Figures
-\ref{fig:pca_iv_geometry} are similar to those that found by the combined-PCA of
-Section \ref{subsec:pca}. One possible explanation for this behavior is that the
-PCA-IV generalized SVD of $X$ is similar to an ordinary PCA of $X$, and that in
-the combined-PCA of $\left[Y, X\right]$, the fact that $X$ has many more columns
-than $Y$ means that the result is similar to a PCA on $X$ alone.
+\ref{fig:pca_iv_geometry} are similar to those that found by the concatenated
+PCA of Section \ref{subsec:pca}. One possible explanation for this behavior is
+that the PCA-IV generalized SVD of $X$ is similar to an ordinary PCA of $X$, and
+that in the concatenated PCA of $\begin{pmatrix}Y & X\end{pmatrix}$, the fact
+  that $X$ has many more columns than $Y$ means that the result is similar to a
+  PCA on $X$ alone.
 
 The loadings are given in Figure \ref{fig:pca_iv_loadings}. Interpretation of
 the species loadings is simple, since species seem well separated by taxa.
 Interpretation of the body composition variables is less clear -- pairs of
 variables that would be expected to be near to one another are not, in many
-cases. Indeed, \texttt{Trunk\_FM} and \texttt{L\_Total\_FM} would be expected to
-have a small angle between one another, but they do not.
+cases. Indeed, trunk fat mass (\texttt{Trunk\_FM}) and left total fat mass
+(\texttt{L\_Total\_FM}) should have a small angle between one another, but they
+do not. It is possible that by approximating the covariation across tables, the
+quality of within-table approximations deteriorates.
 
 \begin{figure}
   \centering
@@ -853,17 +854,17 @@ have a small angle between one another, but they do not.
 \label{subsec:partial_triadic_analysis}
 
 Partial Triadic Analysis (PTA) gives an approach to working with multitable data
-when each table has the same dimension \citep{thioulouse2011simultaneous}.
+when each table has the same dimension, $p_1 = p_2$ \citep{thioulouse2011simultaneous}.
 Specifically, it gives a way of analyzing data of the form $\left(X_{\cdot\cdot
-  l}\right)_{l = 1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$;
-this is called a data cube because it can also be written as a three-dimensional
+  l}\right)_{l = 1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$.
+This is called a data cube because it can also be written as a three-dimensional
 array $X \in \reals^{n \times p \times L}$. We denote the $j^{th}$ feature
 measured on the $i^{th}$ sample in the $l^{th}$ table by $x_{ijl}$, and the
 slices over fixed $i$, $j$, and $l$ by $X_{i \cdot \cdot}$, $X_{\cdot j \cdot}$
 and $X_{\cdot \cdot l}$. This type of data arises frequently in longitudinal
-data analysis, where the same features are collected for the same samples across
+data analysis, where the same features are collected for the same samples over
 a series of $L$ times. However, the actual ordering of the $L$ tables is not
-ever used by this: if we scrambled the time ordering for $L$ tables, the
+ever used by this method: if we scrambled the time ordering for $L$ tables, the
 algorithm's result would not change.
 
 The main idea in PTA is to divide the analysis into two steps,
@@ -876,7 +877,7 @@ The main idea in PTA is to divide the analysis into two steps,
 A naive approach to constructing the compromise table would be to average each
 entry across the $L$ tables. Instead, PTA upweights tables that are more similar
 to the average table, as these are considered more representative. Formally, the
-compromise is defined as $X^{(c)} = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l}
+compromise is defined as $X_c = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l}
 = X\alpha \in \reals^{n \times p}$, where $\alpha$ (constrained to norm one) is
 chosen to maximize $\sum_{l = 1}^{L} \alpha_{l} \left<\overline{X},
 X_{\cdot\cdot l}\right>$, a weighted average of inner-products\footnote{We are
@@ -893,7 +894,7 @@ Section \ref{subsec:pta_alpha_derivation}), and leads to the compromise table,
 \end{align*}
 
 We can try to interpret the compromise matrix geometrically. Suppose
-the $X_{\cdot\cdot l}$ define an orthonormal basis; so $\left<X^{l},
+the $X_{\cdot\cdot l}$ define an orthonormal basis, so that $\left<X^{l},
   X^{l^{\prime}}\right> = \indic{l = l^{\prime}}$. Then, we can write
 the compromise table as
 \begin{align*}
@@ -902,20 +903,19 @@ the compromise table as
 \end{align*}
 a scaled version of the mean.
 
-If however, the tables are not orthonormal, then we place more weight
-on directions that are correlated. For example, if $X^{(1)} =
-X^{(2)}$, but the rest of the tables are orthogonal to each other and
-to these first two tables, then the compromise double counts the
-direction $X^{(1)}$. In this sense, $X_{c}$ is different from the
-naive-average $\overline{X}$ -- it upweights more highly
-represented tables.
+If, however, the tables are not orthonormal, then we place more weight on
+directions that are correlated. For example, if $X^{(1)} = X^{(2)}$, but the
+rest of the tables are orthogonal to each other and to these first two tables,
+then the compromise double counts the direction $X^{(1)}$. Therefore, compared
+to the naive average $\overline{X}$, $X_c$ upweights more highly represented
+tables.
 
 \subsection{Statico and Costatis}
 \label{subsec:statico_and_costatis}
 
 In the multivariate ecology literature, it is common to have a pair of data
 cubes, giving species abundances and environmental variables over time,
-respectively. We write these are $Y \in \reals^{n \times p_{1} \times L}$ and $X
+respectively. We write these as $Y \in \reals^{n \times p_{1} \times L}$ and $X
 \in \reals^{n \times p_{2} \times L}$. Costatis and Statico are two approaches
 for analyzing such data \cite{thioulouse2011simultaneous}. They are easiest to
 understand as divide-and-conquer approaches, where the general problem of
@@ -1087,7 +1087,7 @@ PLS, a similar line of thought leads to sparse PLS \citep{chun2010sparse}, and
 we briefly review this method here.
 
 Directly regularizing the multiresponse version of the
-optimization \label{eq:pls_obj} leads to the problem
+optimization \ref{eq:pls_obj} leads to the problem
 \begin{align*}
   \text{maximize }_{z_k} &\sum_{j = 1}^{p1} \Covsubarg{P^X \times P^{y_j}}{x_i^T z_k, y_{ij}} \\
   \text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j \leq k - 1 \\
@@ -1998,6 +1998,7 @@ the multitask-lasso context, where such structure has not been directly imposed.
 \end{figure}
 
 \subsection{Bayesian multitask learning}
+\label{subsec:bayesian_multitask}
 
 \cite{zhang2005learning} formulates a general probabilistic approach to
 multitask learning. Their framework encapsulates both regression and
