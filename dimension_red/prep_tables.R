@@ -145,6 +145,7 @@ prepare_taxa <- function(taxa) {
     mutate(
       family = fct_lump(Family, n = 9, ties.method = "first")
     )
+  taxa[is.na(taxa[, "family"]), "family"] <- "Other"
   taxa$family <- factor(
     taxa$family,
     levels = names(sort(table(taxa$family), decreasing = TRUE))

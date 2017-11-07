@@ -14,8 +14,8 @@ library("phyloseq")
 library("tidyverse")
 library("reshape2")
 source("../dimension_red/prep_tables.R")
+source("../dimension_red/plot.R")
 library("gflasso")
-library("glasso")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -74,25 +74,8 @@ fit <- gflasso(y, x, R$w, opts)
 ###############################################################################
 ## plot fitted coefficients
 ###############################################################################
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
-
-site_ordered <- c(
-  "aoi", "age", "height_dxa", "weight_dxa",
-  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
-  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
-  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
-  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
-  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
-  "arms_lm"
-)
-mass_type_ordered <- c(
-  site_ordered[!grepl("fm|lm", site_ordered)],
-  site_ordered[grepl("fm", site_ordered)],
-  site_ordered[grepl("lm", site_ordered)]
-)
-
+seq_fam <- seq_families(processed$mseqtab)
+mass_type_ordered <- mass_ordering()
 mR <- melt(
   R$w,
   varnames = c("x", "y"),
@@ -120,7 +103,7 @@ write.csv(species_order, file = "species_order.csv", row.names = FALSE)
 colnames(fit$B) <- colnames(y)
 mbeta <- fit$B %>%
   melt(varnames = c("seq_num", "feature")) %>%
-  left_join(seq_families) %>%
+  left_join(seq_fam) %>%
   mutate(
     feature = factor(feature, mass_type_ordered),
     seq_num = factor(seq_num, species_order)
