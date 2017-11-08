@@ -49,21 +49,12 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list(
-  "filter_k" = 0.07,
-  "filter_a" = 5,
-  "scale_sample_data" = TRUE,
-  "gender" = "Female",
-  "transform_fun" = identity,
-  "vst" = TRUE
-)
 processed <- process_data(
   raw$seqtab,
   raw$bc,
   raw$bc_full,
   raw$taxa,
-  raw$tree,
-  opts
+  raw$tree
 )
 
 y_df <- sample_data(processed$ps)
@@ -125,7 +116,6 @@ ggplot(mbeta) +
   theme(
     axis.text = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(size = 7, angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
@@ -138,20 +128,20 @@ ggsave(
 
 large_species <- mbeta %>%
   filter(
-    feature %in% c("total_lm", "total_fm")
+    feature %in% c("android_fm", "gynoid_fm")
   ) %>%
   group_by(seq_num) %>%
-  mutate(norm = sqrt(sum(coef ^ 2))) %>%
-  filter(norm > 0.065) %>%
+  dplyr::mutate(norm = sqrt(sum(coef ^ 2))) %>%
+  filter(norm > 0.05) %>%
   arrange(desc(norm))
 
 mlarge_species <- melt(
   data.frame(
     "Number" = rownames(x),
     x[, unique(as.character(large_species$seq_num))],
-    y[, c("total_fm", "total_lm")]
+    y[, c("android_fm", "gynoid_fm")]
   ),
-  id.vars = c("Number", "total_fm", "total_lm"),
+  id.vars = c("Number", "android_fm", "gynoid_fm"),
   variable.name = "seq_num"
 ) %>%
   left_join(seq_fam)
@@ -159,7 +149,7 @@ mlarge_species <- melt(
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   large_species %>%
-    filter(feature == "total_lm") %>%
+    filter(feature == "gynoid_fm") %>%
     arrange(desc(coef)) %>%
     .[["seq_num"]]
 )
@@ -167,12 +157,12 @@ mlarge_species$seq_num <- factor(
 ggplot(mlarge_species) +
   geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
   stat_smooth(
-    aes(x = value, y = total_lm, col = family),
+    aes(x = value, y = gynoid_fm, col = family),
     alpha = 0.8, size = 0.5, method = "lm", fill = "#dfdfdf"
   ) +
   geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
   geom_point(
-    aes(x = value, y = total_lm, col = family),
+    aes(x = value, y = gynoid_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
   facet_wrap(~seq_num, ncol = 8) +
@@ -181,7 +171,7 @@ ggplot(mlarge_species) +
   )
 
 ggsave(
-  "../chapter/figure/spls/total_lm_species.png",
+  "../chapter/figure/spls/gynoid_fm_species.png",
   width = 7.4,
   height = 6.3
 )
@@ -190,7 +180,7 @@ ggsave(
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   large_species %>%
-    filter(feature == "total_fm") %>%
+    filter(feature == "android_fm") %>%
     arrange(desc(coef)) %>%
     .[["seq_num"]]
 )
@@ -199,11 +189,11 @@ ggplot(mlarge_species) +
   geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
   geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
   stat_smooth(
-    aes(x = value, y = total_lm, col = family),
+    aes(x = value, y = android_fm, col = family),
     alpha = 0.8, size = 0.5, method = "lm", fill = "#dfdfdf"
   ) +
   geom_point(
-    aes(x = value, y = total_fm, col = family),
+    aes(x = value, y = android_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
   facet_wrap(~seq_num, ncol = 8) +
@@ -212,7 +202,7 @@ ggplot(mlarge_species) +
   )
 
 ggsave(
-  "../chapter/figure/spls/total_fm_species.png",
+  "../chapter/figure/spls/android_fm_species.png",
   width = 7.4,
   height = 6.3
 )
