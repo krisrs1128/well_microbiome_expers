@@ -278,7 +278,7 @@ components does not mean such relationships do not exist.
   \centering
   \includegraphics[width=\textwidth]{figure/pca/loadings}
   \caption{The loadings obtained by applying PCA to the combined body
-    composition and microbial abundance data set. Species are points, and are
+    composition and microbial abundance data. Species are points, and are
     shaded in by taxonomic family. Body composition variables are plotted as
     text. The size of points and words measures the contribution of the third PC
     dimension. \label{fig:loadings} }
@@ -299,10 +299,10 @@ Bacteroidaceae vs. Ruminococcaceae differentiation is visible in Figure
 \ref{fig:scores_rl_ratio}, which is consistent with the loadings.
 
 In this approach, the loadings provide a description of the relationship between
-variables across data sets. Further, scores summarize variation in samples
-across multiple data sets. Hence, this heuristic is a natural first step in
+variables across datasets. Further, scores summarize variation in samples
+across multiple datasets. Hence, this heuristic is a natural first step in
 analyzing multiple table data. However, considering the difficulty in directly
-interpreting the covariation across data sets, as well as the method's failure
+interpreting the covariation across datasets, as well as the method's failure
 to use any sense of covariation in the dimensionality reductions strategy,
 suggests that this method should not be the last step of an analysis workflow.
 Nevertheless, we now have a baseline with which to compare the more elaborate
@@ -312,7 +312,7 @@ methods of subsequent sections.
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
-    composition and microbial abundance data set. The first two principal
+    composition and microbial abundance data. The first two principal
     components explain about 4\% of the variance. Points are species, shaded in
     by taxonomic family. Text are columns from the body composition data. Points
     and text with small angle between one another are more correlated.
@@ -368,27 +368,6 @@ one another. The second pair of canonical correlation directions identify a pair
 of points with a similar interpretation, except they are required to be orthogonal
 to the first pair, with respect to the inner product induced by the covariances
 in each table.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.8\textwidth]{figure/cca/geometric}
-  \caption{The geometric representation of CCA, on a toy subset of the WELL-China
-    data, to facilitate visualization. The three axes correspond correspond to
-    three subjects, and the text labels indicate the positions of (scaled) features with
-    respect to the samples. Features from the 16s table are shaded in blue,
-    while body composition variables are orange. The subspaces spanned by the
-    three features in each table are indicated by a grid of points lying along
-    them, shaded in the same color as the measurement type they correspond to.
-    We only display three features so that the table subspaces do are not simply
-    all of $\reals^{3}$. A set of points lie along ellipses that are unit balls
-    with respect to each data set's covariance matrix, estimated using all
-    samples (not just the three displayed). Two arrows are the first CCA
-    directions associated with the two measurement types. Evidently, the
-    correlation between these measurement types, restricted to these few samples
-    and features, is quite high, since the arrows point in nearly the same
-    direction.
-    \label{fig:cca_geometric} }
-\end{figure}
 
 For a statistical interpretation, the idea of CCA is to find the low-dimensional
 representations of the two tables with maximal covariance -- this is analogous
@@ -501,7 +480,7 @@ maximize the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L}
 \subsubsection{Example}
 \label{subsubsec:cca_example}
 
-We next apply CCA to the WELL-China body composition and microbiome data sets,
+We next apply CCA to the WELL-China body composition and microbiome data,
 with particular interest in how the results compare with those of Section
 \ref{subsubsec:pca_example}. To this end, we provide analogous loadings and
 scores plots in Figures \ref{fig:cca_loadings} through
@@ -519,7 +498,7 @@ stronger filtering, all preprocessing steps remain the same as in Section
   \includegraphics[width=\textwidth]{figure/CCA/loadings}
   \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
     loadings obtained by applying CCA to the combined body composition and
-    microbial abundance data set. Each point is a species, and text are body
+    microbial abundance data. Each point is a species, and text are body
     composition variables. Species are shaded in according to taxonomic family,
     and the size of points corresponds to the third CCA dimension. Text and
     point that are close to one another have similar patterns of abundance
@@ -575,7 +554,7 @@ fat mass.
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_linked}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data set. Each measurement type provides
+    composition and microbial abundance data. Each measurement type provides
     a different set of scores for the observed samples, and the similarity
     between the sets of scores is reflected in the CCA objective. Each sample
     appears as two separate circles, since there is one score per measurement
@@ -589,7 +568,7 @@ fat mass.
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_android_fm}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data set, shaded in by android fat mass.
+    composition and microbial abundance data, shaded in by android fat mass.
     The positions of points are identical to those in Figure
     \ref{fig:cca_scores_linked}, and other than the shading, the plots are read in
     the same way. The first two CCA dimensions suggest smooth variation across
@@ -1198,7 +1177,7 @@ these two steps until convergence.
 \label{subsubsec:spls_example}
 
 Next we apply the SPLS implementation of \cite{chung2012spls} to the WELL-China
-body composition data set. We use the body composition variables as the response
+body composition data. We use the body composition variables as the response
 $Y$ and the microbiome community composition as $X$. We subset to female
 subjects and filter species according to a $K$-over-$A$ filter with $K$ = 7\% of
 samples and $A = 5$. This leaves 372 species over 119 participants. All species
@@ -1625,7 +1604,7 @@ constraints for each of the $c_{1}^{(l)}$.
 \subsubsection{Example}
 \label{subsec:sparse_cca_example}
 
-We apply the PMD formulation of sparse CCA to the WELL-China data set. As
+We apply the PMD formulation of sparse CCA to the WELL-China data. As
 before, we $k$-over-$A$ filter the microbiome data, requiring species to have
 counts of at least 5 in at least 7\% of samples. Further, we first
 variance-stabilize, center, and scale these species abundances. For the
@@ -1727,7 +1706,7 @@ Since likelihood based methods are easily adapted to different data types, it is
 natural to consider versions of CCA designed for non-Gaussian data, using
 Section \ref{subsec:cca} as a starting point. We are particularly interested in
 data with the same structure as the WELL-China body composition and microbiome
-data, namely two table data sets where one table is continuous with Gaussian
+data, namely two table data where one table is continuous with Gaussian
 marginals and correlated columns and the other is a high-dimensional collection
 of counts, where many entries are exactly zero.
 
