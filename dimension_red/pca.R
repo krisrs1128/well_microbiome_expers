@@ -49,13 +49,15 @@ theme_update(
 ## Load data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "filt_a" = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, raw$tree)
 
 ###############################################################################
 ## run and visualize PCA
 ###############################################################################
-combined <- cbind(processed$bc, processed$x_seq)
+samp <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator)
+combined <- cbind(samp, get_taxa(processed$ps))
 pc_res <- prcomp(scale(combined))
 
 ## extract scores and join in sample data
@@ -67,34 +69,37 @@ scores <- prepare_scores(list(pc_res$x), c("combined")) %>%
 
 ## extract loadings and join taxa information
 loadings_list <- list(
-  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$bc), ],
-  pc_res$rotation[rownames(pc_res$rotation) %in% colnames(processed$x_seq), ]
+  pc_res$rotation[rownames(pc_res$rotation) %in% names(sample_data(processed$ps)), ],
+  pc_res$rotation[rownames(pc_res$rotation) %in% taxa_names(processed$ps), ]
 )
 
-seq_families <- processed$mseqtab %>%
+seq_fam <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
 
 loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 
 plot_loadings(loadings, pc_res$sdev)
 ggsave("../chapter/figure/pca/loadings.png", width = 7.69, height = 5.17)
 
 ## and study the scores
-plot_scores(scores, "Total_LM", "Trunk LM", pc_res$sdev) +
+plot_scores(scores, "android_lm", "Android FM", pc_res$sdev) +
   scale_color_viridis(
-    "Total LM ",
+    "Android FM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca/scores_total_lm.png", width = 4.45, height = 2.63)
 
-##  also study scores in relation to overall ruminoccocus / lachospiraceae ratio
+##  also study scores in relation to overall bacteroides / ruminoccocus ratio
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", pc_res$sdev) +
+  left_join(family_means(processed$mseqtab)) %>%
+  mutate(
+    rl_ratio = tanh(rl_ratio)
+  )
+plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", pc_res$sdev) +
   scale_color_viridis(
-    "Rum. / Lach. Ratio  ",
+    "Bact. / Rumino. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)
