@@ -1492,10 +1492,10 @@ subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/illustration_sequence}
   \caption{An example of the PMD CCA solution in a high-dimensional source
-    separation problem, modeled after the simulation experiment in
+    separation problem, based on the simulation experiment in
     \citep{witten2009penalized}. The solid lines indicate true ``sources''
-    underlying two observed data tables $X \in \reals^{20 \times 504}$ and $Y
-    \in \reals^{20 \times 504}$. Specifically, $X$ and $Y$ are defined as random
+    underlying observed data tables $X \in \reals^{20 \times 504}$ and $Y \in
+    \reals^{20 \times 504}$. Specifically, $X$ and $Y$ are defined as random
     linear combinations of two sources each, which are then corrupted with
     noise. The recovered sources from CCA between $X$ and $Y$ using a
     fused-lasso penalty are plotted as points. The fused-lasso regularization
@@ -1592,6 +1592,37 @@ constraints for each of the $c_{1}^{(l)}$.
 \subsubsection{Example}
 \label{subsec:sparse_cca_example}
 
+We apply the PMD formulation of sparse CCA to the WELL-China data set. As
+before, we $k$-over-$A$ filter the microbiome data, requiring ASVs to have
+counts of at least 5 in at least 7\% of samples. Further, we first
+variance-stabilize, center, and scale these species abundances. For the
+regularization parameters, we set $\mu_1 = 0.7$ for the body composition data
+and $\mu_2 = 0.3$ for the species count data. Our reasoning is that sparsity
+within species loadings is more important than sparsity across body composition
+variables, because the microbiome data is more high-dimensional. We only compute
+the first three PMD directions, and the associated correlations between scores
+are $\left(d_1, d_2, d_3\right) = \left(0.700, 0.435, 0.632\right)$. Note that
+the correlation can increase in subsequent directions, since directions are
+computed iteratively, and cannot be defined and sorted all at once.
+
+The learned loadings and scores are displayed in Figures \ref{fig:pmd_loadings}
+and \ref{fig:pmd_scores_android_fm}, respectively. The $x$-axis in the loadings
+differentiates between high android and gynoid fat mass. The $y$-axes in the
+loadings reflect a gradient between overall right and left body mass. The size
+of points corresponds to the third PMD direction, and it seems to highlight high
+BMI, ratio of fat to lean mass, and overall weight. We interpret species
+based on their positions relative to these body composition variables, as in an
+ordinary biplot. For example, species 271 seems to be more common among people
+with higher android and lower gynoid fat mass.
+
+The associated scores are displayed in Figure \ref{fig:pmd_scores_android_fm},
+shaded in according to android fat mass. The gradient between android and gynoid
+fat mass suggested by the loadings is clearly visible from this display. The
+length of links reflects the correlation between sets of scores. They are
+somewhat longer in the sparse CCA compared to the ordinary CCA on a subset of
+species, but this is likely a consequence of regularization and overfitting on
+the part of ordinary CCA.
+
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/loadings}
@@ -1600,20 +1631,27 @@ constraints for each of the $c_{1}^{(l)}$.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/scores_lm}
-  \caption{\label{fig:pmd_scores_lm} }
+  \includegraphics[width=\textwidth]{figure/pmd/scores_android_fm}
+  \caption{\label{fig:pmd_scores_android_fm} }
 \end{figure}
+
+We can folow-up these displays by focusing on species that seemed related to the
+CCA axes. In Figure \ref{fig:pmd_android_fm_species}, we isolate species with
+loadings a distance of at least 0.15 from the origin. These are the same ones
+that are labeled by text in Figure \ref{fig:pmd_loadings}. We can see
+associations between abundance and android fat mass, as suggested by the
+loadings. Generally, there is a difference between android fat mass among people
+with and without particular species -- there is generally no smooth function
+between the quantity of a species android fat mass, even in these cases where an
+association exists. Further, no individual taxonomic group seems to dominate the
+set of associated species. Instead, a few isolated members of a few different
+taxonomic groups seem to be associated with android fat mass.
+
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/total_lm_species}
-  \caption{\label{fig:pmd_total_lm_species}}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pmd/total_fm_species}
-  \caption{\label{fig:pmd_total_fm_species}}
+  \includegraphics[width=\textwidth]{figure/pmd/android_fm_species}
+  \caption{\label{fig:pmd_android_fm_species}}
 \end{figure}
 
 \subsection{Multitable Mixed-Membership}
