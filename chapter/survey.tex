@@ -279,7 +279,10 @@ components does not mean such relationships do not exist.
   \centering
   \includegraphics[width=\textwidth]{figure/pca/loadings}
   \caption{The loadings obtained by applying PCA to the combined body
-    composition and microbial abundance data set. \label{fig:loadings} }
+    composition and microbial abundance data set. Species are points, and are
+    shaded in by taxonomic family. Body composition variables are plotted as
+    text. The size of points and words measures the contribution of the third PC
+    dimension. \label{fig:loadings} }
 \end{figure}
 
 We can study individual samples with respect to these loadings, by plotting
@@ -307,7 +310,7 @@ methods of subsequent sections.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_total_fm}
+  \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
     composition and microbial abundance data set. The first two principal
     components explain about 4\% of the variance. Points are species, shaded in by
@@ -319,9 +322,9 @@ methods of subsequent sections.
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
-  \caption{The same scores as Figure \ref{fig:scores_total_fm}, but shaded now by
-    the ratio of Ruminococcaceae over Lachnospiraceae relative abundances. The
-    slight increase in Ruminococcaceae from left to right is consistent with the
+  \caption{The same scores as Figure \ref{fig:scores_total_fm}, but shaded now
+    by the transformed ratio of Bacteroidaceae over Ruminoccocus abundances. The
+    slight increase in Bacteroidaceae from left to right is consistent with the
     loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
 \end{figure}
 

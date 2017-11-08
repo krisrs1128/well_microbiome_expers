@@ -89,7 +89,7 @@ plot_scores(scores, "android_lm", "Android FM", pc_res$sdev) +
     "Android FM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca/scores_total_lm.png", width = 4.45, height = 2.63)
+ggsave("../chapter/figure/pca/scores_android_fm.png", width = 4.45, height = 2.63)
 
 ##  also study scores in relation to overall bacteroides / ruminoccocus ratio
 scores <- scores %>%
