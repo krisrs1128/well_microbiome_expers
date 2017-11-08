@@ -1771,7 +1771,7 @@ It is this second model that we use in our experiments below.
 We illustrate this multitable mixed-membership approach on the WELL-China data.
 We choose $K = 3$ for the number of shared topics and $L_{1} = L_{2} = 3$ for
 the number of unshared topics per table. We initialize scores and loadings using
-the results from the PMD formulation of sparse CCA. While the use of shared
+results from the PMD formulation of sparse CCA. While the use of shared
 ($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives more
 flexibility in modeling, it also leads to additional complexity in
 interpretation -- there are both more scores and more loadings that need to be
@@ -1807,40 +1807,41 @@ $1$ throughout.
 
 Figure \ref{fig:lda_cca_within_loadings_seq_boxplots} summarizes table-specific
 variation in bacterial abundances. Invariance under rotation and reflection
-complicates interpretation of these loadings. If we flip the sign of the second
-row of loadings, it appears that the main difference between the first and
-second loadings is the rate of decay in frequencies from more to less abundant
-species. However, no clear distinction appears between taxa among the first two
-loadings. The main characteristic of the third loading is that it differentiates
-Ruminococcaceae, which mostly have positive loadings, from Bacteroidaceae, which
-mostly have negative loadings.
+complicates interpretation of these loadings. If we flip the sign of all the
+loadings axes, then the more abundant species have larger loadings. The main
+difference between the first and second loadings is the rate of decay in
+frequencies, especially among Lachnospiraceae and and Ruminococcaceae. For
+example, topic 1 seems to species from these taxonomic families that are not
+very abundant. The second topic also seems to have generally lower loadings
+(hence higher abundances) for the Bacteroidaceae, and higher loadings (lower
+abundances) for Prevotella, compared to other topics. The main characteristic of
+the third loading is that it has higher values for Porphyromonadaceae, so
+samples with high weight on this loading have decreased levels of this taxa.
 
 Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots} suggests that the
-first axes of $W^{Y}$ captures variation between lean and fat mass, which can be
-used to interpret the scores in Supplementary Figure
-\ref{fig:lda_cca_unshared_scores_fm_posterior}. The second axes reflects similar
-variation, while the third axes captures difference between mass in the trunk
-versus arms and legs.
+first and third axes of $W^{Y}$ captures variation between overall and android
+vs. gynoid fat mass, which can be used to interpret the scores in Supplementary
+Figure \ref{fig:lda_cca_unshared_scores_fm_posterior}. The first axes has high
+loadings for weight, BMI, and total fat mass, and the third contrasts areas with
+high android and high gynoid fat mass. The second axis distinguishes between
+right and left total lean and fat mass. variation, while the third axes captures
+difference between mass in the trunk versus arms and legs.
 
 These summaries could have been obtained by analyzing each table separately.
 More interest lies in covariation between the two tables, captured by the shared
 scores $\xi_{i}^{s}$ and loadings $B^{X}, B^{Y}$. The shared body composition
 loadings are given in Figure
-\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The second row of
-loadings slightly differentiates lean and fat mass variables. In the first row
-of loadings, total fat mass, android lean mass, and total lean mass seem to
-stand out. However, in light of Supplementary Figure
-\ref{fig:lda_cca_shared_scores_fm_posterior}, this variation is not clearly
-visible in the raw data, and may simply be due to chance.
+\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The first row of loadings
+again differentiates android and gynoid and fat mass variables. The second axis
+slightly differentiates left and right total fat mass, though the effect is less
+pronounced than in the table-specific loadings.
 
 The bacterial abundance loadings are given in Figures
 \ref{fig:lda_cca_within_loadings_seq_boxplots} and
 \ref{fig:lda_cca_between_loadings_seq_boxplots}. The most notable observation is
-that unlabeled (``Other'') and Ruminococcaceae families have wider spread in the
-second loading than in the first. This could be associated with decreased
-diversity in these species among samples with high weight on the second loading.
-Generally however, taxonomic variation in the shared loadings is not as
-definitive as in the table-specific case.
+that the first axes places more weight on rarer species, while the second places
+proportionally more weight on abundant species. Further, the two axes seem have
+very different behaviors with respect to Prevotellaceae and Veillonellaceae.
 
 In general, we find the results from the LDA-CCA approach less satisfying than
 those of the sparse CCA of Section \ref{subsec:pmd}. It seems that inference of
