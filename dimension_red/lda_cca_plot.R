@@ -8,7 +8,7 @@
 ## author: sankaran.kris@gmail.com
 ## date: //2017
 
-lda_cca_plots <- function(mdist, seq_families, processed, opts) {
+lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
   scv <- scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
@@ -20,17 +20,17 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
       aes(
         x = axis_1,
         y = axis_2,
-        col = Total_LM
+        col = android_fm
       ),
       size = 0.1,
       alpha = 0.01
     ) +
     coord_equal() +
     scv +
-    labs(x = "Axis 1", y = "Axis 2", col = "Total LM")
+    labs(x = "Axis 1", y = "Axis 2", col = "android_fm")
 
   ggsave(
-    sprintf("%s/shared_scores_lm_posterior.png", opts$outdir),
+    sprintf("%s/shared_scores_fm_posterior.png", opts$outdir),
     width = 5.63, height = 3.42
   )
 
@@ -43,27 +43,27 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
       aes(
         x = axis_1,
         y = axis_2,
-        col = Total_LM
+        col = android_fm
       ),
       size = 0.1,
       alpha = 0.1
     ) +
     coord_equal() +
     scv +
-    labs(x = "Axis 1", y = "Axis 2", col = "Total LM")
+    labs(x = "Axis 1", y = "Axis 2", col = "Android FM")
   ggsave(
-    sprintf("%s/unshared_scores_lm_posterior.png", opts$outdir),
+    sprintf("%s/unshared_scores_fm_posterior.png", opts$outdir),
     width = 9.24,
     height = 2.5
   )
 
   ## Now plotting loadings boxplots
-  mdist$Wx$seq_num <- colnames(processed$x_seq)[mdist$Wx$row]
+  mdist$Wx$seq_num <- taxa_names(processed$ps)[mdist$Wx$row]
   mdist$Wx <- mdist$Wx %>%
-    left_join(seq_families)
+    left_join(seq_fam)
   mdist$Wx$seq_num <- factor(
     mdist$Wx$seq_num,
-    levels = names(sort(colSums(processed$x_seq), decreasing = TRUE))
+    levels = names(sort(taxa_sums(processed$ps), decreasing = TRUE))
   )
 
   wx_summary <- mdist$Wx %>%
@@ -95,12 +95,12 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
     height = 3.37
   )
 
-  mdist$Bx$seq_num <- colnames(processed$x_seq)[mdist$Bx$row]
+  mdist$Bx$seq_num <- taxa_names(processed$ps)[mdist$Bx$row]
   mdist$Bx <- mdist$Bx %>%
-    left_join(seq_families)
+    left_join(seq_fam)
   mdist$Bx$seq_num <- factor(
     mdist$Bx$seq_num,
-    levels = names(sort(colSums(processed$x_seq), decreasing = TRUE))
+    levels = names(sort(taxa_sums(processed$ps), decreasing = TRUE))
   )
 
   bx_summary <- mdist$Bx %>%
@@ -133,22 +133,8 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
   )
 
   ## and finally loadings boxplot for body composition variables
-  site_ordered <- c(
-    "aoi", "age", "height_dxa", "weight_dxa",
-    "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
-    "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
-    "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
-    "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
-    "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
-    "arms_lm"
-  )
-  mass_type_ordered <- c(
-    site_ordered[!grepl("fm|lm", site_ordered)],
-    site_ordered[grepl("fm", site_ordered)],
-    site_ordered[grepl("lm", site_ordered)]
-  )
-
-  mdist$Wy$variable <- tolower(colnames(processed$bc)[mdist$Wy$row])
+  mass_type_ordered <- mass_ordering()
+  mdist$Wy$variable <- tolower(colnames(sample_data(processed$ps))[mdist$Wy$row])
   mdist$Wy$variable <- factor(
     mdist$Wy$variable,
     levels = mass_type_ordered
@@ -172,7 +158,7 @@ lda_cca_plots <- function(mdist, seq_families, processed, opts) {
     height = 3.95
   )
 
-  mdist$By$variable <- tolower(colnames(processed$bc)[mdist$By$row])
+  mdist$By$variable <- tolower(colnames(sample_data(processed$ps))[mdist$By$row])
   mdist$By$variable <- factor(
     mdist$By$variable,
     levels = mass_type_ordered

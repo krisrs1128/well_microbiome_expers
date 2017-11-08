@@ -18,7 +18,6 @@ library("ade4")
 source("prep_tables.R")
 source("plot.R")
 
-
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
   scale_color_manual(
@@ -53,14 +52,26 @@ dir.create(out_path)
 ## Load data
 ###############################################################################
 raw <- read_data()
-opts <- list(filt_k = 0.5, filt_a = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+opts <- list(filter_k = 0.5, filter_a = 5)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
+
+bc_mat <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
 
 ###############################################################################
 ## Run CoIA on the two (scaled) tables
 ###############################################################################
-dudi1 <- dudi.pca(processed$x_seq, scan = FALSE, nf = 3)
-dudi2 <- dudi.pca(processed$bc, scan = FALSE, nf = 3)
+dudi1 <- dudi.pca(get_taxa(processed$ps), scan = FALSE, nf = 3)
+dudi2 <- dudi.pca(bc_mat, scan = FALSE, nf = 3)
 coia_res <- coinertia(dudi1, dudi2, scan = FALSE, nf = 3)
 
 loadings <- prepare_loadings(
@@ -89,20 +100,21 @@ plot_scores(scores, "type", "Meas. Type", coia_res$eig) +
   scale_color_brewer(palette = "Set1")
 ggsave(file.path(out_path, "scores_linked.png"), width = 4.7, height = 1.7)
 
-plot_scores(scores, "Total_FM", "Trunk FM", coia_res$eig) +
+plot_scores(scores, "android_fm", "Android FM", coia_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    "Total FM ",
+    "Android FM ",
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave(file.path(out_path, "scores_total_fm.png"), width = 4.7, height = 1.7)
+ggsave(file.path(out_path, "scores_android_fm.png"), width = 4.7, height = 1.7)
 
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach ratio", coia_res$eig) +
+  left_join(family_means(processed$mseqtab)) %>%
+  mutate(rl_ratio = tanh(rl_ratio))
+plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", coia_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    "Rum. / Lach. Ratio  ",
+    "Bact. / Rumino.",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 ggsave(file.path(out_path, "scores_rl_ratio.png"), width = 4.7, height = 1.7)

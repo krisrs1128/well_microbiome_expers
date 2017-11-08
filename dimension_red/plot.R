@@ -39,7 +39,7 @@ prepare_scores <- function(scores_list, types, K = 3) {
   for (m in seq_along(scores_list)) {
     colnames(scores_list[[m]]) <- NULL
     df_list[[m]] <- data.frame(
-      "Number" = rownames(scores_list[[m]]),
+      "number" = rownames(scores_list[[m]]),
       "type" = types[m],
       "Axis" = scores_list[[m]][, 1:K]
     )
@@ -50,7 +50,7 @@ prepare_scores <- function(scores_list, types, K = 3) {
 
 melt_scores <- function(scores) {
   scores %>%
-    select(Number, type, starts_with("Axis")) %>%
+    select(number, type, starts_with("Axis")) %>%
     gather(comp, value, starts_with("Axis")) %>%
     unite(comp_type, comp, type) %>%
     spread(comp_type, value)
@@ -59,7 +59,7 @@ melt_scores <- function(scores) {
 reshape_posterior_score <- function(xi, bc) {
   xi %>%
     mutate(
-      Number = bc$Number[row],
+      number = bc$number[row],
       col = paste0("axis_", col)
     ) %>%
     spread(col, value) %>%
@@ -155,7 +155,7 @@ plot_loadings <- function(loadings,
     coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]]))
 }
 
-plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)) {
+plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)) {
   ggplot() +
     geom_hline(yintercept = 0, alpha = 0.5) +
     geom_vline(xintercept = 0, alpha = 0.5) +
@@ -193,7 +193,7 @@ link_scores <- function(mscores, alpha = 0.1) {
 plot_scores_wrapper <- function(xi, raw, processed, scv) {
   xi_df <- data.frame(
     "Axis" = xi,
-    "Number" = rownames(processed$bc)
+    "number" = rownames(processed$bc)
   ) %>%
     left_join(raw$bc) %>%
     left_join(family_means(processed$mseqtab))
@@ -236,8 +236,8 @@ seq_families <- function(mseqtab) {
 
 mass_ordering <- function() {
   site_ordered <- c(
-    "aoi", "age", "height_dxa", "weight_dxa",
-    "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+    "aoi", "fat_lean_ratio", "age", "height_dxa", "weight_dxa", "bmi",
+    "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
     "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
     "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
     "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",

@@ -25,6 +25,7 @@ merge_process_opts <- function(opts = list()) {
     scale_sample_data = TRUE,
     transform_fun = identity,
     vst = TRUE,
+    remove_na = FALSE,
     outdir = "../data"
   )
   modifyList(default_opts, opts)
@@ -66,8 +67,9 @@ read_data <- function(data_dir = "../data/") {
       operator = NA,
       batch = NA
     ) %>%
-    select_at(
-      .vars = setdiff(tolower(colnames(bc)), "number")
+    left_join(
+      bc %>%
+        dplyr::select(id, number, batch, operator)
     )
 
   taxa <- readRDS(file.path(data_dir, "taxa.rds")) %>%
@@ -101,7 +103,7 @@ prep_sample <- function(survey, scale_sample_data = FALSE) {
     select( ## reorder columns
       id, age, gender, height_dxa, weight_dxa,
       bmi, aoi, ends_with("_fm"), ends_with("_lm"),
-      starts_with("diet_"), batch, operator
+      batch, operator
     )%>%
     mutate_at( ## fm ratios
       vars(ends_with("fm"), -total_fm),
@@ -227,6 +229,8 @@ process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
 
   bc_full <- prep_sample(bc_full, opts$scale_sample_data) %>%
     left_join(bc %>% select(id, number))
+  bc <- prep_sample(bc, opts$scale_sample_data) %>%
+    left_join(bc %>% select(id, number))
   rownames(bc) <- bc$number
 
   ## combine into ps
@@ -259,6 +263,12 @@ process_data <- function(seqtab, bc, bc_full, taxa, tree, opts = list()) {
     otu_table(ps)@.Data <- t(assay(vst_dds))
   }
 
+  if (opts$remove_na) {
+    na_rows <- apply(sample_data(ps), 1, function(x) any(is.na(x)))
+    ps <- ps %>%
+      subset_samples(!na_rows)
+  }
+
   list(
     "ps" = ps,
     "bc_full" = bc_full,
@@ -283,9 +293,9 @@ melt_ps <- function(ps) {
 
 family_means <- function(mseqtab) {
   processed$mseqtab %>%
-    group_by(family, Number) %>%
+    group_by(family, number) %>%
     dplyr::summarise(family_mean = mean(value)) %>%
     spread(family, family_mean) %>%
-    group_by(Number) %>%
-    dplyr::summarise(rl_ratio = Ruminococcaceae / Lachnospiraceae)
+    group_by(number) %>%
+    dplyr::summarise(rl_ratio = Bacteroidaceae / Ruminococcaceae)
 }

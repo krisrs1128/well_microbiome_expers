@@ -57,28 +57,35 @@ theme_update(
 ###############################################################################
 raw <- read_data()
 opts <- list(
-  "filt_k" = 0.02,
-  "rlog" = FALSE,
+  "vst" = FALSE,
   "stan_file" = "lda_cca.stan",
   "outdir" = "../chapter/figure/lda_cca/"
 )
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
 
 ###############################################################################
 ## Run and plot LDA / CCA on the two (scaled) tables
 ###############################################################################
-bc_mat <- scale(processed$bc)
+bc_mat <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
 
 K <- 2
 L1 <- 3
 L2 <- 3
 
 ## initialize using results from sparse CCA
-opts_cca <- opts
-opts_cca$rlog <- TRUE
-processed_rlog <- process_data(raw$seqtab, raw$bc, raw$taxa, opts_cca)
+processed_vst <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, raw$tree)
 cca_res <- CCA(
-  scale(processed_rlog$x_seq),
+  scale(get_taxa(processed_vst$ps)),
   bc_mat,
   penaltyx = 0.6,
   penaltyz = 0.3,
@@ -87,7 +94,7 @@ cca_res <- CCA(
 
 stan_data <- list(
   "n" = nrow(bc_mat),
-  "p1" = ncol(processed$x_seq),
+  "p1" = ntaxa(processed$ps),
   "p2" = ncol(bc_mat),
   "K" = K,
   "L1" = L1,
@@ -95,7 +102,7 @@ stan_data <- list(
   "sigma" = 1,
   "a0" = 1,
   "b0" = 1,
-  "x" = processed$x_seq,
+  "x" = get_taxa(processed$ps),
   "y" = bc_mat,
   "id_y" = diag(ncol(bc_mat)),
   "id_k" = diag(K),
@@ -123,12 +130,11 @@ rm(vb_fit)
 scv <- scale_color_viridis(
   guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
 )
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+seq_fam <- processed$mseqtab %>%
+  seq_families()
 
 mdist <- melt_parameters(posterior)
 mdist$xi_s <- reshape_posterior_score(mdist$xi_s, raw$bc)
 mdist$xi_x <- reshape_posterior_score(mdist$xi_x, raw$bc)
 mdist$xi_y <- reshape_posterior_score(mdist$xi_y, raw$bc)
-lda_cca_plots(mdist, seq_families, processed, opts)
+lda_cca_plots(mdist, seq_fam, processed, opts)

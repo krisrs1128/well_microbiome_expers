@@ -49,36 +49,37 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "filt_a" = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
-x <- scale(processed$bc)
-y <- scale(processed$x_seq)
-
-cca_res <- CCA(x, y, penaltyx = 0.6, penaltyz = 0.3, K = 3)
+processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, raw$tree)
+x <- sample_data(processed$ps) %>%
+  select_if(is.numeric) %>%
+  scale()
+y <- scale(get_taxa(processed$ps))
+cca_res <- CCA(x, y, penaltyx = 0.7, penaltyz = 0.3, K = 3)
 
 ## Plot the scores
 scores <- prepare_scores(
   list(x %*% cca_res$u, y %*% cca_res$v),
   c("body_comp", "seq")
 ) %>%
-  left_join(raw$bc)
+  left_join(sample_data(processed$ps))
 
 mscores <- melt_scores(scores)
 plot_scores(scores, "type", "Meas. Type", cca_res$d) +
   link_scores(mscores) +
   scale_color_brewer(palette = "Set1")
 
-## color by lean mass
-plot_scores(scores, "Total_LM", "Total LM", cca_res$d, c(-3, 3)) +
+## color by android fat mass
+plot_scores(scores, "android_fm", "android fm", cca_res$d, c(-3, 3)) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pmd/scores_lm.png", width = 5.52, height = 3.86)
+ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 5.52, height = 3.86)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab))
+  left_join(family_means(processed$mseqtab)) %>%
+  mutate(rl_ratio = ifelse(rl_ratio > 25, 25, rl_ratio))
 plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$d) +
   link_scores(mscores) +
   scale_color_viridis(
@@ -88,19 +89,18 @@ plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$d) +
 ## Plot the loadings
 rownames(cca_res$u) <- colnames(x)
 rownames(cca_res$v) <- colnames(y)
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+seq_fam <- processed$mseqtab %>%
+  seq_families()
 
 loadings <- prepare_loadings(
   list(data.frame(cca_res$u), data.frame(cca_res$v)),
   c("body_comp", "seq")
 ) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 
 large_species <- loadings %>%
   filter(
-    sqrt(Axis.1 ^ 2 + Axis.2 ^ 2) > 0.16,
+    sqrt(Axis.1 ^ 2 + Axis.2 ^ 2) > 0.15,
     type == "seq"
   )
 
@@ -118,64 +118,47 @@ plot_loadings(
     ),
     size = 3
   ) +
-  scale_size(range = c(1.5, 4), breaks = c(-5, 5))
+  scale_size(range = c(1, 3), breaks = c(-5, 5))
 ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
 
 mlarge_species <- melt(
   data.frame(
-    "Number" = rownames(x),
+    "number" = rownames(x),
     y[, large_species$seq_num],
-    x[, c("Total_FM", "Total_LM")]
+    x[, c("android_fm", "gynoid_fm")]
   ),
-  id.vars = c("Number", "Total_FM", "Total_LM"),
+  id.vars = c("number", "android_fm", "gynoid_fm"),
   variable.name = "seq_num"
 ) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   loadings %>%
-    arrange(desc(Axis.2)) %>%
+  arrange(dplyr::desc(Axis.1)) %>%
     .[["seq_num"]]
 )
 
 ggplot(mlarge_species) +
   geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
   geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
+  stat_smooth(
+    aes(x = value, y = android_fm, col = family),
+    fill = "#adadad",
+    size = 0.5,
+    method = "lm"
+  ) +
   geom_point(
-    aes(x = value, y = Total_LM, col = family),
+    aes(x = value, y = android_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
   facet_wrap(~seq_num, ncol = 8) +
   theme(
     legend.position = "bottom"
   )
-ggsave(
-  "../chapter/figure/pmd/total_lm_species.png",
-  width = 7.06,
-  height = 4.41
-)
 
-mlarge_species$seq_num <- factor(
-  mlarge_species$seq_num,
-  loadings %>%
-    arrange(desc(Axis.1)) %>%
-    .[["seq_num"]]
-)
-
-ggplot(mlarge_species) +
-  geom_hline(yintercept = 0, size = 0.1, alpha = 0.8) +
-  geom_vline(xintercept = 0, size = 0.1, alpha = 0.8) +
-  geom_point(
-    aes(x = value, y = Total_FM, col = family),
-    size = 0.7, alpha = 0.8
-  ) +
-  facet_wrap(~seq_num, ncol = 8) +
-  theme(
-    legend.position = "bottom"
-  )
 ggsave(
-  "../chapter/figure/pmd/total_fm_species.png",
+  "../chapter/figure/pmd/android_fm_species.png",
   width = 7.06,
   height = 4.41
 )

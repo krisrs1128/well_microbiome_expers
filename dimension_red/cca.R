@@ -48,26 +48,35 @@ theme_update(
 ## read and prepare the data
 ###############################################################################
 raw <- read_data()
-opts <- list(filt_k = 0.5, filt_a = 0)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
+opts <- list(filter_k = 0.5, filter_a = 5)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
 
 ###############################################################################
 ## Run and plot CCA on the two (scaled) tables
 ###############################################################################
-bc_mat <- scale(processed$bc)
-x_seq <- scale(processed$x_seq)
+bc_mat <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
+x_seq <- scale(get_taxa(processed$ps))
 cca_res <- CCorA(bc_mat, x_seq)
 
 ## Plot the loadings
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+seq_fam <- processed$mseqtab %>%
+  seq_families()
 
 loadings <- prepare_loadings(
   list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),
   c("body_comp", "seq")
 ) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 
 plot_loadings(loadings, cca_res$Eigenvalues)
 ggsave("../chapter/figure/cca/loadings.png", width = 5.77, height = 4.73)
@@ -80,23 +89,24 @@ scores <- prepare_scores(
   left_join(raw$bc)
 
 mscores <- melt_scores(scores)
-plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues) +
+plot_scores(scores, "type", "Meas. Type", cca_res$Eigenvalues, c(-1, 1)) +
   link_scores(mscores) +
   scale_color_brewer(palette = "Set1")
 ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 
 ## color by weight
-plot_scores(scores, "Total_LM", "Total LM", cca_res$Eigenvalues) +
+plot_scores(scores, "android_fm", "Android FM", cca_res$Eigenvalues, c(-1, 1)) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_total_lm.png", width = 3.67, height = 3.4)
+ggsave("../chapter/figure/cca/scores_android_fm.png", width = 3.67, height = 3.4)
 
-## color by ruminoccocus / lachnospiraceae ratios
+## color by bacteroides / ruminoccocus ratios
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$Eigenvalues) +
+  left_join(family_means(processed$mseqtab)) %>%
+  mutate(rl_ratio = tanh(rl_ratio))
+plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
