@@ -114,7 +114,7 @@ ggplot(mbeta) +
   scale_y_discrete(expand = c(0, 0)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
-    axis.text = element_blank(),
+    axis.text.x = element_blank(),
     panel.spacing = unit(0, "cm"),
     strip.text.x = element_blank(),
     legend.position = "bottom"
