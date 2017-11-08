@@ -74,7 +74,7 @@ plot_scores(scores, "android_fm", "android fm", cca_res$d, c(-3, 3)) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pmd/scores_fm.png", width = 5.52, height = 3.86)
+ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 5.52, height = 3.86)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
@@ -135,7 +135,7 @@ mlarge_species <- melt(
 mlarge_species$seq_num <- factor(
   mlarge_species$seq_num,
   loadings %>%
-    arrange(desc(Axis.1)) %>%
+  arrange(dplyr::desc(Axis.1)) %>%
     .[["seq_num"]]
 )
 
