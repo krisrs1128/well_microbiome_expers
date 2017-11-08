@@ -244,7 +244,7 @@ Nonetheless, it is not ideal in the multitable setting.
 \subsubsection{Example}
 \label{subsubsec:pca_example}
 
-Figure \ref{fig:loadings} and \ref{fig:scores_total_fm} illustrate this approach
+Figure \ref{fig:loadings} and \ref{fig:scores_android_fm} illustrate this approach
 on body composition and bacterial abundance data from the WELL-China study. Note
 that we have subsetted to only women, since men and women have very different
 body compositions, and we have slightly more data for women. Further, the 16s
@@ -287,11 +287,11 @@ components does not mean such relationships do not exist.
 
 We can study individual samples with respect to these loadings, by plotting
 their projections onto the top two principal components. This is the content of
-Figures \ref{fig:scores_total_fm} and \ref{fig:scores_rl_ratio}. These figures
+Figures \ref{fig:scores_android_fm} and \ref{fig:scores_rl_ratio}. These figures
 display samples in the same positions, but shaded by total fat mass and Ruminococcaceae
 / Lachnospiraceae ratio, respectively. This shading confirms the observations
 from the loadings directly using observed data. Indeed, the increasing fat mass
-among samples in the top right of Figure \ref{fig:scores_total_fm} exactly
+among samples in the top right of Figure \ref{fig:scores_android_fm} exactly
 corresponds to the fact that  related variables lie in the top right in
 Figure \ref{fig:loadings}. A top-to-bottom Ruminococcaceae /
 Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
@@ -316,13 +316,13 @@ methods of subsequent sections.
     components explain about 4\% of the variance. Points are species, shaded in by
     taxonomic family. Text are columns from the body composition data. Points
     and text with small angle between one another are more correlated.
-    \label{fig:scores_total_fm} }
+    \label{fig:scores_android_fm} }
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
-  \caption{The same scores as Figure \ref{fig:scores_total_fm}, but shaded now
+  \caption{The same scores as Figure \ref{fig:scores_android_fm}, but shaded now
     by the transformed ratio of Bacteroidaceae over Ruminoccocus abundances. The
     slight increase in Bacteroidaceae from left to right is consistent with the
     loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
@@ -559,10 +559,10 @@ original CCA directions. This is especially important in this nearly
 high-dimensional setting, where covariance estimation may be unreliable.
 
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
-a PCA scores plot, as in Figure \ref{fig:scores_total_fm}. For example, Figures
-\ref{fig:cca_scores_total_fm} and \ref{fig:cca_scores_rl_ratio} display the
+a PCA scores plot, as in Figure \ref{fig:scores_android_fm}. For example, Figures
+\ref{fig:cca_scores_android_fm} and \ref{fig:cca_scores_rl_ratio} display the
 samples shaded in by total fat mass and Ruminococcaceae vs. Lachnospiraceae
-ratios, respectively, as in Figures \ref{fig:scores_total_fm} and
+ratios, respectively, as in Figures \ref{fig:scores_android_fm} and
 \ref{fig:cca_scores_rl_ratio}. The association between these variables and the
 sample positions is not as strong as when performing PCA on the combined table.
 This is to be expected, however, as PCA maximizes variance without any thought
@@ -641,29 +641,29 @@ as CoIA also needs to estimate the covariance between tables, which is difficult
 when the number of species is large. The loadings are displayed in Supplementary
 Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
 \ref{fig:cca_loadings}. However, the associated scores are quite different than
-those found using CCA. Compare Figure \ref{fig:coia_scores_total_fm}, which
+those found using CCA. Compare Figure \ref{fig:coia_scores_android_fm}, which
 shades samples by total fat mass, or Supplemental Figure
 \ref{fig:coia_scores_rl_ratio}, which shades them by Ruminococcaceae /
-Lachnospiraceae ratios, with Figures \ref{fig:cca_scores_total_fm} and
+Lachnospiraceae ratios, with Figures \ref{fig:cca_scores_android_fm} and
 \ref{fig:cca_scores_rl_ratio} for CCA. The scores for CoIA are not so closely
 aligned across tables, but they exhibit a clearer gradient across supplemental
 variables. We find that the scores are not nearly as closely aligned as they are
-for CCA (see Figure \ref{fig:cca_scores_total_fm}), but that they are more
+for CCA (see Figure \ref{fig:cca_scores_android_fm}), but that they are more
 strongly associated with variation in , as in the concatenated PCA result of
-Figure \ref{fig:scores_total_fm}. It is not clear whether this phenomena -- the
+Figure \ref{fig:scores_android_fm}. It is not clear whether this phenomena -- the
 CoIA scores being more similar to those from PCA than CCA -- holds in general,
 or what it is about the change in inner products between CoIA and CCA that is
 responsible for this difference.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_total_fm}
+  \includegraphics[width=\textwidth]{figure/coia/scores_android_fm}
   \caption{The normalized scores from each table, displayed
     simultaneously, as obtained by CoIA. This is the analog of Figure
-    \ref{fig:cca_scores_total_fm} from CCA, though the aspect ratio has been
+    \ref{fig:cca_scores_android_fm} from CCA, though the aspect ratio has been
     adjusted according to the relative amount of variance explained by the first
     two CoIA axes.
-    \label{fig:coia_scores_total_fm} }
+    \label{fig:coia_scores_android_fm} }
 \end{figure}
 
 \subsection{MFA}
@@ -1237,7 +1237,7 @@ To interpret these coefficients in the raw data, we can visualize individual
 species with strong associations to body composition. Specifically, we study
 associations with the total lean and fat mass variables, since within lean or
 fat mass types, coefficients tend to be quite correlated. In Figures
-\ref{fig:spls_total_lm_species} and \ref{fig:spls_total_fm_species}, we display
+\ref{fig:spls_total_lm_species} and \ref{fig:spls_android_fm_species}, we display
 the abundances $X$ for species against total lean and fat mass, respectively.
 The species are chosen according to whether the two-dimensional coefficient
 across lean and fat mass has large norm\footnote{Specifically,
@@ -1268,10 +1268,10 @@ more interpretable.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/total_fm_species}
+  \includegraphics[width=\textwidth]{figure/spls/android_fm_species}
   \caption{
     The analog of Figure \ref{fig:spls_total_lm_species}, but with fat, rather
-    than lean, mass along the $y$-axis. \label{fig:spls_total_fm_species}
+    than lean, mass along the $y$-axis. \label{fig:spls_android_fm_species}
   }
 \end{figure}
 
@@ -2269,7 +2269,7 @@ large $t$.
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_total_fm},
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_android_fm},
     but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
     \ref{fig:scores_rl_ratio} and
     \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
@@ -2277,18 +2277,18 @@ large $t$.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_total_fm}
+  \includegraphics[width=\textwidth]{figure/pca_iv/scores_android_fm}
   \caption{We can display the scores obtained by PCA-IV. The results are similar
     to those from combined-PCA, which is not surprising, since they are related
     to the PCA based only on microbial
-    abundances. \label{fig:pca_iv_scores_total_fm} }
+    abundances. \label{fig:pca_iv_scores_android_fm} }
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
   \caption{This provides the same scores as Figure
-    \ref{fig:pca_iv_scores_total_fm}, but shaded by Ruminoccoccaceae vs.
+    \ref{fig:pca_iv_scores_android_fm}, but shaded by Ruminoccoccaceae vs.
     Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
 \end{figure}
 
