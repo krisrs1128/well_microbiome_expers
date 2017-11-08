@@ -254,22 +254,21 @@ in at least 7\% of samples.
 
 Figure \ref{fig:loadings} displays the loadings associated with this
 concatenated PCA approach, where body composition (36 columns) and 16s
-abundances (368 columns) were combined into one dataset (401 columns). Columns
+abundances (372 columns) were combined into one dataset (408 columns). Columns
 associated with bacterial species are displayed as points, shaded by taxonomic
 family, while columns associated with body composition variables are labeled
 with text.
 
 Most body composition variables lie on the top right, in a direction
-approximately orthogonal to the main direction of variation among species. Columns
-that are highly correlated -- e.g., right (R) and left (L) Trunk Fat Mass (FM) --
-have loadings nearly equal to one another. Age appears in generally negatively
-correlated with the other variables. Among species, the main
-source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
-which appear overrepresented on the top and bottom, respectively.
+approximately orthogonal to the main direction of variation among species.
+Columns that are highly correlated -- e.g., right (R) and left (L) leg fat mass
+(FM) -- have loadings nearly equal to one another. Age appears in generally
+negatively correlated with the other variables. Among species, the most notable
+pattern is the concentration of Ruminococcaceae on the right.
 
-To identify relationships between species and body composition variables, it would
-be of interest to isolate those species with large contributions along the axis
-defined by linking the center of the  variables and the origin. Relatively
+To identify relationships between species and body composition variables, it
+would be of interest to isolate those species with large contributions along the
+axis defined by linking the center of the variables and the origin. Relatively
 few such species stand out, though note that there is nothing in this
 algorithm's objective that would seek covariation across tables directly, so the
 fact that such associations seem weak with respect to the top two principal
@@ -288,22 +287,23 @@ components does not mean such relationships do not exist.
 We can study individual samples with respect to these loadings, by plotting
 their projections onto the top two principal components. This is the content of
 Figures \ref{fig:scores_android_fm} and \ref{fig:scores_rl_ratio}. These figures
-display samples in the same positions, but shaded by total fat mass and Ruminococcaceae
-/ Lachnospiraceae ratio, respectively. This shading confirms the observations
-from the loadings directly using observed data. Indeed, the increasing fat mass
-among samples in the top right of Figure \ref{fig:scores_android_fm} exactly
-corresponds to the fact that  related variables lie in the top right in
-Figure \ref{fig:loadings}. A top-to-bottom Ruminococcaceae /
-Lachnospiraceae differentiation is visible in Figure \ref{fig:scores_rl_ratio},
-which is consistent with the loadings, though we also observe a few samples with
-substantially higher Ruminoccocus ratios.
+display samples in the same positions, but shaded by android (i.e., abdominal)
+fat mass and the difference between variance-stabilized Bacteroidaceae and
+Ruminococcaceae\footnote{We pass the difference through $\tanh$ to squash very
+  large differences.} counts, respectively. This shading confirms the
+observations from the loadings directly using observed data. Indeed, the
+increasing android fat mass among samples in the top of Figure
+\ref{fig:scores_android_fm} exactly corresponds to the fact that related
+variables lie at the top in Figure \ref{fig:loadings}. The largest
+Bacteroidaceae vs. Ruminococcaceae differentiation is visible in Figure
+\ref{fig:scores_rl_ratio}, which is consistent with the loadings.
 
 In this approach, the loadings provide a description of the relationship between
 variables across data sets. Further, scores summarize variation in samples
 across multiple data sets. Hence, this heuristic is a natural first step in
 analyzing multiple table data. However, considering the difficulty in directly
 interpreting the covariation across data sets, as well as the method's failure
-to use any sense of covariation in the dimensionality reductions trategy,
+to use any sense of covariation in the dimensionality reductions strategy,
 suggests that this method should not be the last step of an analysis workflow.
 Nevertheless, we now have a baseline with which to compare the more elaborate
 methods of subsequent sections.
@@ -313,8 +313,8 @@ methods of subsequent sections.
   \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
     composition and microbial abundance data set. The first two principal
-    components explain about 4\% of the variance. Points are species, shaded in by
-    taxonomic family. Text are columns from the body composition data. Points
+    components explain about 4\% of the variance. Points are species, shaded in
+    by taxonomic family. Text are columns from the body composition data. Points
     and text with small angle between one another are more correlated.
     \label{fig:scores_android_fm} }
 \end{figure}
@@ -323,9 +323,10 @@ methods of subsequent sections.
   \centering
   \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:scores_android_fm}, but shaded now
-    by the transformed ratio of Bacteroidaceae over Ruminoccocus abundances. The
-    slight increase in Bacteroidaceae from left to right is consistent with the
-    loadings observed in Figure \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
+    by the transformed ratio of Bacteroidaceae over Ruminococcaceae abundances.
+    The slight increase in Ruminococcaceae from left to right is consistent with
+    the loadings observed in Figure
+    \ref{fig:loadings}.\label{fig:scores_rl_ratio} }
 \end{figure}
 
 \subsection{CCA}
@@ -506,7 +507,7 @@ with particular interest in how the results compare with those of Section
 scores plots in Figures \ref{fig:cca_loadings} through
 \ref{fig:cca_scores_rl_ratio}. However, note that the data are \textit{not}
 quite the same between the two analysis -- we have filtered down to species passing
-a filter, which reduces the number of species to 57, from 2565. This very
+a filter, which reduces the number of species to 66, from 2565. This very
 aggressive filtering is necessary because CCA requires estimation of covariances
 matrices $\Sigma_{XX}, \Sigma_{XY}$, and $\Sigma_{YY}$, which is impossible for
 $p > n$ and highly unstable when $p$ is a large fraction of $n$. Besides this
@@ -517,24 +518,24 @@ stronger filtering, all preprocessing steps remain the same as in Section
   \centering
   \includegraphics[width=\textwidth]{figure/CCA/loadings}
   \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
-      loadings obtained by applying CCA to the combined body
-      composition and microbial abundance data set. Each point is a species, and
-      text are body composition variables. Species are shaded in according to
-      taxonomic family, and the size of points corresponds to the third CCA
-      dimension. Text and point that are close to one another have similar
-      patterns of abundance across samples. 
+    loadings obtained by applying CCA to the combined body composition and
+    microbial abundance data set. Each point is a species, and text are body
+    composition variables. Species are shaded in according to taxonomic family,
+    and the size of points corresponds to the third CCA dimension. Text and
+    point that are close to one another have similar patterns of abundance
+    across samples.
       \label{fig:cca_loadings} }
 \end{figure}
 
 Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
 precise, let $X \in \reals^{102\times 36}$ be the matrix of body composition
-measurements and $Y \in \reals^{102 \times 57}$ be the variance-stabilized
+measurements and $Y \in \reals^{102 \times 66}$ be the variance-stabilized
 microbial abundances. As before, write $u_{k} \in \reals^{36}, v_{k} \in
-\reals^{57}$ for the $k^{th}$ canonical correlation directions. Then, Figure
+\reals^{66}$ for the $k^{th}$ canonical correlation directions. Then, Figure
 \ref{fig:cca_loadings} displays text labels for column $j$ of the body
 composition variables at location $\left(u_{j1}, u_{j2}\right)_{j = 1}^{36}$ and
 shaded points for the $j^{th}$ species at position $\left(v_{j1},
-v_{j2}\right)_{j = 1}^{57}$.
+v_{j2}\right)_{j = 1}^{66}$.
 
 As in the concatenated PCA, we find that the groups of variables occupy
 separates spaces. Our interpretation is that sequences further to the left are
@@ -553,21 +554,22 @@ colored differently according to the table to which they are associated. The
 pairs of scores for each individual sample are drawn with small links. Since
 most links are relatively short, linear combinations of the two tables could be
 found that optimized the objective -- indeed, the top two canonical correlations
-are 0.984 and 0.961. However, some caution is necessary here, and a more honest
+are 0.968 and 0.957. However, some caution is necessary here, and a more honest
 evaluation would be based scores obtained by projecting new samples onto the
 original CCA directions. This is especially important in this nearly
 high-dimensional setting, where covariance estimation may be unreliable.
 
 Aside from the fact that samples appear as pairs, interpretation proceeds as in
-a PCA scores plot, as in Figure \ref{fig:scores_android_fm}. For example, Figures
-\ref{fig:cca_scores_android_fm} and \ref{fig:cca_scores_rl_ratio} display the
-samples shaded in by total fat mass and Ruminococcaceae vs. Lachnospiraceae
-ratios, respectively, as in Figures \ref{fig:scores_android_fm} and
-\ref{fig:cca_scores_rl_ratio}. The association between these variables and the
-sample positions is not as strong as when performing PCA on the combined table.
-This is to be expected, however, as PCA maximizes variance without any thought
-to on covariance, and the body composition table alone has a large portion of
-its variance related to total fat mass.
+a PCA scores plot, as in Figure \ref{fig:scores_android_fm}. For example,
+Figures \ref{fig:cca_scores_android_fm} and \ref{fig:cca_scores_rl_ratio}
+display the samples shaded in by android fat mass and Bacteroidaceae vs.
+Ruminococcaceae difference, respectively, as in Figures
+\ref{fig:scores_android_fm} and \ref{fig:cca_scores_rl_ratio}. The association
+between these variables and the sample positions is not as strong as when
+performing PCA on the combined table. This is to be expected, however, as PCA
+maximizes variance without any thought to on covariance, and the body
+composition table alone has a large portion of its variance related to android
+fat mass.
 
 \begin{figure}
   \centering
@@ -589,7 +591,7 @@ its variance related to total fat mass.
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data set, shaded in by android fat mass.
     The positions of points are identical to those in Figure
-    \ref{fig:scores_linked}, and other than the shading, the plots are read in
+    \ref{fig:cca_scores_linked}, and other than the shading, the plots are read in
     the same way. The first two CCA dimensions suggest smooth variation across
     samples, according to amount of android fat
     mass. \label{fig:cca_scores_android_fm} }
@@ -599,7 +601,7 @@ its variance related to total fat mass.
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:cca_scores_android_fm}, but shaded
-    now by the ratio of Bacteroidaceae to Ruminococcaceae
+    now by the difference in Bacteroidaceae to Ruminococcaceae
     abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
 
@@ -642,18 +644,18 @@ when the number of species is large. The loadings are displayed in Supplementary
 Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
 \ref{fig:cca_loadings}. However, the associated scores are quite different than
 those found using CCA. Compare Figure \ref{fig:coia_scores_android_fm}, which
-shades samples by total fat mass, or Supplemental Figure
-\ref{fig:coia_scores_rl_ratio}, which shades them by Ruminococcaceae /
-Lachnospiraceae ratios, with Figures \ref{fig:cca_scores_android_fm} and
+shades samples by android fat mass, or Supplemental Figure
+\ref{fig:coia_scores_rl_ratio}, which shades them by Bacteroides vs.
+Ruminococcaceae differences, with Figures \ref{fig:cca_scores_android_fm} and
 \ref{fig:cca_scores_rl_ratio} for CCA. The scores for CoIA are not so closely
 aligned across tables, but they exhibit a clearer gradient across supplemental
 variables. We find that the scores are not nearly as closely aligned as they are
 for CCA (see Figure \ref{fig:cca_scores_android_fm}), but that they are more
-strongly associated with variation in , as in the concatenated PCA result of
-Figure \ref{fig:scores_android_fm}. It is not clear whether this phenomena -- the
-CoIA scores being more similar to those from PCA than CCA -- holds in general,
-or what it is about the change in inner products between CoIA and CCA that is
-responsible for this difference.
+strongly associated with variation in android fat mass, as in the concatenated
+PCA result of Figure \ref{fig:scores_android_fm}. It is not clear whether this
+phenomena -- the CoIA scores being more similar to those from PCA than CCA --
+holds in general, or what it is about the change in inner products between CoIA
+and CCA that is responsible for this difference.
 
 \begin{figure}
   \centering
@@ -856,18 +858,18 @@ The loadings are given in Figure \ref{fig:pca_iv_loadings}. Interpretation of
 the species loadings is simple, since species seem well separated by taxa.
 Interpretation of the body composition variables is less clear -- pairs of
 variables that would be expected to be near to one another are not, in many
-cases. Indeed, trunk fat mass (\texttt{Trunk\_FM}) and left total fat mass
-(\texttt{L\_Total\_FM}) should have a small angle between one another, but they
-do not. It is possible that by approximating the covariation across tables, the
+cases. Indeed, leg fat mass (\texttt{leg\_fm}) and left leg fat mass
+(\texttt{l\_leg\_fm}) should have a small angle between one another, but they do
+not. It is possible that by approximating the covariation across tables, the
 quality of within-table approximations deteriorates.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
   \caption{The loadings for PCA-IV can be interpreted like loadings from
-    previous methods, for example Figure \ref{fig:loadings}. The relationship
-    between variables seems more reasonable than in CCA, but are only indirectly
-    related to covariation across tables.
+    previous methods, for example Figure \ref{fig:loadings}. Some of the
+    relationships between variables seem less intuitive than those observed
+    previously.
     \label{fig:pca_iv_loadings} }
 \end{figure}
 
@@ -1214,10 +1216,10 @@ Figure \ref{fig:spls_coef_heatmap} displays fitted coefficients relating body
 composition variables with species abundances. By fitted coefficients, we mean
 we display $\hat{B} = ZQ^T$, where $Z$ are the SPLS directions and a
 multiresponse linear regression model is used, $Y = XB + E = XZQ^T + E$.
-Positive associations tend to occur across all responses
-simultaneously, while negative associations can be unique to either lean or fat
-mass. Most taxonomic families seem to have slightly more negative than positive
-associations, with the possible exception of Porphyromonodaceae.
+Positive associations tend to occur across all responses simultaneously, while
+negative associations can be unique to either lean or fat mass. Most taxonomic
+families seem to have slightly more negative than positive associations, with
+the possible exception of Porphyromonodaceae.
 
 \begin{figure}
   \centering
@@ -1235,22 +1237,21 @@ associations, with the possible exception of Porphyromonodaceae.
 
 To interpret these coefficients in the raw data, we can visualize individual
 species with strong associations to body composition. Specifically, we study
-associations with the total lean and fat mass variables, since within lean or
-fat mass types, coefficients tend to be quite correlated. In Figures
-\ref{fig:spls_total_lm_species} and \ref{fig:spls_android_fm_species}, we display
-the abundances $X$ for species against total lean and fat mass, respectively.
-The species are chosen according to whether the two-dimensional coefficient
-across lean and fat mass has large norm\footnote{Specifically,
-  $\left\| \begin{pmatrix} \beta_{fm} \\ \beta_{lm} \end{pmatrix} \right\|_{2} >
-  0.065$.}. The main associations that are visible are those between the body
-composition and species presence or absence. That is, there don't seem to be any
-cases where a body composition feature varies smoothly as a species becomes more
-or less abundant. Instead, SPLS has identified species whose samples have lower or
-higher body fat or lean mass, depending on whether that species is present or
-absent. This suggests that a logistic regression version of SPLS
-\citep{chung2010sparse}, applied to the presence-absence transformed version of
-this data may fit the data just as well, with the advantage of being somewhat
-more interpretable.
+associations with the android and gynoid fat mass variables. In Figures
+\ref{fig:spls_android_fm_species} and \ref{fig:spls_gynoid_fm_species}, we
+display the abundances $X$ for species against android and gynoid fat mass,
+respectively. The species are chosen according to whether the two-dimensional
+coefficient across android and gynoid fat mass has large
+norm\footnote{Specifically, $\left\| \begin{pmatrix} \beta_{android}
+    \\ \beta_{gynoid} \end{pmatrix} \right\|_{2} > 0.065$.}. The main
+associations that are visible are those between the body composition and species
+presence or absence. That is, there don't seem to be any cases where a body
+composition feature varies smoothly as a species becomes more or less abundant.
+Instead, SPLS has identified species whose samples have lower or higher android
+or gynoid fat mass, depending on whether that species is present or absent. This
+suggests that a logistic regression version of SPLS \citep{chung2010sparse},
+applied to the presence-absence transformed version of this data may fit the
+data just as well, with the advantage of being somewhat more interpretable.
 
 \begin{figure}
   \centering
@@ -1258,7 +1259,7 @@ more interpretable.
   \caption{A subset of the species whose coefficients for total lean and fat
     mass are high in magnitude. Each panel represents one species, and each
     point is a samples $\times$ species combination. The $x$-axis gives the
-    abundance of that species across samples, and the $y$-axis gives total lean
+    abundance of that species across samples, and the $y$-axis gives android fat
     mass of the associated sample. Colors indicate taxonomic family membership.
     Panels are sorted from most positive to most negative association. Within
     each panel, a linear smooth is given, independent of the estimated
@@ -1271,8 +1272,9 @@ more interpretable.
   \centering
   \includegraphics[width=\textwidth]{figure/spls/gynoid_fm_species}
   \caption{
-    The analog of Figure \ref{fig:spls_android_fm_species}, but with fat, rather
-    than lean, mass along the $y$-axis. \label{fig:spls_gynoid_fm_species}
+    The analog of Figure \ref{fig:spls_android_fm_species}, but with gynoid,
+    rather than android, fat mass along the
+    $y$-axis. \label{fig:spls_gynoid_fm_species}
   }
 \end{figure}
 
@@ -1679,7 +1681,7 @@ the part of ordinary CCA.
     Sample scores provided by sparse CCA. Each point is a sample, positioned at
     their coordinates with respect to the first two learned sparse CCA
     directions. Points are shaded in according to android fat mass, and their
-    sizes are set according to the third CCA direction's contribution.
+    sizes are set according to the third sparse CCA direction's contribution.
     Evidently, the first two directions reflect a gradient across android fat
     mass, suggesting that this is a substantial contributor to covariation
     across microbiome and body composition tables.
@@ -1823,20 +1825,20 @@ $1$ throughout.
   \label{fig:lda_cca_within_loadings_body_comp_boxplots}}
 \end{figure}
 
-Figure \ref{fig:lda_cca_within_loadings_seq_boxplots} summarizes table-specific variation in
-bacterial abundances. Invariance under rotation and reflection complicates
-interpretation of these loadings. If we flip the sign of the second row of
-loadings, it appears that the main difference between the first and second
-loadings is the rate of decay in frequencies from more to less abundant species.
-However, no clear distinction appears between taxa among the first two loadings.
-The main characteristic of the third loading is that it differentiates
+Figure \ref{fig:lda_cca_within_loadings_seq_boxplots} summarizes table-specific
+variation in bacterial abundances. Invariance under rotation and reflection
+complicates interpretation of these loadings. If we flip the sign of the second
+row of loadings, it appears that the main difference between the first and
+second loadings is the rate of decay in frequencies from more to less abundant
+species. However, no clear distinction appears between taxa among the first two
+loadings. The main characteristic of the third loading is that it differentiates
 Ruminococcaceae, which mostly have positive loadings, from Bacteroidaceae, which
 mostly have negative loadings.
 
 Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots} suggests that the
 first axes of $W^{Y}$ captures variation between lean and fat mass, which can be
 used to interpret the scores in Supplementary Figure
-\ref{fig:lda_cca_unshared_scores_lm_posterior}. The second axes reflects similar
+\ref{fig:lda_cca_unshared_scores_fm_posterior}. The second axes reflects similar
 variation, while the third axes captures difference between mass in the trunk
 versus arms and legs.
 
@@ -1848,10 +1850,11 @@ loadings are given in Figure
 loadings slightly differentiates lean and fat mass variables. In the first row
 of loadings, total fat mass, android lean mass, and total lean mass seem to
 stand out. However, in light of Supplementary Figure
-\ref{fig:lda_cca_shared_scores_lm_posterior}, this variation is not clearly
+\ref{fig:lda_cca_shared_scores_fm_posterior}, this variation is not clearly
 visible in the raw data, and may simply be due to chance.
 
 The bacterial abundance loadings are given in Figures
+\ref{fig:lda_cca_within_loadings_seq_boxplots} and
 \ref{fig:lda_cca_between_loadings_seq_boxplots}. The most notable observation is
 that unlabeled (``Other'') and Ruminococcaceae families have wider spread in the
 second loading than in the first. This could be associated with decreased
@@ -1864,7 +1867,6 @@ those of the sparse CCA of Section \ref{subsec:pmd}. It seems that inference of
 a probabilistic model with shared and unshared parameters is more difficult than
 optimization of a single set of shared parameters. It may be possible to improve
 this approach through the following strategies,
-
 \begin{itemize}
 \item Applying LDA-CCA only to those species that are not sent entirely to zero by
   sparse CCA.
@@ -2308,9 +2310,9 @@ large $t$.
    \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
      composition variables. These are much more spread out than either the
      $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
-     36 body composition variables, rather than counts for all $\sim 600$
+     36 body composition variables, rather than counts for all $\sim 400$
      species.
-     \label{fig:lda_cca_unshared_scores_lm_posterior} }
+     \label{fig:lda_cca_unshared_scores_fm_posterior} }
  \end{figure}
 
  \begin{figure}
@@ -2320,10 +2322,10 @@ large $t$.
      abundance and body composition variables. Points are positioned according
      to their value in the first two dimensions shared body composition loading
      dimensions, $B^{Y}_{\cdot, 1:2}$. Clouds of points correspond to
-     participants, and they are shaded by their total lean mass. This method
+     participants, and they are shaded by their android fat mass. This method
      does not appear to pick up on any associations between body composition and
      microbiome structure.
- \label{fig:lda_cca_shared_scores_lm_posterior} }
+ \label{fig:lda_cca_shared_scores_fm_posterior} }
  \end{figure}
 
 \begin{figure}
