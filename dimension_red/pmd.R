@@ -54,8 +54,7 @@ x <- sample_data(processed$ps) %>%
   select_if(is.numeric) %>%
   scale()
 y <- scale(get_taxa(processed$ps))
-cca_res <- CCA(x, y, penaltyx = 0.5, penaltyz = 0.4, K = 3)
-cca_res <- CCA(x, y, K = 3)
+cca_res <- CCA(x, y, penaltyx = 0.7, penaltyz = 0.3, K = 3)
 
 ## Plot the scores
 scores <- prepare_scores(
@@ -75,7 +74,7 @@ plot_scores(scores, "android_fm", "android fm", cca_res$d, c(-3, 3)) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pmd/scores_lm.png", width = 5.52, height = 3.86)
+ggsave("../chapter/figure/pmd/scores_fm.png", width = 5.52, height = 3.86)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
@@ -102,7 +101,7 @@ loadings <- prepare_loadings(
 
 large_species <- loadings %>%
   filter(
-    sqrt(Axis.1 ^ 2 + Axis.2 ^ 2) > 0.16,
+    sqrt(Axis.1 ^ 2 + Axis.2 ^ 2) > 0.15,
     type == "seq"
   )
 
@@ -160,7 +159,7 @@ ggplot(mlarge_species) +
   )
 
 ggsave(
-  "../chapter/figure/pmd/total_lm_species.png",
+  "../chapter/figure/pmd/android_fm_species.png",
   width = 7.06,
   height = 4.41
 )
