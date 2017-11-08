@@ -90,8 +90,7 @@ plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$d) +
 rownames(cca_res$u) <- colnames(x)
 rownames(cca_res$v) <- colnames(y)
 seq_fam <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+  seq_families()
 
 loadings <- prepare_loadings(
   list(data.frame(cca_res$u), data.frame(cca_res$v)),

@@ -70,8 +70,7 @@ cca_res <- CCorA(bc_mat, x_seq)
 
 ## Plot the loadings
 seq_fam <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+  seq_families()
 
 loadings <- prepare_loadings(
   list(cca_res$corr.Y.Cy, cca_res$corr.X.Cx),

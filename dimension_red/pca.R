@@ -74,8 +74,7 @@ loadings_list <- list(
 )
 
 seq_fam <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+  seq_families()
 
 loadings <- prepare_loadings(loadings_list, c("body_comp", "seq")) %>%
   left_join(seq_fam)
