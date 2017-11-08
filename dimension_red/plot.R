@@ -236,8 +236,8 @@ seq_families <- function(mseqtab) {
 
 mass_ordering <- function() {
   site_ordered <- c(
-    "aoi", "age", "height_dxa", "weight_dxa",
-    "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
+    "aoi", "fat_lean_ratio", "age", "height_dxa", "weight_dxa", "bmi",
+    "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
     "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
     "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
     "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
