@@ -106,7 +106,7 @@ ggsave("../chapter/figure/cca/scores_android_fm.png", width = 3.67, height = 3.4
 scores <- scores %>%
   left_join(family_means(processed$mseqtab)) %>%
   mutate(rl_ratio = tanh(rl_ratio))
-plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", cca_res$Eigenvalues) +
+plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)

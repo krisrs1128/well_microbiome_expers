@@ -16,6 +16,7 @@ library("reshape2")
 source("../dimension_red/prep_tables.R")
 source("../dimension_red/plot.R")
 library("gflasso")
+library("glasso")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -127,10 +128,9 @@ ggplot(mbeta) +
   scale_y_discrete(expand = c(0, 0)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
-    axis.text = element_blank(),
+    axis.text.x = element_blank(),
     panel.border = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )

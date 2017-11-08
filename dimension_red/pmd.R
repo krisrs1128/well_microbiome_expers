@@ -78,9 +78,8 @@ ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 5.52, height = 3.8
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab)) %>%
-  mutate(rl_ratio = ifelse(rl_ratio > 25, 25, rl_ratio))
-plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", cca_res$d) +
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", cca_res$d) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)

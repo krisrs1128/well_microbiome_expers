@@ -92,11 +92,9 @@ ggsave("../chapter/figure/pca/scores_android_fm.png", width = 4.45, height = 2.6
 
 ##  also study scores in relation to overall bacteroides / ruminoccocus ratio
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab)) %>%
-  mutate(rl_ratio = tanh(rl_ratio))
-plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", pc_res$sdev) +
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", pc_res$sdev) +
   scale_color_viridis(
-    "Bact. / Rumino. Ratio  ",
     guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)

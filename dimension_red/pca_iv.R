@@ -110,9 +110,8 @@ plot_scores(scores, "android_fm", "Android FM", pcaiv_res$eig) +
 ggsave("../chapter/figure/pca_iv/scores_android_fm.png", width = 3.56, height = 1.8)
 
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab)) %>%
-  mutate(rl_ratio = tanh(rl_ratio))
-plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", pcaiv_res$eig) +
+  left_join(family_means(processed$mseqtab))
+plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
