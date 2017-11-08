@@ -152,7 +152,10 @@ plot_loadings <- function(loadings,
       range = c(1, 3.5),
       breaks = size_breaks
     ) +
-    coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]]))
+    coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]])) +
+    theme(
+      legend.position = "bottom"
+    )
 }
 
 plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)) {
@@ -174,7 +177,10 @@ plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)
       "y" = perc_label(eigs, 2)
     ) +
     scale_size_continuous(range = c(0, 1.5), breaks = size_breaks) +
-    coord_fixed(sqrt(eigs[2] / eigs[1]))
+    coord_fixed(sqrt(eigs[2] / eigs[1])) +
+    theme(
+      legend.position = "bottom"
+    )
 }
 
 link_scores <- function(mscores, alpha = 0.1) {

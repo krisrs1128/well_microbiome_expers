@@ -160,9 +160,8 @@ lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
     height = 3.95
   )
 
-  mdist$By$variable <- tolower(colnames(sample_data(processed$ps))[mdist$By$row])
   mdist$By$variable <- factor(
-    mdist$By$variable,
+    bc_names[mdist$By$row],
     levels = mass_ordering()
   )
 
