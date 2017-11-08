@@ -691,6 +691,7 @@ $l^{th}$ table far in the $k^{th}$ direction. Plotting these table-level
 coordinates helps resolve which tables measure similar underlying variation.
 
 \subsection{PCA-IV}
+\label{subsec:pcaiv}
 
 PCA-IV adapts the dimensionality reduction ideas of PCA to the multivariate
 regression setting \citep{rao1964use}. It can also be viewed as a version of PCA
@@ -2209,10 +2210,42 @@ find a $\theta^{1}$ to maximize $\F\left(\gamma^{(1)}, \theta\right)$, and
 so forth. The final posterior is approximated by $q_{\gamma^{t}}$ for some
 large $t$.
 
+\section{Conclusion}
+\label{sec:conclusion}
+
+In this work, we have studied the problem of multitable data analysis, reviewing
+both the algorithmic foundations and practical applications of various methods.
+We have described approaches that usually confined to particular literature
+areas and highlighted certain similarities in the process -- for example, PCA-IV
+(Section \ref{subsec:pcaiv}) and Bayesian multitask regression (Section
+\ref{subsec:bayesian_multitask}) were proposed in very different contexts, but
+have similar goals. By writing short, self-contained descriptions of various
+methods, we hope to contribute to an effort to distill ideas from the wide
+multitable data analysis literature to make them easily understandable to
+researchers interested in entering this field and useful for scientists hoping
+to apply these methods.
+
+In developing our WELL-China case study, we have both (1) described the types of
+interpretations facilitated by different approaches and (2) provided accessible
+implementations that can be incorporated into practical scientific workflows.
+Our case study includes carefully thought-through visualizations of model
+results, a step that is crucial in scientific study but often overlooked in
+methodological research, where model results are reduced to tables of
+performance metrics. Recognizing that a good deal of effort in statistical work
+goes into data preparation and visualization of model results, we have ensured
+that code for all steps are available, so that our work is fully reproducible.
+
+We have found that multitable data analysis problem have motivated a wide range
+of analysis approaches. This is not surprising, considering the variety of
+contexts in which it arises, and it speaks to the richness of this
+methodological problem. As new data sources arise and as science evolves, we
+expect these ideas will inspire future generations of multitable research
+advances.
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 
-\section{Appendix}
+\section{Supplementary Material}
 
 \subsection{Additional figures}
 
