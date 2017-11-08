@@ -48,20 +48,33 @@ theme_update(
 ## Run PCA-IV
 ###############################################################################
 raw <- read_data()
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa)
+opts <- list(filter_k = 0.5, filter_a = 5)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
+
+bc_mat <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
 
 K <- 3
 pca_micro <- dudi.pca(
-  scale(processed$x_seq),
+  scale(get_taxa(processed$ps)),
   center = FALSE,
   scale = FALSE,
   scan = FALSE,
-  nf = 3
+  nf = K
 )
 pcaiv_res <- pcaiv(
-  pca_micro, scale(processed$bc),
+  pca_micro, bc_mat,
   scan = FALSE,
-  nf = 3
+  nf = K
 )
 
 ###############################################################################
@@ -73,12 +86,12 @@ plot(pcaiv_res)
 
 ## correlate columns from both data frames with the principal axes
 loadings <- prepare_loadings(
-  list(0.001 * pcaiv_res$fa, pcaiv_res$c1),
+  list(0.01 * pcaiv_res$fa, pcaiv_res$c1),
     c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
 plot_loadings(loadings, pcaiv_res$eig) +
-  scale_size_continuous(range = c(0.3, 1))
+  scale_size_continuous(range = c(1, 3))
 ggsave("../chapter/figure/pca_iv/loadings.png", width = 4.56, height = 3)
 
 ## project the samples onto the principal axes
@@ -89,16 +102,17 @@ scores <- prepare_scores(
   left_join(raw$bc)
 
 mscores <- melt_scores(scores)
-plot_scores(scores, "Total_LM", "Total LM", pcaiv_res$eig) +
+plot_scores(scores, "android_fm", "Android FM", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pca_iv/scores_total_lm.png", width = 3.56, height = 1.8)
+ggsave("../chapter/figure/pca_iv/scores_android_fm.png", width = 3.56, height = 1.8)
 
 scores <- scores %>%
-  left_join(family_means(processed$mseqtab))
-plot_scores(scores, "rl_ratio", "Rum. / Lach. ratio", pcaiv_res$eig) +
+  left_join(family_means(processed$mseqtab)) %>%
+  mutate(rl_ratio = tanh(rl_ratio))
+plot_scores(scores, "rl_ratio", "Bact. / Rumino. ratio", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
