@@ -155,7 +155,7 @@ plot_loadings <- function(loadings,
     coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]]))
 }
 
-plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-8, 8)) {
+plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)) {
   ggplot() +
     geom_hline(yintercept = 0, alpha = 0.5) +
     geom_vline(xintercept = 0, alpha = 0.5) +
