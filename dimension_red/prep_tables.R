@@ -297,5 +297,5 @@ family_means <- function(mseqtab) {
     dplyr::summarise(family_mean = mean(value)) %>%
     spread(family, family_mean) %>%
     group_by(number) %>%
-    dplyr::summarise(rl_ratio = Bacteroidaceae / Ruminococcaceae)
+    dplyr::summarise(rl_ratio = tanh(Bacteroidaceae - Ruminococcaceae))
 }
