@@ -49,21 +49,29 @@ theme_update(
 ## Apply canonical correspondence analysis
 ###############################################################################
 raw <- read_data()
-opts <- list("filt_k" = 0.02, "rlog" = FALSE)
-processed <- process_data(raw$seqtab, raw$bc, raw$taxa, opts)
-x <- scale(processed$bc)
-y <- processed$x_seq
+opts <- list(vst = FALSE)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree,
+  opts
+)
+x <- processed$ps %>%
+  sample_data() %>%
+  select(-id, -number, -gender, -batch, -operator)
+y <- get_taxa(processed$ps)
 cca_res <- cca(
-  y ~ age + weight_dxa + Total_FM + Total_LM + aoi,
+  y ~ age + weight_dxa + android_fm + gynoid_fm + aoi,
   data.frame(x)
 )
 
 ###############################################################################
 ## Plot loadings and scores
 ###############################################################################
-seq_families <- processed$mseqtab %>%
-  select(seq_num, family) %>%
-  unique()
+seq_fam <- processed$mseqtab %>%
+  seq_families()
 
 ## Plot the scores
 cc_scores <- prepare_scores(
@@ -72,7 +80,7 @@ cc_scores <- prepare_scores(
 ) %>%
   left_join(raw$bc)
 
-plot_scores(cc_scores, "Total_LM", "Total LM", cca_res$CCA$eig) +
+plot_scores(cc_scores, "android_fm", "Android FM", cca_res$CCA$eig) +
   scale_color_viridis(
     guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
   )
@@ -82,7 +90,7 @@ loadings <- prepare_loadings(
   list(4 * cca_res$CCA$biplot, cca_res$CCA$v),
   c("body_comp", "seq")
 ) %>%
-  left_join(seq_families)
+  left_join(seq_fam)
 plot_loadings(loadings, cca_res$CCA$eig, c(-8, 4)) +
-  scale_size_continuous(range = c(0.1, 5))
+  scale_size_continuous(range = c(0.1, 3))
 ggsave("../chapter/figure/ccpna/loadings.png", width = 9.81, height = 4.62)
