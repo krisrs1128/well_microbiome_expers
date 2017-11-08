@@ -249,8 +249,8 @@ on body composition and bacterial abundance data from the WELL-China study. Note
 that we have subsetted to only women, since men and women have very different
 body compositions, and we have slightly more data for women. Further, the 16s
 data have been variance stabilized according the methodology proposed in
-\citep{Anders2010} and filtered to only those amplicon sequence variants (ASVs)
-that have count $\geq 5$ in at least 7\% of samples.
+\citep{Anders2010} and filtered to only those species that have count $\geq 5$
+in at least 7\% of samples.
 
 Figure \ref{fig:loadings} displays the loadings associated with this
 concatenated PCA approach, where body composition (36 columns) and 16s
@@ -260,15 +260,15 @@ family, while columns associated with body composition variables are labeled
 with text.
 
 Most body composition variables lie on the top right, in a direction
-approximately orthogonal to the main direction of variation among ASVs. Columns
+approximately orthogonal to the main direction of variation among species. Columns
 that are highly correlated -- e.g., right (R) and left (L) Trunk Fat Mass (FM) --
 have loadings nearly equal to one another. Age appears in generally negatively
-correlated with the other variables. Among ASVs, the main
+correlated with the other variables. Among species, the main
 source of variation seems to be between Ruminococcaceae and Lachnospiraceae,
 which appear overrepresented on the top and bottom, respectively.
 
-To identify relationships between ASVs and body composition variables, it would
-be of interest to isolate those ASVs with large contributions along the axis
+To identify relationships between species and body composition variables, it would
+be of interest to isolate those species with large contributions along the axis
 defined by linking the center of the  variables and the origin. Relatively
 few such species stand out, though note that there is nothing in this
 algorithm's objective that would seek covariation across tables directly, so the
@@ -310,7 +310,7 @@ methods of subsequent sections.
   \includegraphics[width=\textwidth]{figure/pca/scores_total_fm}
   \caption{The scores resulting from PCA applied to the combined body
     composition and microbial abundance data set. The first two principal
-    components explain about 4\% of the variance. Points are ASVs, shaded in by
+    components explain about 4\% of the variance. Points are species, shaded in by
     taxonomic family. Text are columns from the body composition data. Points
     and text with small angle between one another are more correlated.
     \label{fig:scores_total_fm} }
@@ -502,8 +502,8 @@ with particular interest in how the results compare with those of Section
 \ref{subsubsec:pca_example}. To this end, we provide analogous loadings and
 scores plots in Figures \ref{fig:cca_loadings} through
 \ref{fig:cca_scores_rl_ratio}. However, note that the data are \textit{not}
-quite the same between the two analysis -- we have filtered down to ASVs passing
-a filter, which reduces the number of ASVs to 57, from 2565. This very
+quite the same between the two analysis -- we have filtered down to species passing
+a filter, which reduces the number of species to 57, from 2565. This very
 aggressive filtering is necessary because CCA requires estimation of covariances
 matrices $\Sigma_{XX}, \Sigma_{XY}$, and $\Sigma_{YY}$, which is impossible for
 $p > n$ and highly unstable when $p$ is a large fraction of $n$. Besides this
@@ -621,7 +621,7 @@ CCA. The proof of this fact is almost identical to the derivation in Section
 
 We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
 as CoIA also needs to estimate the covariance between tables, which is difficult
-when the number of ASVs is large. The loadings are displayed in Supplementary
+when the number of species is large. The loadings are displayed in Supplementary
 Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
 \ref{fig:cca_loadings}. However, the associated scores are quite different than
 those found using CCA. Compare Figure \ref{fig:coia_scores_total_fm}, which
@@ -1214,10 +1214,10 @@ The species are chosen according to whether the two-dimensional coefficient
 across lean and fat mass has large norm\footnote{Specifically,
   $\left\| \begin{pmatrix} \beta_{fm} \\ \beta_{lm} \end{pmatrix} \right\|_{2} >
   0.065$.}. The main associations that are visible are those between the body
-composition and ASV presence or absence. That is, there don't seem to be any
+composition and species presence or absence. That is, there don't seem to be any
 cases where a body composition feature varies smoothly as a species becomes more
-or less abundant. Instead, SPLS has identified ASVs whose samples have lower or
-higher body fat or lean mass, depending on whether that ASV is present or
+or less abundant. Instead, SPLS has identified species whose samples have lower or
+higher body fat or lean mass, depending on whether that species is present or
 absent. This suggests that a logistic regression version of SPLS
 \citep{chung2010sparse}, applied to the presence-absence transformed version of
 this data may fit the data just as well, with the advantage of being somewhat
@@ -1593,7 +1593,7 @@ constraints for each of the $c_{1}^{(l)}$.
 \label{subsec:sparse_cca_example}
 
 We apply the PMD formulation of sparse CCA to the WELL-China data set. As
-before, we $k$-over-$A$ filter the microbiome data, requiring ASVs to have
+before, we $k$-over-$A$ filter the microbiome data, requiring species to have
 counts of at least 5 in at least 7\% of samples. Further, we first
 variance-stabilize, center, and scale these species abundances. For the
 regularization parameters, we set $\mu_1 = 0.7$ for the body composition data
@@ -1626,13 +1626,34 @@ the part of ordinary CCA.
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/loadings}
-  \caption{\label{fig:pmd_loadings} }
+  \caption{
+    Body composition and species loadings produced by sparse CCA, for variables
+    with at least one nonzero coordinate. Each point corresponds to a species
+    loading, and is shaded in by taxonomic family. Species with loadings far
+    from the origin are also annotated with their names. Black text are loadings
+    for body composition variables. The size of points and text reflects the
+    contribution of the third CCA dimension. Many loadings have at least one
+    dimension that is exactly zero, due to $\ell^{1}$-regularization. There
+    appear to be a gradient with android and gynoid weight, running from left to
+    right, and this is confirmed in Figures \ref{fig:pmd_scores_android_fm} and
+    \ref{fig:pmd_android_fm_species}.
+    \label{fig:pmd_loadings}
+  }
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/scores_android_fm}
-  \caption{\label{fig:pmd_scores_android_fm} }
+  \caption{
+    Sample scores provided by sparse CCA. Each point is a sample, positioned at
+    their coordinates with respect to the first two learned sparse CCA
+    directions. Points are shaded in according to android fat mass, and their
+    sizes are set according to the third CCA direction's contribution.
+    Evidently, the first two directions reflect a gradient across android fat
+    mass, suggesting that this is a substantial contributor to covariation
+    across microbiome and body composition tables.
+    \label{fig:pmd_scores_android_fm}
+  }
 \end{figure}
 
 We can folow-up these displays by focusing on species that seemed related to the
@@ -1647,11 +1668,21 @@ association exists. Further, no individual taxonomic group seems to dominate the
 set of associated species. Instead, a few isolated members of a few different
 taxonomic groups seem to be associated with android fat mass.
 
-
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/pmd/android_fm_species}
-  \caption{\label{fig:pmd_android_fm_species}}
+  \caption{
+    A more focused view of the species with high loadings in Figure
+    \ref{fig:pmd_loadings}. Each panel corresponds to a species. Points are
+    shaded in according to each species' taxonomic family. The $x$-axis within
+    panels corresponds to variance-stabilized species abundance, while the
+    $y$-axis gives android fat mass. A linear smooth is provided to summarize
+    the direction of associations. Panels are arranged according to the size of
+    that species' loading onto the first sparse CCA axis. The presence of
+    certain species seems to correspond to increased or decreased levels of
+    android fat mass.
+    \label{fig:pmd_android_fm_species}
+  }
 \end{figure}
 
 \subsection{Multitable Mixed-Membership}
@@ -2014,7 +2045,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
     particular species (column) for a given response variable (row). Purple and
     green denote negative and positive coefficients, respectively. Note that
     coefficients have been smoothed according to correlation network between
-    variables, as given in Figure \ref{fig:graph_lasso_graph}. Further, ASVs
+    variables, as given in Figure \ref{fig:graph_lasso_graph}. Further, species
     with similar coefficients are placed near one
     another. \label{fig:graph_lasso_coef_heatmap} }
 \end{figure}
