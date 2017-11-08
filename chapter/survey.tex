@@ -513,8 +513,14 @@ stronger filtering, all preprocessing steps remain the same as in Section
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/CCA/loadings}
-  \caption{The loadings obtained by applying CCA to the combined body
-    composition and microbial abundance data set. \label{fig:cca_loadings} }
+  \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
+      loadings obtained by applying CCA to the combined body
+      composition and microbial abundance data set. Each point is a species, and
+      text are body composition variables. Species are shaded in according to
+      taxonomic family, and the size of points corresponds to the third CCA
+      dimension. Text and point that are close to one another have similar
+      patterns of abundance across samples. 
+      \label{fig:cca_loadings} }
 \end{figure}
 
 Figure \ref{fig:cca_loadings} provides the analog of CCA loadings. To be
@@ -566,23 +572,31 @@ its variance related to total fat mass.
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data set. Each measurement type provides
     a different set of scores for the observed samples, and the similarity
-    between the sets of scores is reflected in the CCA
-    objective.\label{fig:cca_scores_linked}}
+    between the sets of scores is reflected in the CCA objective. Each sample
+    appears as two separate circles, since there is one score per measurement
+    type. A light line links the two appearances of each sample. Colors
+    distinguish the two table sources. The higher the CCA objective, the shorter
+    the links between pairs.
+    \label{fig:cca_scores_linked}}
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_total_fm}
+  \includegraphics[width=\textwidth]{figure/cca/scores_android_fm}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data set, shaded in by
-    .\label{fig:cca_scores_total_fm} }
+    composition and microbial abundance data set, shaded in by android fat mass.
+    The positions of points are identical to those in Figure
+    \ref{fig:scores_linked}, and other than the shading, the plots are read in
+    the same way. The first two CCA dimensions suggest smooth variation across
+    samples, according to amount of android fat
+    mass. \label{fig:cca_scores_android_fm} }
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
-  \caption{The same scores as Figure \ref{fig:cca_scores_total_fm}, but shaded now by
-    the ratio of Ruminococcaceae over Lachnospiraceae relative
+  \caption{The same scores as Figure \ref{fig:cca_scores_android_fm}, but shaded
+    now by the ratio of Ruminococcaceae and Lachnospiraceae
     abundances. \label{fig:cca_scores_rl_ratio} }
 \end{figure}
 
@@ -643,7 +657,10 @@ responsible for this difference.
   \includegraphics[width=\textwidth]{figure/coia/scores_total_fm}
   \caption{The normalized scores from each table, displayed
     simultaneously, as obtained by CoIA. This is the analog of Figure
-    \ref{fig:cca_scores_total_fm} from CCA. \label{fig:coia_scores_total_fm} }
+    \ref{fig:cca_scores_total_fm} from CCA, though the aspect ratio has been
+    adjusted according to the relative amount of variance explained by the first
+    two CoIA axes.
+    \label{fig:coia_scores_total_fm} }
 \end{figure}
 
 \subsection{MFA}
@@ -845,9 +862,10 @@ quality of within-table approximations deteriorates.
   \centering
   \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
   \caption{The loadings for PCA-IV can be interpreted like loadings from
-    previous methods. The relationship between variables seems more reasonable
-    than in CCA, but are only indirectly related to covariation across
-    tables. \label{fig:pca_iv_loadings} }
+    previous methods, for example Figure \ref{fig:loadings}. The relationship
+    between variables seems more reasonable than in CCA, but are only indirectly
+    related to covariation across tables.
+    \label{fig:pca_iv_loadings} }
 \end{figure}
 
 \subsection{Partial Triadic Analysis}
@@ -1201,7 +1219,15 @@ associations, with the possible exception of Porphyromonodaceae.
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/spls/coef_heatmap}
-  \caption{\label{fig:spls_coef_heatmap} }
+  \caption{
+    Coefficients learned by SPLS. Each row is a response dimension, which is a
+    body composition variable. Each column is associated with a species. The
+    shading within each cell corresponds to the SPLS coefficient for that
+    species-response pair. Green and purple cells are positive and negative
+    coefficients, respectively. Species are grouped first according to their
+    taxonomic family, marked by grouping panel colors, and then by a
+    hierarchical clustering on coefficient values.
+    \label{fig:spls_coef_heatmap} }
 \end{figure}
 
 To interpret these coefficients in the raw data, we can visualize individual
@@ -1240,8 +1266,9 @@ more interpretable.
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figure/spls/total_fm_species}
-  \caption{The analog of Figure \ref{fig:spls_total_lm_species}, but with fat,
-    rather than lean, mass along the $y$-axis. \label{fig:spls_total_fm_species}
+  \caption{
+    The analog of Figure \ref{fig:spls_total_lm_species}, but with fat, rather
+    than lean, mass along the $y$-axis. \label{fig:spls_total_fm_species}
   }
 \end{figure}
 
