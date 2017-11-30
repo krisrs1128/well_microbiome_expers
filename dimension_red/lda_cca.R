@@ -128,7 +128,7 @@ rm(vb_fit)
 ## Plot the results
 ###############################################################################
 scv <- scale_color_viridis(
-  guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
 )
 seq_fam <- processed$mseqtab %>%
   seq_families()

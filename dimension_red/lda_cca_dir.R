@@ -90,7 +90,7 @@ for (i in seq_along(pmeans)) {
 ## Plot the results
 ###############################################################################
 scv <- scale_color_viridis(
-  guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+  guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
 )
 seq_families <- processed$mseqtab %>%
   select(seq_num, family) %>%

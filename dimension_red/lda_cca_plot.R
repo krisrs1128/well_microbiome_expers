@@ -10,7 +10,7 @@
 
 lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
   scv <- scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
   ggplot() +
     geom_hline(yintercept = 0, alpha = 0.5) +

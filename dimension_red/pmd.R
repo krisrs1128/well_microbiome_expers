@@ -72,7 +72,7 @@ plot_scores(scores, "type", "Meas. Type", cca_res$d) +
 plot_scores(scores, "android_fm", "android fm", cca_res$d, c(-3, 3)) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 5.52, height = 3.86)
 
@@ -82,7 +82,7 @@ scores <- scores %>%
 plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", cca_res$d) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
   )
 
 ## Plot the loadings

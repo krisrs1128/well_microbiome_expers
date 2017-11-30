@@ -86,7 +86,7 @@ ggsave("../chapter/figure/pca/loadings.png", width = 7.69, height = 5.17)
 plot_scores(scores, "android_lm", "Android FM", pc_res$sdev) +
   scale_color_viridis(
     "Android FM ",
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca/scores_android_fm.png", width = 4.45, height = 2.63)
 
@@ -95,6 +95,6 @@ scores <- scores %>%
   left_join(family_means(processed$mseqtab))
 plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", pc_res$sdev) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca/scores_rl_ratio.png", width = 3.56, height = 2.6)

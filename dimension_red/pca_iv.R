@@ -105,7 +105,7 @@ mscores <- melt_scores(scores)
 plot_scores(scores, "android_fm", "Android FM", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca_iv/scores_android_fm.png", width = 3.56, height = 1.8)
 
@@ -114,6 +114,6 @@ scores <- scores %>%
 plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", pcaiv_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/pca_iv/scores_rl_ratio.png", width = 3.56, height = 1.8)
