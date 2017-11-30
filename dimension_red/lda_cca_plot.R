@@ -10,7 +10,7 @@
 
 lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
   scv <- scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
   ggplot() +
     geom_hline(yintercept = 0, alpha = 0.5) +
@@ -133,11 +133,13 @@ lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
   )
 
   ## and finally loadings boxplot for body composition variables
-  mass_type_ordered <- mass_ordering()
-  mdist$Wy$variable <- tolower(colnames(sample_data(processed$ps))[mdist$Wy$row])
+  bc_names <- processed$ps %>%
+    sample_data() %>%
+    select(-id, -number, -gender, -batch, -operator) %>%
+    colnames()
   mdist$Wy$variable <- factor(
-    mdist$Wy$variable,
-    levels = mass_type_ordered
+    bc_names[mdist$Wy$row],
+    levels = mass_ordering()
   )
 
   ggplot(mdist$Wy) +
@@ -158,10 +160,9 @@ lda_cca_plots <- function(mdist, seq_fam, processed, opts) {
     height = 3.95
   )
 
-  mdist$By$variable <- tolower(colnames(sample_data(processed$ps))[mdist$By$row])
   mdist$By$variable <- factor(
-    mdist$By$variable,
-    levels = mass_type_ordered
+    bc_names[mdist$By$row],
+    levels = mass_ordering()
   )
 
   ggplot(mdist$By) +

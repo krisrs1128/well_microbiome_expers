@@ -86,7 +86,7 @@ ggplot(shared_scores) +
   ) +
   scale_color_viridis(
     "Weight ",
-    guide = guide_colorbar(barwidth= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
   )
 
 rownames(pmean$Wx) <- colnames(processed$bc)

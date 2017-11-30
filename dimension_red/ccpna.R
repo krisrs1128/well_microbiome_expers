@@ -82,7 +82,7 @@ cc_scores <- prepare_scores(
 
 plot_scores(cc_scores, "android_fm", "Android FM", cca_res$CCA$eig) +
   scale_color_viridis(
-    guide = guide_colorbar(barwidth = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/ccpna/scores_total_lm.png", width = 5.47, height = 3.19)
 
