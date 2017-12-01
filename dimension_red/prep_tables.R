@@ -53,7 +53,7 @@ read_data <- function(data_dir = "../data/") {
     left_join(batch)
   colnames(bc) <- tolower(colnames(bc))
 
-  colnames(seqtab) <- paste0("species_", seq_len(ntaxa(seqtab)))
+  colnames(seqtab) <- paste0("genus_", seq_len(ntaxa(seqtab)))
   bc_full <- read_csv(file.path(data_dir, "WELL_China_1969_7.25.2017.csv")) %>%
     dplyr::rename(
       gender = gender_it,
@@ -209,8 +209,6 @@ vst_ps <- function(ps, sf_quantile = 0.95, ...) {
 #'     - filter_k: The proportion [in 0 to 1] of samples with more than a
 #'         samples, needed for filtering.
 #'     - filter_a: The threshold value used by the k over a filter.
-#'     - rlog: Should the data be rlog transformed?
-#'     - rlog_opts: A list giving options passed directly to rlog in DESeq2.
 #'     - outdir: To what directory should any intermediate rlog transformed data
 #'         be saved?
 #' @return resutls [list] A list containing preprocessed data. Includes the
