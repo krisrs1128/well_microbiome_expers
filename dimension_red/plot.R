@@ -250,7 +250,7 @@ mass_ordering <- function() {
     "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
     "arms_lm"
   )
-  mass_type_ordered <- c(
+  c(
     site_ordered[!grepl("fm|lm", site_ordered)],
     site_ordered[grepl("fm", site_ordered)],
     site_ordered[grepl("lm", site_ordered)]
