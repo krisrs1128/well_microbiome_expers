@@ -91,7 +91,7 @@ ggplot(melt(cv_err)) +
 ###############################################################################
 ## Plot the results
 ###############################################################################
-seq_families <- processed$mseqtab %>%
+seq_fam <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
 
@@ -102,11 +102,12 @@ mbeta <- beta_hats %>%
   melt(
     varnames = c("feature", "seq_num", "lambda")
   ) %>%
-  left_join(seq_families) %>%
+  left_join(seq_fam) %>%
   mutate(
     feature = factor(feature, mass_ordering()),
     seq_num = factor(seq_num, c("intercept", species_order))
-  )
+  ) %>%
+  filter(seq_num != "intercept")
 
 ggplot(mbeta) +
   geom_rect(
@@ -123,7 +124,10 @@ ggplot(mbeta) +
     mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
   guides(
-    col = guide_legend(override.aes = list(alpha = 1, size = 1.0))
+    col = guide_legend(
+      override.aes = list(alpha = 1, size = 1.0),
+      order = 1
+    )
   ) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -156,21 +160,21 @@ ggplot(mbeta_sub) +
     fill = "transparent", size = 2,
     xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
+  scale_colour_discrete() +
   scale_fill_gradient2(
     "Coef. ",
     guide = guide_colorbar(ticks = FALSE, barheight = 0.6),
     mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
-  scale_colour_discrete() +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  guides(color = guide_legend(nrow = 4)) +
+  guides(color = guide_legend(nrow = 4, order = 1)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
     axis.text = element_blank(),
     panel.border = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(angle = 0, hjust = 0),
+    axis.text.y = element_text(size = 6, angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
