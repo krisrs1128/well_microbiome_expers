@@ -1,5 +1,6 @@
 cd dimension_red
 Rscript pca.R
+Rscript pmd.R
 Rscript cca.R
 Rscript ccpna.R
 Rscript coia.R
@@ -11,3 +12,5 @@ Rscript illustration_pmd.R
 cd ../supervised/
 Rscript spls.R
 Rscript graph_lasso.R
+Rscript multitask_lasso.R
+
