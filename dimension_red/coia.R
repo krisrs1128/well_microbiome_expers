@@ -83,7 +83,7 @@ plot_loadings(loadings, coia_res$eig) +
   ylim(-0.6, 0.5) +
   xlim(-0.45, 0.35) +
   scale_size_continuous(range = c(0, 3), breaks = c(-8, -8))
-ggsave(file.path(out_path, "loadings.png"), width = 4.56, height = 2.3)
+ggsave(file.path(out_path, "loadings.png"), width = 4.56, height = 3.3)
 
 scores <- prepare_scores(
   list(coia_res$lX, coia_res$lY),

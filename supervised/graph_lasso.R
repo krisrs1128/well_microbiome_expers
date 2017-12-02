@@ -36,12 +36,12 @@ theme_update(
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
-  legend.title = element_text(size = 12),
-  legend.text = element_text(size = 10),
-  axis.text = element_text(size = 10),
-  axis.title = element_text(size = 10),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
   strip.background = element_blank(),
-  strip.text = element_text(size = 10),
+  strip.text = element_text(size = 8),
   legend.key = element_blank()
 )
 
@@ -120,13 +120,15 @@ ggplot(mbeta) +
     xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
   scale_fill_gradient2(
-    guide = guide_colorbar(ticks = FALSE, barheight = 0.6),
+    "Coef. ",
+    guide = guide_colorbar(ticks = FALSE, barheight = 0.9),
     mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
   scale_colour_discrete() +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
+  guides(color = guide_legend(nrow = 4)) +
   theme(
     axis.text.x = element_blank(),
     panel.border = element_blank(),
@@ -137,6 +139,6 @@ ggplot(mbeta) +
 
 ggsave(
   "../chapter/figure/graph_lasso/coef_heatmap.png",
-  width = 9.5,
-  height = 6.5
+  width = 5.9,
+  height = 4.1
 )

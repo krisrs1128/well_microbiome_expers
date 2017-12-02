@@ -15,6 +15,7 @@ library("tidyverse")
 library("viridis")
 library("glmnet")
 source("../dimension_red/prep_tables.R")
+source("../dimension_red/plot.R")
 
 ## cleaner ggplot theme
 scale_colour_discrete <- function(...)
@@ -34,12 +35,12 @@ theme_update(
   panel.border = element_rect(size = 0.5),
   panel.grid = element_blank(),
   axis.ticks = element_blank(),
-  legend.title = element_text(size = 12),
-  legend.text = element_text(size = 10),
-  axis.text = element_text(size = 10),
-  axis.title = element_text(size = 10),
+  legend.title = element_text(size = 8),
+  legend.text = element_text(size = 6),
+  axis.text = element_text(size = 6),
+  axis.title = element_text(size = 8),
   strip.background = element_blank(),
-  strip.text = element_text(size = 10),
+  strip.text = element_text(size = 8),
   legend.key = element_blank()
 )
 
@@ -48,9 +49,17 @@ theme_update(
 ###############################################################################
 raw <- read_data()
 opts <- list("filt_k" = 0.07)
-processed <- process_data(raw$seqtab, raw$bc, raw$bc_full, raw$taxa, opts)
-y <- scale(processed$bc)
-x <- scale(processed$x_seq)
+processed <- process_data(
+  raw$seqtab,
+  raw$bc,
+  raw$bc_full,
+  raw$taxa,
+  raw$tree
+)
+y <- sample_data(processed$ps) %>%
+  select(-id, -number, -gender, -batch, -operator) %>%
+  scale()
+x <- scale(get_taxa(processed$ps))
 
 n_lambda <- 30
 lambdas <- seq(0.001, 0.7, length.out = n_lambda)
@@ -66,7 +75,7 @@ for (r in seq_len(ncol(y))) {
 ###############################################################################
 ## Plot the cross validation errors
 ###############################################################################
-cv_err <- do.call(cbind, sapply(fits, function(x) x$cvm))
+cv_err <- do.call(cbind, lapply(fits, function(x) x$cvm))
 cv_err[cv_err > 1.4] <- NA
 colnames(cv_err) <- colnames(y)
 rownames(cv_err) <- lambdas
@@ -82,24 +91,9 @@ ggplot(melt(cv_err)) +
 ###############################################################################
 ## Plot the results
 ###############################################################################
-seq_families <- processed$mseqtab %>%
+seq_fam <- processed$mseqtab %>%
   select(seq_num, family) %>%
   unique()
-
-site_ordered <- c(
-  "aoi", "age", "height_dxa", "weight_dxa",
-  "bmi", "android_fm", "android_lm", "gynoid_fm", "gynoid_lm", "l_trunk_fm",
-  "l_trunk_lm", "r_trunk_fm", "r_trunk_lm", "trunk_fm", "trunk_lm",
-  "l_total_fm", "l_total_lm", "r_total_fm", "r_total_lm", "total_fm",
-  "total_lm", "l_leg_fm", "l_leg_lm", "r_leg_fm", "r_leg_lm", "legs_fm",
-  "legs_lm", "l_arm_fm", "l_arm_lm", "r_arm_fm", "r_arm_lm", "arms_fm",
-  "arms_lm"
-)
-mass_type_ordered <- c(
-  site_ordered[!grepl("fm|lm", site_ordered)],
-  site_ordered[grepl("fm", site_ordered)],
-  site_ordered[grepl("lm", site_ordered)]
-)
 
 species_order <- read_csv("species_order.csv") %>% unlist()
 rownames(beta_hats) <- colnames(y)
@@ -108,11 +102,12 @@ mbeta <- beta_hats %>%
   melt(
     varnames = c("feature", "seq_num", "lambda")
   ) %>%
-  left_join(seq_families) %>%
+  left_join(seq_fam) %>%
   mutate(
-    feature = factor(feature, mass_type_ordered),
+    feature = factor(feature, mass_ordering()),
     seq_num = factor(seq_num, c("intercept", species_order))
-  )
+  ) %>%
+  filter(seq_num != "intercept")
 
 ggplot(mbeta) +
   geom_rect(
@@ -129,7 +124,10 @@ ggplot(mbeta) +
     mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
   guides(
-    col = guide_legend(override.aes = list(alpha = 1, size = 1.0))
+    col = guide_legend(
+      override.aes = list(alpha = 1, size = 1.0),
+      order = 1
+    )
   ) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -162,25 +160,27 @@ ggplot(mbeta_sub) +
     fill = "transparent", size = 2,
     xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
+  scale_colour_discrete() +
   scale_fill_gradient2(
+    "Coef. ",
     guide = guide_colorbar(ticks = FALSE, barheight = 0.6),
     mid = "#F8F8F8", low = "#40004b", high = "#00441b"
   ) +
-  scale_colour_discrete() +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
+  guides(color = guide_legend(nrow = 4, order = 1)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
     axis.text = element_blank(),
     panel.border = element_blank(),
     panel.spacing = unit(0, "cm"),
-    axis.text.y = element_text(angle = 0, hjust = 0),
+    axis.text.y = element_text(size = 6, angle = 0, hjust = 0),
     strip.text.x = element_blank(),
     legend.position = "bottom"
   )
 
 ggsave(
   "../chapter/figure/graph_lasso/multitask_lasso_hm.png",
-  width = 11.5,
-  height = 6.5
+  width = 5.9,
+  height = 4.1
 )

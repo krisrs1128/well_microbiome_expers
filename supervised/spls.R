@@ -106,11 +106,15 @@ ggplot(mbeta) +
     xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
   ) +
   scale_fill_gradient2(
-    guide = guide_colorbar(ticks = FALSE, keyheight = 0.5),
+    "Coef. ",
+    guide = guide_colorbar(ticks = FALSE, barheight = 0.9),
     low = "#40004b",
     high = "#00441b"
   ) +
-  scale_x_discrete(expand = c(0, 0)) +
+  guides(
+    color = guide_legend(nrow = 4)
+  ) +
+  scale_x_discrete("Genus", expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   facet_grid(. ~ family, scale = "free", space = "free") +
   theme(
@@ -122,8 +126,8 @@ ggplot(mbeta) +
 
 ggsave(
   "../chapter/figure/spls/coef_heatmap.png",
-  width = 8.77,
-  height = 5.17
+  width = 5.9,
+  height = 4.1
 )
 
 large_species <- mbeta %>%
@@ -165,10 +169,8 @@ ggplot(mlarge_species) +
     aes(x = value, y = gynoid_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
-  facet_wrap(~seq_num, ncol = 8) +
-  theme(
-    legend.position = "bottom"
-  )
+  facet_wrap(~seq_num, ncol = 6) +
+  theme(legend.position = "bottom")
 
 ggsave(
   "../chapter/figure/spls/gynoid_fm_species.png",
@@ -196,10 +198,8 @@ ggplot(mlarge_species) +
     aes(x = value, y = android_fm, col = family),
     size = 0.7, alpha = 0.8
   ) +
-  facet_wrap(~seq_num, ncol = 8) +
-  theme(
-    legend.position = "bottom"
-  )
+  facet_wrap(~seq_num, ncol = 6) +
+  theme(legend.position = "bottom")
 
 ggsave(
   "../chapter/figure/spls/android_fm_species.png",

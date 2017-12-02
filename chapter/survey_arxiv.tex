@@ -2,7 +2,7 @@
 %% \usepackage[a4paper, margin=0.2in]{geometry}
 \usepackage{natbib}
 \usepackage{amssymb, amsmath, amsfonts}
-\usepackage{graphicx, hyperref}
+\usepackage{graphicx}
 \input{preamble.tex}
 %% \linespread{2}
 
@@ -197,7 +197,7 @@ projected points with respect to this subspace.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/pca/proj_plot_1}
+  \includegraphics[width=0.5\textwidth]{pca_proj_plot_1}
   \caption{A geometric motivation for PCA. The first principal component spans
     the one-dimensional subspace $V$ minimizing the squared error between points
     and their projections, $\sum_{i = 1}^{n}\|\left(I -
@@ -212,7 +212,7 @@ projected points with respect to this subspace.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/pca/var_plot}
+  \includegraphics[width=0.5\textwidth]{pca_var_plot}
   \caption{A statistical motivation for PCA. Each histogram is computed from the
     linear combinations $\left(c^{j^{T}}x_{i}\right)$, for $c^{j}$ equal
     to the first and second principal components, the vector
@@ -293,7 +293,7 @@ components does not mean such relationships do not exist.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/loadings}
+  \includegraphics[width=\textwidth]{pca_loadings}
   \caption{The loadings obtained by applying PCA to the combined body
     composition and microbial abundance data. Species are points, and are
     shaded in by taxonomic family. Body composition variables are plotted as
@@ -327,7 +327,7 @@ methods of subsequent sections.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
+  \includegraphics[width=\textwidth]{pca_scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
     composition and microbial abundance data. The first two principal
     components explain about 4\% of the variance. Points are species, shaded in
@@ -338,7 +338,7 @@ methods of subsequent sections.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{pca_scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:scores_android_fm}, but shaded now
     by the transformed ratio of Bacteroidaceae over Ruminococcaceae abundances.
     The slight increase in Ruminococcaceae from left to right is consistent with
@@ -512,7 +512,7 @@ stronger filtering, all preprocessing steps remain the same as in Section
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/CCA/loadings}
+  \includegraphics[width=\textwidth]{cca_loadings}
   \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
     loadings obtained by applying CCA to the combined body composition and
     microbial abundance data. Each point is a species, and text are body
@@ -569,7 +569,7 @@ fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_linked}
+  \includegraphics[width=\textwidth]{cca_scores_linked}
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data. Each measurement type provides
     a different set of scores for the observed samples, and the similarity
@@ -583,7 +583,7 @@ fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_android_fm}
+  \includegraphics[width=\textwidth]{cca_scores_android_fm}
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data, shaded in by android fat mass.
     The positions of points are identical to those in Figure
@@ -595,7 +595,7 @@ fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{cca_scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:cca_scores_android_fm}, but shaded
     now by the difference in Bacteroidaceae to Ruminococcaceae
     abundances. \label{fig:cca_scores_rl_ratio} }
@@ -655,7 +655,7 @@ and CCA that is responsible for this difference.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_android_fm}
+  \includegraphics[width=\textwidth]{coia_scores_android_fm}
   \caption{The normalized scores from each table, displayed
     simultaneously, as obtained by CoIA. This is the analog of Figure
     \ref{fig:cca_scores_android_fm} from CCA, though the aspect ratio has been
@@ -797,7 +797,7 @@ this further subspace is not much worse. This is displayed in Figure
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{figure/pca_iv/pca_iv_geometry}
+  \includegraphics[width=0.7\textwidth]{pca_iv_geometry}
   \caption{A geometric view of PCA-IV. The columns of the response $Y$ are views
     as $n$-dimensional vectors. The grey plane is the span of
     $X$. Multivariate OLS simply projects the columns of $Y$ onto the plane,
@@ -862,7 +862,7 @@ quality of within-table approximations deteriorates.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
+  \includegraphics[width=\textwidth]{pca_iv_loadings}
   \caption{The loadings for PCA-IV can be interpreted like loadings from
     previous methods, for example Figure \ref{fig:loadings}. Some of the
     relationships between variables seem less intuitive than those observed
@@ -1220,7 +1220,7 @@ the possible exception of Porphyromonodaceae.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/coef_heatmap}
+  \includegraphics[width=\textwidth]{spls_coef_heatmap}
   \caption{
     Coefficients learned by SPLS. Each row is a response dimension, which is a
     body composition variable. Each column is associated with a species. The
@@ -1252,7 +1252,7 @@ data just as well, with the advantage of being somewhat more interpretable.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/android_fm_species}
+  \includegraphics[width=\textwidth]{spls_android_fm_species}
   \caption{A subset of the species whose coefficients for total lean and fat
     mass are high in magnitude. Each panel represents one species, and each
     point is a samples $\times$ species combination. The $x$-axis gives the
@@ -1267,7 +1267,7 @@ data just as well, with the advantage of being somewhat more interpretable.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/gynoid_fm_species}
+  \includegraphics[width=\textwidth]{spls_gynoid_fm_species}
   \caption{
     The analog of Figure \ref{fig:spls_android_fm_species}, but with gynoid,
     rather than android, fat mass along the
@@ -1520,7 +1520,7 @@ subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/illustration_sequence}
+  \includegraphics[width=\textwidth]{pmd_illustration_sequence}
   \caption{An example of the PMD CCA solution in a high-dimensional source
     separation problem, based on the simulation experiment in
     \citep{witten2009penalized}. The solid lines indicate true ``sources''
@@ -1655,7 +1655,7 @@ the part of ordinary CCA.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/loadings}
+  \includegraphics[width=\textwidth]{pmd_loadings}
   \caption{
     Body composition and species loadings produced by sparse CCA, for variables
     with at least one nonzero coordinate. Each point corresponds to a species
@@ -1673,7 +1673,7 @@ the part of ordinary CCA.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/scores_android_fm}
+  \includegraphics[width=\textwidth]{pmd_scores_android_fm}
   \caption{
     Sample scores provided by sparse CCA. Each point is a sample, positioned at
     their coordinates with respect to the first two learned sparse CCA
@@ -1700,7 +1700,7 @@ taxonomic groups seem to be associated with android fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/android_fm_species}
+  \includegraphics[width=\textwidth]{pmd_android_fm_species}
   \caption{
     A more focused view of the species with high loadings in Figure
     \ref{fig:pmd_loadings}. Each panel corresponds to a species. Points are
@@ -1802,7 +1802,7 @@ $1$ throughout.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_seq_boxplots}
+  \includegraphics[width=\textwidth]{lda_cca_within_loadings_seq_boxplots}
   \caption{Table-specific loadings for different species. As in Figure
     \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, each row is a loading
     dimension, columns are features (species in this case), and intervals
@@ -1815,7 +1815,7 @@ $1$ throughout.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_body_comp_boxplots}
+  \includegraphics[width=\textwidth]{lda_cca_within_loadings_body_comp_boxplots}
   \caption{Table-specific loadings for the body composition variables. Each row
     is one loading dimension, columns are features, and boxplots summarize
     posterior samples for the associated loading parameter, $W_{jk}^{Y}$.
@@ -1874,7 +1874,7 @@ this approach through the following strategies,
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/between_loadings_seq_boxplots}
+  \includegraphics[width=\textwidth]{lda_cca_between_loadings_seq_boxplots}
   \caption{Cross-table loadings for species, as in
     Figure \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
     $B^{X}_{jk}$. \label{fig:lda_cca_between_loadings_seq_boxplots} }
@@ -1882,7 +1882,7 @@ this approach through the following strategies,
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.95\textwidth]{figure/lda_cca/between_loadings_body_comp_boxplots}
+  \includegraphics[width=0.95\textwidth]{lda_cca_between_loadings_body_comp_boxplots}
   \caption{Cross-table loadings for the body composition variables, read exactly
     as in Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, but for for the
     parameters
@@ -2037,7 +2037,7 @@ displayed in Figure \ref{fig:graph_lasso_graph}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.9\textwidth]{figure/graph_lasso/graph}
+  \includegraphics[width=0.9\textwidth]{graph_lasso_graph}
   \caption{Correlation matrix used as the input graph $R$ for the graph-fused
     lasso, estimated itself according to the graphical
     lasso. The two main blocks correspond to lean and fat mass variables,
@@ -2069,7 +2069,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
+  \includegraphics[width=\textwidth]{graph_lasso_coef_heatmap}
   \caption{Coefficients for the graph-fused lasso highlight groups of species
     with similar profiles across response variables. Colored rectangles
     demarcate taxonomic families. Individual cells give the coefficient for a
@@ -2083,7 +2083,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
+  \includegraphics[width=\textwidth]{graph_lasso_multitask_lasso_hm}
   \caption{The analog of Figure \ref{fig:graph_lasso_coef_heatmap} when there is
     no sharing across response problems. Note that coefficients nonetheless seem
     to be similar within lean and fat mass response groups, respectively, but
@@ -2268,7 +2268,7 @@ advances.
 \subsection{Additional figures}
 
 \begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
+  \includegraphics[width=0.7\textwidth]{pca_proj_plot_2}
   \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
     PCA is run on all body composition variables, rather than just lean and
     fat mass. That is, we project the original values for these two features
@@ -2282,7 +2282,7 @@ advances.
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_3}
+  \includegraphics[width=0.7\textwidth]{pca_proj_plot_3}
   \caption{Here we perform the same procedure as in Figure
     \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
     we project onto only the top PC. The main point is that, while in two
@@ -2293,7 +2293,7 @@ advances.
 \end{figure}
 
 \begin{figure}
-  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
+  \centering \includegraphics[width=\textwidth]{coia_loadings}
   \caption{These are the loadings obtained from CoIA, which are analogous to
     those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
     (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
@@ -2301,7 +2301,7 @@ advances.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{coia_scores_rl_ratio}
   \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_android_fm},
     but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
     \ref{fig:scores_rl_ratio} and
@@ -2310,7 +2310,7 @@ advances.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_android_fm}
+  \includegraphics[width=\textwidth]{pca_iv_scores_android_fm}
   \caption{We can display the scores obtained by PCA-IV. The results are similar
     to those from combined-PCA, which is not surprising, since they are related
     to the PCA based only on microbial
@@ -2319,7 +2319,7 @@ advances.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{pca_iv_scores_rl_ratio}
   \caption{This provides the same scores as Figure
     \ref{fig:pca_iv_scores_android_fm}, but shaded by Ruminoccoccaceae vs.
     Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
@@ -2327,7 +2327,7 @@ advances.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/illustration_scatter}
+  \includegraphics[width=\textwidth]{pmd_illustration_scatter}
   \caption{An alternative view of Figure \ref{fig:pmd_illustration_sequence},
     where the two underlying sources are plotted in two dimensions rather than
     one. Basic unidentifiabilities in the model are visible as long swaps
@@ -2336,7 +2336,7 @@ advances.
 
  \begin{figure}
    \centering
-   \includegraphics[width=0.9\textwidth]{figure/lda_cca/unshared_scores_fm_posterior}
+   \includegraphics[width=0.9\textwidth]{lda_cca_unshared_scores_fm_posterior}
    \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
      composition variables. These are much more spread out than either the
      $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
@@ -2347,7 +2347,7 @@ advances.
 
  \begin{figure}
    \centering
-   \includegraphics[width=0.9\textwidth]{figure/lda_cca/shared_scores_fm_posterior}
+   \includegraphics[width=0.9\textwidth]{lda_cca_shared_scores_fm_posterior}
    \caption{Posterior samples of scores $\xi^{s}_i$ shared across both bacterial
      abundance and body composition variables. Points are positioned according
      to their value in the first two dimensions shared body composition loading
@@ -2360,7 +2360,7 @@ advances.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm_lambdas}
+  \includegraphics[width=\textwidth]{graph_lasso_multitask_lasso_hm_lambdas}
   \caption{ Inspecting coefficients from multitask lasso across $\lambda$
     regularization parameters highlights species with different directions and
     strengths of association with body composition variables. Different panel
