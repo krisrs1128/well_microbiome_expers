@@ -1,28 +1,46 @@
-\documentclass[14pt]{extarticle}
-\usepackage[a4paper, margin=0.2in]{geometry}
+\documentclass{article}
+%% \usepackage[a4paper, margin=0.2in]{geometry}
 \usepackage{natbib}
 \usepackage{amssymb, amsmath, amsfonts}
 \usepackage{graphicx, hyperref}
 \input{preamble.tex}
-\linespread{2}
+%% \linespread{2}
 
 \title{Multitable Data Analysis for the Microbiome}
-\author{Kris Sankaran}
+\author{Kris Sankaran and Susan P. Holmes}
 
 \begin{document}
 \maketitle
 
+\begin{abstract}
+  Many modern microbiome studies require the analysis of data collected across
+  multiple measurement sources -- for example, 16s sequencing, metagenomic,
+  metabolomic, or transcriptomic data. We abstract away the essential scientific
+  questions underlying these studies and provide a self-contained review of
+  methods that have emerged to address them. In addition to summarizing methods
+  abstractly, we describe an application to a multitable problem encountered at
+  the intersection of the microbiome and epidemiology literatures. Code for all
+  methods and figures is publicly available at
+  \url{https://github.com/krisrs1128/well\_microbiome\_expers}. We hope this
+  work can both (1) help practitioners understand and easily apply multitable
+  methods in their day-to-day work and (2) provide a concrete case study to
+  motivate the design and comparison of multitable techniques among methods
+  researchers.
+\end{abstract}
+
 \tableofcontents
+
+\section{Introduction}
 
 The simultaneous study of multiple measurement types is a frequently encountered
 problem in practical data analysis. It is especially common in microbiome
-research, where several sources of data -- for example, 16s, metagenomic,
-metabolomic, or transcriptomic data -- can be collected on the same physical
-samples \citep{Franzosa2015, McHardy2013}. There has been a proliferation of
-proposals for analyzing such multitable microbiome data, as is often the case
-when new data sources become more readily available, facilitating inquiry into
-new types of scientific questions \citep{Fukuyama2017, Rahnavard2017,
-  Chaudhary2017, Chalise2017}.
+research, where several sources of data -- for example, 16s sequencing,
+metagenomic, metabolomic, or transcriptomic data -- can be collected on the same
+physical samples \citep{McHardy2013, Franzosa2015}. There has been a
+proliferation of proposals for analyzing such multitable microbiome data, as is
+often the case when new data sources become more readily available, facilitating
+inquiry into new types of scientific questions \citep{Fukuyama2017,
+  Rahnavard2017, Chaudhary2017, Chalise2017}.
 
 However, stepping back from the rush of new methods for multitable analysis in
 the microbiome literature, it is worthwhile to recognize the broader landscape
@@ -41,23 +59,22 @@ Towards the second goal, we have made code for all analysis and figures
 available online at
 \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
 
-First, though, why does anyone bother collecting multiple sources of data, and
-why can't these sources simply be combined into a single, unified table for
-subsequent analysis? One answer is that many scientific problems can only be
-answered by collecting several complementary measurement types. Indeed, the
-situation is analogous to using many types of sensors to study a single system
-from many perspectives. Further, while in certain supervised problems, it is
-enough to predict a single measurement of interest, with other sources primarily
-collected to provide better features, there are often an additional relational
-components to the analysis: how do different types of measurements covary with
-one another? Here, it is of interest to provide a representation of
-the data that facilitates comparisons across tables, rather than just comparing
-each table with a single response of interest. This richer scientific question
-motivates the development of methods distinct from those used to analyze a
-single measurement type at a time.
+First, though, why can't multiple sources of data simply be combined into a
+single, unified table for subsequent analysis? One answer is that many
+scientific problems can only be answered by collecting several complementary
+measurement types. Indeed, the situation is analogous to using many types of
+sensors to study a single system from many perspectives. Further, while in
+certain supervised problems, it is enough to predict a single measurement of
+interest, with other sources primarily collected to provide better features,
+there are often an additional relational components to the analysis: how do
+different types of measurements covary with one another? Here, it is of interest
+to provide a representation of the data that facilitates comparisons across
+tables, rather than just comparing each table with a single response of
+interest. This richer scientific question motivates the development of methods
+distinct from those used to analyze a single measurement type at a time.
 
-For more concrete motivation, we consider data from the WELL-China study, which
-is focused on the relationships between various indicators of wellness
+For more concrete motivation, consider data from the WELL-China study, which is
+focused on the relationships between various indicators of wellness
 \citep{wellchina}. In this study, 1969 individuals\footnote{Though sampling is
   still ongoing.} underwent clinical examinations, filled out wellness surveys
 (covering topics such as exercise, sleep, diet, and mental health, for example),
@@ -1156,10 +1173,10 @@ algorithm for solving it. First, notice that if we extend $\tilde{A}
 since norms are preserved under orthonormal rotations,
 
 \begin{align*}
-  \sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 &= \|X - XVA\|_{F}^2 \\
-  &= \|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \|_{F}^2 \\
-  &= \|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \tilde{A} \|_{F}^2 \\
-  &= \sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + C
+  \sum_{i = 1}^{n} \left\|x_i - AV^T x_i\right\|_2^2 &= \left\|X - XVA\right\|_{F}^2 \\
+  &= \left\|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \right\|_{F}^2 \\
+  &= \left\|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \tilde{A} \right\|_{F}^2 \\
+  &= \sum_{k = 1}^{K} \left\|Xa_k - X v_k\right\|_2^2 + C
 \end{align*}
 where $C$ is constant in $A$, and hence the sparse PCA objective can be written
 as
