@@ -2252,7 +2252,7 @@ Analytical Solution & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Met
 Sparsity & SPLS, Graph-Fused Lasso, Graph-Fused Lasso & Encouraging sparsity on scores or loadings can result in more interpretable, results for high-dimensional data sets. These methods provide automatic variable selection in the multitable analysis problem. \\
 Tuning Parameters & \begin{tabular}[c]{@{}l@{}}Sparsity: Graph-Fused Lasso, PMD, SPLS\\ Number of Factors: PCA-IV, Red. Rank Regression, Mixed-Membership CCA\\ Prior Parameters: Mixed-Membership CCA, Bayesian Multitask Regression\\ Kernel: KCCA\end{tabular} & Methods with many tuning parameters are often more expressive than those without any, since it makes it possible to adapt to different degrees of model complexity. However, in the absence of automatic tuning strategies, these methods are typically more difficult to use effectively. \\
 Probabilistic & Mixed-Membership CCA, Bayesian Multitask Regression & Probabilistic techniques provide estimates of uncertainty, along with representations of cross-table covariation. This comes at the cost of more involved computation and difficulty in assessing convergence. \\
-Not Normal or Nonlinear & KCCA, Mixed-Membership CCA, Bayesian Multitask Regression & When data are not normal (and are difficult to transform to normality) or there are sources of nonlinear covariation across tables, it can be beneficial to directly model this structure. KCCA allows the most general types of nonlinearity, while the probabilistic methods are suited to specific count-structure. \\
+Not Normal or Nonlinear & KCCA, CCpNA, Mixed-Membership CCA, Bayesian Multitask Regression & When data are not normal (and are difficult to transform to normality) or there are sources of nonlinear covariation across tables, it can be beneficial to directly model this structure. KCCA allows the most general types of nonlinearity, while the probabilistic methods are suited to specific count-structure. \\
 \textgreater 2 Tables & Concat. PCA, CCA, MFA, PMD, KCCA & Methods that allow more than two tables are applicable in a wider range of multitable problems. Note these are a subset of the cross-table symmetric methods. \\
 Cross-Table Symmetry & Concat. PCA, CCA, CoIA, Statico / Costatis, MFA, PMD, KCCA & Cross-table symmetry refers to the idea that some methods don't need a supervised or multitask setup, where one table contains response variable and the other requires predictors. The results of these methods do not change when the two tables are swapped in the method input. \\
 \end{tabular}
@@ -2263,6 +2263,28 @@ Cross-Table Symmetry & Concat. PCA, CCA, CoIA, Statico / Costatis, MFA, PMD, KCC
   applications, and availability of programming computation time.
 }
 \label{tab:algorithms_comparison}
+\end{table}
+
+\begin{table}[]
+\centering
+\begin{tabular}{llll}
+Package & Methods & Documentation & Link \\
+ade4 & PCA, CCA, CoIA, Statico / Costatis, PCA-IV & Average & \url{https://cran.r-project.org/web/packages/ade4/} \\
+FactoMineR & PCA, MFA & High & \url{https://cran.r-project.org/web/packages/FactoMineR/} \\
+vegan & CCA, CCpnA & High & \url{https://cran.r-project.org/web/packages/vegan/} \\
+GFLasso & Graph-Fused Lasso & Low & \url{https://github.com/krisrs1128/gflasso} \\
+bayesMult & Bayesian Multitask Regression & Low & \url{https://github.com/krisrs1128/bayesmult} \\
+spls & SPLS & High & \url{https://cran.r-project.org/web/packages/spls/} \\
+kernlab & KCCA & High & \url{https://cran.r-project.org/web/packages/kernlab/} \\
+PMA & PMD & High & \url{https://cran.r-project.org/web/packages/PMA/} \\
+Base R & PCA, CCA & High & \url{https://cran.r-project.org/} \\
+pls & PLS & High & \url{https://cran.r-project.org/web/packages/pls/}
+\end{tabular}
+\caption{Pointers to R package that can be used to implement methods discussed
+  in this survey. The vignettes in these packages go into more depth on the
+  capabilities of these packages than do the short scripts used in our case
+  study, available at \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
+\label{tab:r-packages}
 \end{table}
 
 In developing our WELL-China case study, we have both (1) described the types of
