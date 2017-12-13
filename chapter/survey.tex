@@ -2241,7 +2241,8 @@ have similar goals. By writing short, self-contained descriptions of various
 methods, we hope to contribute to an effort to distill ideas from the wide
 multitable data analysis literature to make them easily understandable to
 researchers interested in entering this field and useful for scientists hoping
-to apply these methods.
+to apply these methods. A ``cheat-sheet'' summarizing some of the key properties
+of these methods is given in Table \ref{tab:methods_comparison}.
 
 \begin{table}
 \centering
@@ -2283,19 +2284,21 @@ pls & PLS & High & \url{https://cran.r-project.org/web/packages/pls/}
 \caption{Pointers to R package that can be used to implement methods discussed
   in this survey. The vignettes in these packages go into more depth on the
   capabilities of these packages than do the short scripts used in our case
-  study, available at \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
+  study, available at \url{https://github.com/krisrs1128/well\_microbiome\_expers}.}
 \label{tab:r-packages}
 \end{table}
 
 In developing our WELL-China case study, we have both (1) described the types of
 interpretations facilitated by different approaches and (2) provided accessible
 implementations that can be incorporated into practical scientific workflows.
-Our case study includes carefully thought-through visualizations of model
-results, a step that is crucial in scientific study but often overlooked in
-methodological research, where model results are reduced to tables of
-performance metrics. Recognizing that a good deal of effort in statistical work
-goes into data preparation and visualization of model results, we have ensured
-that code for all steps are available, so that our work is fully reproducible.
+Packages providing the implementations of the multitable methods we have
+reviewed in this work are linked in Table \ref{tab:r-packages}. Our case study
+includes carefully thought-through visualizations of model results, a step that
+is crucial in scientific study but often overlooked in methodological research,
+where model results are reduced to tables of performance metrics. Recognizing
+that a good deal of effort in statistical work goes into data preparation and
+visualization of model results, we have ensured that code for all steps are
+available, so that our work is fully reproducible.
 
 We have found that multitable data analysis problem have motivated a wide range
 of analysis approaches. This is not surprising, considering the variety of
