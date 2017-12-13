@@ -2243,21 +2243,26 @@ multitable data analysis literature to make them easily understandable to
 researchers interested in entering this field and useful for scientists hoping
 to apply these methods.
 
-\begin{table}[]
+\begin{table}
 \centering
-\caption{}
-\label{tab:methods_properties}
 \begin{tabular}{lll}
-Property              & Algorithms                                                                                                                                                                                                                                    & Consequence \\
-Sparsity              & SPLS, Graph-Fused Lasso, Graph-Fused Lasso                                                                                                                                                                                                    &             \\
-Low-Dimen. Only       & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis                                                                                                                                                                                          &             \\
-Probabilistic         & Mixed-Membership CCA, Bayesian Multitask Regression                                                                                                                                                                                           &             \\
-\textgreater 2 Tables & CCA, MFA, PMD, KCCA                                                                                                                                                                                                                           &             \\
-Tuning Parameters     & \begin{tabular}[c]{@{}l@{}}Sparsity: Graph-Fused Lasso, PMD, SPLS\\ Number of Factors: PCA-IV, Red. Rank Regression, Mixed-Membership CCA\\ Prior Parameters: Mixed-Membership CCA, Bayesian Multitask Regression\\ Kernel: KCCA\end{tabular} &             \\
-Nonlinear             & KCCA, Mixed-Membership CCA, Bayesian Multitask Regression                                                                                                                                                                                     &             \\
-Cross-Table Symmetry  & Concat. PCA, PMD, CCA, MFA                                                                                                                                                                                                                    &             \\
-Analytical Solution   & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis                                                                                                                                                                                          &            
+Property & Algorithms & Consequence \\
+Require covariance estimate & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods that require estimates of covariance matrices cannot be applied to data with more variables than samples, and become unstable in high-dimensional settings. \\
+Analytical Solution & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods with analytical solutions generally run much faster than those that require iterative updates, optimization, or Monte Carlo sampling. They tend to be restricted to more classical settings, however.
+Sparsity & SPLS, Graph-Fused Lasso, Graph-Fused Lasso & Encouraging sparsity on scores or loadings can result in more interpretable, results for high-dimensional data sets. These methods provide automatic variable selection in the multitable analysis problem. \\
+Tuning Parameters & \begin{tabular}[c]{@{}l@{}}Sparsity: Graph-Fused Lasso, PMD, SPLS\\ Number of Factors: PCA-IV, Red. Rank Regression, Mixed-Membership CCA\\ Prior Parameters: Mixed-Membership CCA, Bayesian Multitask Regression\\ Kernel: KCCA\end{tabular} & Methods with many tuning parameters are often more expressive than those without any, since it makes it possible to adapt to different degrees of model complexity. However, in the absence of automatic tuning strategies, these methods are typically more difficult to use effectively. \\
+Probabilistic & Mixed-Membership CCA, Bayesian Multitask Regression & Probabilistic techniques provide estimates of uncertainty, along with representations of cross-table covariation. This comes at the cost of more involved computation and difficulty in assessing convergence. \\
+Not Normal or Nonlinear & KCCA, Mixed-Membership CCA, Bayesian Multitask Regression & When data are not normal (and are difficult to transform to normality) or there are sources of nonlinear covariation across tables, it can be beneficial to directly model this structure. KCCA allows the most general types of nonlinearity, while the probabilistic methods are suited to specific count-structure. \\
+\textgreater 2 Tables & Concat. PCA, CCA, MFA, PMD, KCCA & Methods that allow more than two tables are applicable in a wider range of multitable problems. Note these are a subset of the cross-table symmetric methods. \\
+Cross-Table Symmetry & Concat. PCA, CCA, CoIA, Statico / Costatis, MFA, PMD, KCCA & Cross-table symmetry refers to the idea that some methods don't need a supervised or multitask setup, where one table contains response variable and the other requires predictors. The results of these methods do not change when the two tables are swapped in the method input. \\
 \end{tabular}
+\caption{A high-level comparison of the multitable analysis methods discussed in
+  this review. The purpose of this table is to give rules-of-thumb that can guide
+  practical application, where choices invariabily depend on the scale and structure of
+  the data, the goals of the analysis, the expected number of future workflow
+  applications, and availability of programming computation time.
+}
+\label{tab:algorithms_comparison}
 \end{table}
 
 In developing our WELL-China case study, we have both (1) described the types of
