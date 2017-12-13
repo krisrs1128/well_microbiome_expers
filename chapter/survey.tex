@@ -2243,6 +2243,23 @@ multitable data analysis literature to make them easily understandable to
 researchers interested in entering this field and useful for scientists hoping
 to apply these methods.
 
+\begin{table}[]
+\centering
+\caption{}
+\label{tab:methods_properties}
+\begin{tabular}{lll}
+Property              & Algorithms                                                                                                                                                                                                                                    & Consequence \\
+Sparsity              & SPLS, Graph-Fused Lasso, Graph-Fused Lasso                                                                                                                                                                                                    &             \\
+Low-Dimen. Only       & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis                                                                                                                                                                                          &             \\
+Probabilistic         & Mixed-Membership CCA, Bayesian Multitask Regression                                                                                                                                                                                           &             \\
+\textgreater 2 Tables & CCA, MFA, PMD, KCCA                                                                                                                                                                                                                           &             \\
+Tuning Parameters     & \begin{tabular}[c]{@{}l@{}}Sparsity: Graph-Fused Lasso, PMD, SPLS\\ Number of Factors: PCA-IV, Red. Rank Regression, Mixed-Membership CCA\\ Prior Parameters: Mixed-Membership CCA, Bayesian Multitask Regression\\ Kernel: KCCA\end{tabular} &             \\
+Nonlinear             & KCCA, Mixed-Membership CCA, Bayesian Multitask Regression                                                                                                                                                                                     &             \\
+Cross-Table Symmetry  & Concat. PCA, PMD, CCA, MFA                                                                                                                                                                                                                    &             \\
+Analytical Solution   & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis                                                                                                                                                                                          &            
+\end{tabular}
+\end{table}
+
 In developing our WELL-China case study, we have both (1) described the types of
 interpretations facilitated by different approaches and (2) provided accessible
 implementations that can be incorporated into practical scientific workflows.
