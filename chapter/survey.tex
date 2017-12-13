@@ -2013,8 +2013,8 @@ which can be input to any number of gradient-based routines.
 \cite{chen2010graph} uses Nesterov's accelerated method, a version of gradient
 descent with a momentum term, and this is what we use in our examples below.
 
-\subsection{Example}
-\label{subsec:graph_fused_example}
+\subsubsection{Example}
+\label{subsubsec:graph_fused_example}
 
 We apply the graph-fused lasso to the body composition problem and compare it to
 a naive version of lasso that doesn't share any information across responses. We
@@ -2228,8 +2228,8 @@ find a $\theta^{1}$ to maximize $\F\left(\gamma^{(1)}, \theta\right)$, and
 so forth. The final posterior is approximated by $q_{\gamma^{t}}$ for some
 large $t$.
 
-\section{Conclusion}
-\label{sec:conclusion}
+\section{Discussion}
+\label{sec:Discussion}
 
 In this work, we have studied the problem of multitable data analysis, reviewing
 both the algorithmic foundations and practical applications of various methods.
@@ -2241,17 +2241,64 @@ have similar goals. By writing short, self-contained descriptions of various
 methods, we hope to contribute to an effort to distill ideas from the wide
 multitable data analysis literature to make them easily understandable to
 researchers interested in entering this field and useful for scientists hoping
-to apply these methods.
+to apply these methods. A ``cheat-sheet'' summarizing some of the key properties
+of these methods is given in Table \ref{tab:methods_comparison}.
+
+\begin{table}
+\centering
+\begin{tabular}{lll}
+Property & Algorithms & Consequence \\
+Require covariance estimate & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods that require estimates of covariance matrices cannot be applied to data with more variables than samples, and become unstable in high-dimensional settings. \\
+Analytical Solution & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods with analytical solutions generally run much faster than those that require iterative updates, optimization, or Monte Carlo sampling. They tend to be restricted to more classical settings, however.
+Sparsity & SPLS, Graph-Fused Lasso, Graph-Fused Lasso & Encouraging sparsity on scores or loadings can result in more interpretable, results for high-dimensional data sets. These methods provide automatic variable selection in the multitable analysis problem. \\
+Tuning Parameters & \begin{tabular}[c]{@{}l@{}}Sparsity: Graph-Fused Lasso, PMD, SPLS\\ Number of Factors: PCA-IV, Red. Rank Regression, Mixed-Membership CCA\\ Prior Parameters: Mixed-Membership CCA, Bayesian Multitask Regression\\ Kernel: KCCA\end{tabular} & Methods with many tuning parameters are often more expressive than those without any, since it makes it possible to adapt to different degrees of model complexity. However, in the absence of automatic tuning strategies, these methods are typically more difficult to use effectively. \\
+Probabilistic & Mixed-Membership CCA, Bayesian Multitask Regression & Probabilistic techniques provide estimates of uncertainty, along with representations of cross-table covariation. This comes at the cost of more involved computation and difficulty in assessing convergence. \\
+Not Normal or Nonlinear & KCCA, CCpNA, Mixed-Membership CCA, Bayesian Multitask Regression & When data are not normal (and are difficult to transform to normality) or there are sources of nonlinear covariation across tables, it can be beneficial to directly model this structure. KCCA allows the most general types of nonlinearity, while the probabilistic methods are suited to specific count-structure. \\
+\textgreater 2 Tables & Concat. PCA, CCA, MFA, PMD, KCCA & Methods that allow more than two tables are applicable in a wider range of multitable problems. Note these are a subset of the cross-table symmetric methods. \\
+Cross-Table Symmetry & Concat. PCA, CCA, CoIA, Statico / Costatis, MFA, PMD, KCCA & Cross-table symmetry refers to the idea that some methods don't need a supervised or multitask setup, where one table contains response variable and the other requires predictors. The results of these methods do not change when the two tables are swapped in the method input. \\
+\end{tabular}
+\caption{A high-level comparison of the multitable analysis methods discussed in
+  this review. The purpose of this table is to give rules-of-thumb that can guide
+  practical application, where choices invariabily depend on the scale and structure of
+  the data, the goals of the analysis, the expected number of future workflow
+  applications, and availability of programming computation time.
+}
+\label{tab:algorithms_comparison}
+\end{table}
+
+\begin{table}[]
+\centering
+\begin{tabular}{llll}
+Package & Methods & Documentation & Link \\
+ade4 & PCA, CCA, CoIA, Statico / Costatis, PCA-IV & Average & \url{https://cran.r-project.org/web/packages/ade4/} \\
+FactoMineR & PCA, MFA & High & \url{https://cran.r-project.org/web/packages/FactoMineR/} \\
+vegan & CCA, CCpnA & High & \url{https://cran.r-project.org/web/packages/vegan/} \\
+GFLasso & Graph-Fused Lasso & Low & \url{https://github.com/krisrs1128/gflasso} \\
+bayesMult & Bayesian Multitask Regression & Low & \url{https://github.com/krisrs1128/bayesmult} \\
+spls & SPLS & High & \url{https://cran.r-project.org/web/packages/spls/} \\
+kernlab & KCCA & High & \url{https://cran.r-project.org/web/packages/kernlab/} \\
+PMA & PMD & High & \url{https://cran.r-project.org/web/packages/PMA/} \\
+Base R & PCA, CCA & High & \url{https://cran.r-project.org/} \\
+pls & PLS & High & \url{https://cran.r-project.org/web/packages/pls/}
+\end{tabular}
+\caption{Pointers to R package that can be used to implement methods discussed
+  in this survey. The vignettes in these packages go into more depth on the
+  capabilities of these packages than do the short scripts used in our case
+  study, available at \url{https://github.com/krisrs1128/well\_microbiome\_expers}.}
+\label{tab:r-packages}
+\end{table}
 
 In developing our WELL-China case study, we have both (1) described the types of
 interpretations facilitated by different approaches and (2) provided accessible
 implementations that can be incorporated into practical scientific workflows.
-Our case study includes carefully thought-through visualizations of model
-results, a step that is crucial in scientific study but often overlooked in
-methodological research, where model results are reduced to tables of
-performance metrics. Recognizing that a good deal of effort in statistical work
-goes into data preparation and visualization of model results, we have ensured
-that code for all steps are available, so that our work is fully reproducible.
+Packages providing the implementations of the multitable methods we have
+reviewed in this work are linked in Table \ref{tab:r-packages}. Our case study
+includes carefully thought-through visualizations of model results, a step that
+is crucial in scientific study but often overlooked in methodological research,
+where model results are reduced to tables of performance metrics. Recognizing
+that a good deal of effort in statistical work goes into data preparation and
+visualization of model results, we have ensured that code for all steps are
+available, so that our work is fully reproducible.
 
 We have found that multitable data analysis problem have motivated a wide range
 of analysis approaches. This is not surprising, considering the variety of
@@ -2264,6 +2311,22 @@ advances.
 \bibliography{refs.bib}
 
 \section{Supplementary Material}
+
+\begin{table}
+\centering
+\begin{tabular}{lll}
+Statistics & Ecology & Machine Learning \\
+Samples & Sites & Samples \\
+Variables & Species & Features \\
+Scores & Scores & Embeddings \\
+Biplot & Ordination & ----- \\
+Variance explained & Inertia & Training Error \\
+Entropy & Diversity & Entropy
+\end{tabular}
+\caption{A brief translation of terms used in multitable data analysis, across
+  three of the fields where many methods have been proposed.}
+\label{tab:multitable_translation}
+\end{table}
 
 \subsection{Additional figures}
 
