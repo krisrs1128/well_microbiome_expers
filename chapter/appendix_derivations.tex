@@ -1,0 +1,251 @@
+\chapter{Derivation details for Multitable Methods}
+\label{ch:multitable_supp_derivations}
+
+This appendix includes derivations and technical discussion of several methods
+surveyed in Chapter \ref{ch:multitable}: PCA-IV, PTA, Reduced-Rank Regression,
+and the C\&W algorithm. While these methods can be understood and applied based
+on their computational description, these mathematical discussions provide
+motivation and context for their particular form.
+
+\section{Derivation details for PCA-IV}
+\label{subsec:pca_iv_derivation}
+
+In this section, we provide the argument for why the generalized
+eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
+\hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
+
+First consider $k = 1$. For any $\tilde{v}$, the objective
+in equation \ref{eq:pca_iv_obj_2} has the form
+\begin{align}
+  \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
+  \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
+  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \nonumber \\
+  &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
+\end{align}
+where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
+to maximize equation \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
+eigenvector of
+$\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
+which implies that $\tilde{v}$ is the top generalized eigenvector of
+$\Sigma_{XY}\Sigma_{YX}$ with respect to $\Sigma_{XX}$. Indeed, in this case,
+\begin{align*}
+  \Sigma_{XY}\Sigma_{YX}\tilde{v}
+  &=\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w} \\
+  &= \Sigma_{XX}^{\frac{1}{2}} \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX} \Sigma_{XX}^{-\frac{1}{2}}\tilde{w}\\
+  &= \Sigma_{XX}^{\frac{1}{2}}\lambda_{1}\tilde{w} \\
+  &= \lambda_{1}\Sigma_{XX}\tilde{v}.
+\end{align*}
+
+Hence, in the case $K = 1$, the criterion is maximized by the top generalized
+eigenvector. For larger $K$, recall that the problem of maximizing
+$\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
+- 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
+applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
+result for general $K$.
+
+\section{Derivation of PTA $\alpha$}
+\label{subsec:pta_alpha_derivation}
+
+ The Lagrangian of the optimization defined by PTA is
+\begin{align*}
+\mathcal{L}\left(\alpha, \lambda\right) &= \sum_{l = 1}^{L}
+\alpha_{l}\left<\overline{X}, X_{\cdot\cdot l}\right> +
+\lambda\left(\|\alpha\|^{2}_{2} - 1\right),
+\end{align*}
+which when differentiated with respect to $\alpha$ yields $\alpha_{l} =
+-\frac{1}{2\lambda} \left<\overline{X}, X_{\cdot\cdot l}\right>$ for all $l$.
+The constraint that $\|\alpha\|_{2}^{2} = 1$ implies that
+$\frac{1}{4\lambda^{2}} \sum_{l^{\prime} = 1}^{L} \left<\overline{X},
+X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
+\sqrt{\sum_{l^{\prime} =1 }^{L} \left<\overline{X}, X_{\cdot\cdot
+    l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
+  X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
+    X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
+
+\section{Derivation of Reduced Rank Solution}
+\label{subsec:reduced_rank_derivation}
+
+Consider the data and parameters in the whitened space, $Y^{\ast} =
+Y\hat{\Sigma}_{YY}^{-\frac{1}{2}}$ and $B^{\ast} =
+B\hat{\Sigma}_{YY}^{-\frac{1}{2}}$, and rewrite the objective \ref{eq:rr_obj} as
+\begin{align*}
+\|Y^{\ast} - XB^{\ast}\|_{F}^{2} &= \|Y^{\ast} - \hat{Y}^{\ast \text{ols}}\|_{F}^{2} + \|\hat{Y}^{\ast \text{ols}} - XB^{\ast}\|_{F}^{2},
+\end{align*}
+where we used the fact that the residuals are orthogonal to the column space of
+$X$ to remove the cross term. The first term does not involve $B^{\ast}$, so we
+can focus on minimizing the second. Consider the SVD $\hat{Y}^{\ast \text{ols}}
+= \dot{U}\dot{D}\dot{V}^{T}$. We know that the matrix $A$ of rank $K$ that
+minimizes $\|\hat{Y}^{\ast \text{ols}} - A\|_{F}^{2}$ is $A =
+\dot{U}_{K}\dot{D}_{K}\dot{V}_{K}^{T} = Y^{\ast
+  \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}$, the truncated SVD of $\hat{Y}^{\ast
+  \text{ols}}$, or alternatively its projection onto the top $K$ right
+eigenvectors.
+
+In particular, any matrix $B$ that satisfies
+\begin{align*}
+  XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
+\end{align*}
+solves the reduced rank regression problem, so we can choose
+\begin{align*}
+  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T},
+\end{align*}
+which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
+$V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
+$\hat{Y}^{\ast \text{ols}}$.
+
+There is a connection between this fit and the response canonical directions of
+$\hat{Y}$. In particular, consider the eigendecomposition that follows from the
+earlier SVD,
+\begin{align}
+\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \nonumber \\
+&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)\nonumber \\
+  &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
+\end{align}
+
+Recall that the response canonical directions $V$ are derived by taking the SVD
+of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
+\tilde{U}\tilde{D}\tilde{V}^{T}$ and setting $V =
+\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
+\ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
+which the CCA response directions are derived are equal to the eigenvectors of
+the cross-products of the OLS fits in the whitened space. Hence,
+\begin{align*}
+\hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
+&= \left(X^{T}X\right)^{-1}X^{T}Y V_{K} \Sigma_{YY}^{\frac{1}{2}}V_{K}^{T} \\
+&= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
+\end{align*}
+
+Therefore, the reduced-rank coefficients are just the projection of the original
+OLS coefficients onto the subspace spanned by the top $K$ response canonical
+directions.
+
+\section{Derivation of Curds \& Whey Shrinkage}
+\label{subsec:derivation_curds_and_whey}
+
+Consider prediction across many related response variables. One way to pool
+information across respones is to define new fitted values from a linear
+combination of independent OLS fits. That is, to predict a response $y_{i} \in
+\reals^{p_{1}}$, we set $\hat{y}^{\text{cw}}_{i} = B\hat{y}^{\text{ols}}_{i}$
+for some square matrix $B \in \reals^{p_{1} \times p_{1}}$. But how to choose
+$B$?
+
+One reasonable idea is to choose a $B$ that has the best performance in a
+generalized cross-validation (GCV). The GCV approximation is that the $h_{ii}$
+can be approximated by their average across all diagonal elements of $H$:
+$h_{ii} \approx h := \frac{1}{n}\tr\left(H\right)$ for all $i$. In this spirit,
+define $g = \frac{1}{1 - h}$, and approximate
+\begin{align*}
+  \hat{y}_{-i} \approx \left(1 - g\right)y_{i} + g\hat{y}_{i}.
+\end{align*}
+
+Then, the leave-one-out CV error can be simplified to
+\begin{align*}
+  \sum_{i = 1}^{n}\|y_{i} - B\hat{y}_{-i}\|_{2}^{2} &= \sum_{i =
+    1}^{n} \|y_{i} - B\left(\left(1 - g\right)y_{i} +
+    g\hat{y}_{-i}\right)\|_{2}^{2},
+\end{align*}
+and differentiating with respect to $B$, we find that the optimal
+$\hat{B}^{\text{cw}}$ in this GCV framework must satisfy
+\begin{align*}
+\sum_{i = 1}^{n}\left(y_{i} - B\left(\left(1 - g\right)y_{i} +
+    g\hat{y}_{-i}\right)\right)\left(\left(1 - g\right)y_{i} +
+  g\hat{y}_{-i}\right)^{T},
+\end{align*}
+or equivalently
+\begin{align*}
+\sum_{i = 1}^{n} y_{i}\left(\left(1 - g\right)y_{i} +
+  g\hat{y}_{-i}\right)^{T} &=  \sum_{i = 1}^{n}B\left(\left(1 -
+    g\right)y_{i} + g\hat{y}_{-i}\right)\left(\left(1 - g\right)y_{i}
+  +  g\hat{y}_{-i}\right)^{T},
+\end{align*}
+which in matrix form is
+\begin{align}
+\left(1 - g\right)Y^{T}Y + g\hat{Y}^{T}Y = B\left(\left(1 - g\right)Y
+  + g \hat{Y}\right)^{T}\left(\left(1 - g\right)Y + g \hat{Y}\right), \label{eq:gcv_mat_form}
+\end{align}
+where $\hat{Y} \in \reals^{n \times p_{1}}$ has $i^{th}$ row
+$\hat{y}_{-i}$.
+
+Next, we can represent these cross-products in a way that is suggestive of CCA,
+\begin{align*}
+  Y^{T}Y &= n \hat{\Sigma}_{YY} \\
+  \hat{Y}^{T}Y &= Y^{T}HY = Y^{T}X\left(X^{T}X\right)^{-1}X^{T}Y =
+  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY} \\
+  \hat{Y}^{T}\hat{Y} &= Y^{T}P_{X}^2 Y = Y^{T}P_{X}Y=
+  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY},
+\end{align*}
+Substituting this into equation \ref{eq:gcv_mat_form} and ignoring the scaling
+$n$ yields
+\begin{align*}
+\left(1 - g\right)\hat{\Sigma}_{YY} + g
+\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY} &=
+B\left[\left(1 - g\right)\hat{\Sigma}_{YY} + \left(2g -
+    g^{2}\right)\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}\right].
+\end{align*}
+Postmultiplying by $\hat{\Sigma}_{YY}$ gives
+\begin{align}
+  \left(1 - g\right)I_{p_{1}} + g\hat{Q}^{T} &= B\left[\left(1 -
+      g\right)I_{p_{1}} + \left(2g -
+      g^{2}\right)\hat{Q}^{T}\right], \label{eq:cca_gcv_id}
+\end{align}
+where,
+\begin{align*}
+\hat{Q} :=
+\hat{\Sigma}_{YY}^{-1}\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}
+\in \reals^{p_{1}\times p_{1}}.
+\end{align*}
+Now, we claim that we can decompose $\hat{Q} = VD^{2}V^{-1}$, where $V \in
+\reals^{p_{1} \times p_{1}}$ is the full matrix of CCA response directions and
+$D$ is diagonal with the canonical correlations. Indeed, the usual CCA response
+directions $V$ can be recovered by setting $V =
+\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{V}$, where $\tilde{V}$ comes from the SVD
+of $A := \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{XX}^{-\frac{1}{2}} =
+\tilde{U}D\tilde{V}^{T}$. Hence,
+\begin{align*}
+  Q &= \Sigma_{YY}^{-\frac{1}{2}}A^{T}A\Sigma_{YY}^{\frac{1}{2}} \\
+  &= \Sigma_{YY}^{-\frac{1}{2}}\tilde{V}^{2}D^{2}\tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}\\
+  &= VD^{2}V^{-1},
+\end{align*}
+where we are able to write $V^{-1} = \tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}$
+because $\tilde{V}$ is the full (untruncated) matrix of eigenvectors, so
+$\tilde{V}\tilde{V}^{T} = I$ in addition to the usual $\tilde{V}^{T}\tilde{V}
+=I$, which holds even for the truncated SVD.
+
+Therefore, equation \ref{eq:cca_gcv_id} can be expressed as
+\begin{align*}
+  V^{-T}\left[\left(1 - g\right)I_{p_{1}} + gD^{2}\right]V^{T} &=
+  BV^{-T}\left[\left(1 - g\right)I_{p_{1}} + \left(2g -
+      g^2\right)D^{2}\right]V^{T}
+\end{align*}
+and the $B$ satisfying the normal equations has the form
+\begin{align*}
+\hat{B}^{\text{cw}} &= V^{-T}\Lambda V^{T},
+\end{align*}
+where $\Lambda$ is a diagonal matrix with entries
+\begin{align*}
+\lambda_{jj} = \frac{1 - g + d_{jj}^{2}g}{1 - g + \left(2g -
+    g^{2}\right)d_{jj}^{2}}.
+\end{align*}
+Notice that when $n$ is large, $\frac{1}{n}\tr P_{X}$ will be small, leading to
+a smaller $g \approx 0$ less shrinkage.
+
+Recall that $\hat{B}^{\text{cw}}$ is used to pool across OLS fits,
+$\hat{y}_{i}^{\text{cw}} = \hat{B}^{\text{cw}}\hat{y}_{i}^{\text{ols}}$. That
+is,
+\begin{align*}
+\hat{Y}^{\text{cw}} &= \hat{Y}^{\text{ols}}B^{T} =
+\hat{Y}^{\text{ols}}V\Lambda V^{-1}
+\end{align*}
+which we can also view as $\hat{Y}^{\text{cw}}V =
+\left(\hat{Y}^{\text{ols}}V\right)\Lambda$. This means that the C\&W coordinates
+along the canonical directions $V$ are set as the OLS fits
+$\hat{Y}^{\text{ols}}$ along the canonical directions $V$, with weights defined
+by $\Lambda$. The actual $\hat{Y}^{\text{cw}}$ are recovered by transforming
+back to the original coordinate system. A similar way to view the C\&W fits is
+to note $\hat{Y}^{\text{cw}}V = P_{X}\left(YV\right)\Lambda$, which the original
+data $Y$ according to the canonical directions, then projects the shrunk data
+onto the subspace defined by the columns of $X$. In any case, we see that C\&W
+pools across regression problems through a soft shrinkage weighted along
+canonical response directions.

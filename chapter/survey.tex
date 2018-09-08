@@ -1,113 +1,84 @@
-\documentclass{article}
-%% \usepackage[a4paper, margin=0.2in]{geometry}
-\usepackage{natbib}
-\usepackage{amssymb, amsmath, amsfonts}
-\usepackage{graphicx, hyperref}
-\input{preamble.tex}
-%% \linespread{2}
-
-\title{Multitable Data Analysis for the Microbiome}
-\author{Kris Sankaran and Susan P. Holmes}
-
-\begin{document}
-\maketitle
-
-\begin{abstract}
-  Many modern microbiome studies require the analysis of data collected across
-  multiple measurement sources -- for example, 16s sequencing, metagenomic,
-  metabolomic, or transcriptomic data. We abstract away the essential scientific
-  questions underlying these studies and provide a self-contained review of
-  methods that have emerged to address them. In addition to summarizing methods
-  abstractly, we describe an application to a multitable problem encountered at
-  the intersection of the microbiome and epidemiology literatures. Code for all
-  methods and figures is publicly available at
-  \url{https://github.com/krisrs1128/well\_microbiome\_expers}. We hope this
-  work can both (1) help practitioners understand and easily apply multitable
-  methods in their day-to-day work and (2) provide a concrete case study to
-  motivate the design and comparison of multitable techniques among methods
-  researchers.
-\end{abstract}
-
-\tableofcontents
-
-\section{Introduction}
+\chapter{Multitable Methods and Microbiome Data Integration}
+\label{ch:multitable}
 
 The simultaneous study of multiple measurement types is a frequently encountered
 problem in practical data analysis. It is especially common in microbiome
-research, where several sources of data -- for example, 16s sequencing,
-metagenomic, metabolomic, or transcriptomic data -- can be collected on the same
-physical samples \citep{McHardy2013, Franzosa2015}. There has been a
-proliferation of proposals for analyzing such multitable microbiome data, as is
-often the case when new data sources become more readily available, facilitating
-inquiry into new types of scientific questions \citep{Fukuyama2017,
-  Rahnavard2017, Chaudhary2017, Chalise2017}.
+research, where several sources of data -- for example, 16S, metagenomic,
+metabolomic, or transcriptomic data -- can be collected on the same physical
+samples \citep{Franzosa2015, McHardy2013}. There has been a proliferation of
+proposals for analyzing such multitable microbiome data, as is often the case
+when new data sources become more readily available, facilitating inquiry into
+new types of scientific questions \citep{Fukuyama2017, Rahnavard2017,
+  Chaudhary2017, Chalise2017}.
 
-However, stepping back from the rush of new methods for multitable analysis in
+However, stepping back from the rush for new methods for multitable analysis in
 the microbiome literature, it is worthwhile to recognize the broader landscape
 of multitable methods, as they have been relevant in problem domains ranging
 from economics \citep{hannan1967canonical} to robotics
-\citep{vlassis2000supervised} to computational biology \citep{gomez2014data}. Of
-course, there is no unique optimal algorithm to use across domains -- different
-instances of the multitable problem possess specific structure or variation
-that are worth incorporating in methodology.
+\citep{vlassis2000supervised} to genomics \citep{gomez2014data}. In different
+contexts, these techniques are called data integration, multi-omic, and
+multitask methods, for example. Of course, there is no unique optimal algorithm
+to use across domains -- different instances of the multitable problem possess
+specific structure or variation that are worth incorporating in methodology.
 
 Our purpose here is not to develop new algorithms, but rather to (1) distill the
 relevant themes across different analysis approaches and (2) provide concrete
 workflows for approaching analysis, as a function of ultimate analysis goals and
-data characteristics (heterogeneity, dimensionality, sparsity, ...) of the data.
+data characteristics (heterogeneity, dimensionality, sparsity, ...).
 Towards the second goal, we have made code for all analysis and figures
 available online at
 \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
 
-First, though, why can't multiple sources of data simply be combined into a
-single, unified table for subsequent analysis? One answer is that many
-scientific problems can only be answered by collecting several complementary
-measurement types. Indeed, the situation is analogous to using many types of
-sensors to study a single system from many perspectives. Further, while in
-certain supervised problems, it is enough to predict a single measurement of
-interest, with other sources primarily collected to provide better features,
-there are often an additional relational components to the analysis: how do
-different types of measurements covary with one another? Here, it is of interest
-to provide a representation of the data that facilitates comparisons across
-tables, rather than just comparing each table with a single response of
-interest. This richer scientific question motivates the development of methods
-distinct from those used to analyze a single measurement type at a time.
+First, though, why does anyone bother collecting multiple sources of data, and
+why can't these sources simply be combined into a single, unified table for
+subsequent analysis? One answer is that many scientific problems can only be
+answered by collecting several complementary measurement types. Indeed, the
+situation is analogous to using many types of sensors to study a single system
+from many perspectives. Further, while in certain supervised problems, it is
+enough to predict a single measurement of interest, with other sources primarily
+collected to provide better features, there are often an additional relational
+components to the analysis: how do different types of measurements covary with
+one another? Here, it is of interest to provide a representation of
+the data that facilitates comparisons across tables, rather than just comparing
+each table with a single response of interest. This richer scientific question
+motivates the development of methods distinct from those used to analyze a
+single measurement type at a time.
 
-For more concrete motivation, consider data from the WELL-China study, which is
-focused on the relationships between various indicators of wellness
+For more concrete motivation, we consider data from the WELL-China study, which
+is focused on the relationships between various indicators of wellness
 \citep{wellchina}. In this study, 1969 individuals\footnote{Though sampling is
   still ongoing.} underwent clinical examinations, filled out wellness surveys
 (covering topics such as exercise, sleep, diet, and mental health, for example),
-and provided stool samples, used for 16s sequencing and metabolomic analysis. To
-date, 16s sequencing data is available for 221 of these participants. Evidently,
+and provided stool samples, used for 16S sequencing and metabolomic analysis. To
+date, 16S sequencing data is available for 221 of these participants. Evidently,
 various interesting relational questions can be investigated using this data
 source.
 
 For the purpose of illustration, we focus on one relatively narrow question that
 can be addressed using this data: How is the distribution of lean and fat mass
 across the body related to patterns of microbial abundance? The measurement
-types most relevant in this analysis are DEXA scans and 16s sequencing abundances.
+types most relevant in this analysis are DEXA scans and 16S sequencing abundances.
 DEXA scans use relative X-ray absorption to gauge the amount of lean and fat body
 mass within a region of the body being scanned. We have access to these
 lean and fat body mass measurements at several body sites -- arms, legs, trunk,
 etc. -- along with related body type variables, like height, age, and android
-and gynoid fat measurements. In total, there are 36 of these variables. 16s
-sequencing is a technology for gauging the abundance of differnet bacterial
-species in the gut by counting the alignments of reads to the 16s gene, a
+and gynoid fat measurements. In total, there are 36 of these variables. 16S
+sequencing is a technology for gauging the abundance of different bacterial
+species in the gut by counting the alignments of reads to the 16S gene, a
 component of all bacterial genomes with enough variation to allow discimination
 between different individual species. We have counts associated with 2565
-species across 181 genuses, though the vast majority are present in low
+species across 181 genera, though the vast majority are present in low
 abundances.
 
 This question of the relationship between lean and fat mass distribution
 (informally, ``body type'') and the microbiome is motivated by findings that
 certain taxonomic groups are over or underrepresented as a function of an
-individual's BMI \citep{ley2006microbial, turnbaugh2009core, ley2005obesity,
-  ley2010obesity}. Further, since the distribution of fat is often more related
-to underlying biological mechanisms than overall body mass
+individual's Body Mass Index (BMI) \citep{ley2006microbial, turnbaugh2009core,
+  ley2005obesity, ley2010obesity}. Further, since the distribution of fat is
+often more related to underlying biological mechanisms than overall body mass
 \citep{matsuzawa2008role}, and since this distribution is mediated by specific
 metabolic pathways, there is reason to suspect that a joint analysis of DEXA and
-16s microbial abundance data might yield a more complete view of the
+16S microbial abundance data might yield a more complete view of the
 relationship between the microbiome and body type.
 
 \section{Classical multivariate methods}
@@ -125,17 +96,17 @@ Principal Component Analysis with Instrumental Variables (PCA-IV).
 
 The earliest multitable method (CCA) was published in 1936, where the motivating
 data analysis problem was to relate prices of groups of commodities
-\citep{hotelling1936relations}. There are two notable aspects of data analysis in
-this classical paradigm which no longer hold in modern statistics,
+\citep{hotelling1936relations}. There are two notable aspects of data analysis
+in this classical paradigm which no longer hold in modern statistics,
 \begin{itemize}
-  \item Even when many samples could be collected, there were typically only a
-    few features for each sample, and it was straightforwards to study all of
-    them simultaneously. It is now possible to automatically collect a large
-    number of features for each sample.
+  \item Even when many samples could be collected, there were typically
+    only a few features for each samples, and it was straightforwards to study
+    all of them simultaneously. It is now possible to automatically collect a
+    large number of features for each observation.
   \item Before electronic computers had been invented, it was important that all
     statistical quantities be easy to calculate, typically necessitating
     analytical formulas for parameter estimates. This is no longer an important
-    limitation in an environment due to modern computation.
+    limitation due to modern computation.
 \end{itemize}
 
 These changes have driven the development of high-dimensional methods and
@@ -173,8 +144,7 @@ accomplish two goals,
 However, two drawbacks of this approach are worth noting,
 \begin{itemize}
   \item It does not provide a summary of the relationship between the sets of
-    variables defining the tables -- it can only relate pairs of
-    variables.
+    variables defining the tables -- it can only relate pairs of variables.
   \item If some tables have many more variables than others, they can dominate
     the resulting ordination.
 \end{itemize}
@@ -197,7 +167,7 @@ projected points with respect to this subspace.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/pca/proj_plot_1}
+  \includegraphics[width=0.5\textwidth]{figure/multitable/pca/proj_plot_1}
   \caption{A geometric motivation for PCA. The first principal component spans
     the one-dimensional subspace $V$ minimizing the squared error between points
     and their projections, $\sum_{i = 1}^{n}\|\left(I -
@@ -212,14 +182,14 @@ projected points with respect to this subspace.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/pca/var_plot}
+  \includegraphics[width=0.5\textwidth]{figure/multitable/pca/var_plot}
   \caption{A statistical motivation for PCA. Each histogram is computed from the
-    linear combinations $\left(c^{j^{T}}x_{i}\right)$, for $c^{j}$ equal
-    to the first and second principal components, the vector
-    $\frac{1}{n}\mathbf{1}$, and a normalized random multivariate Gaussian. At
-    least among these four vectors, the scores obtained from the first PC have
-    the largest variance. It is a theorem that its variance is in fact maximal
-    among all linear combinations with unit-length vectors.}
+    linear combinations $\left(c^{j^{T}}x_{i}\right)$, for $c^{j}$ equal to the
+    first and second principal components, the vector $\frac{1}{n}\mathbf{1}$,
+    and a normalized random multivariate Gaussian. At least among these four
+    vectors, the scores obtained from the first PC have the largest variance. It
+    is a theorem that its variance is in fact maximal among all linear
+    combinations with unit-length vectors.}
   \label{fig:pca-var}
 \end{figure}
 
@@ -233,14 +203,14 @@ side by side, to emphasize the fact that the linear combination $x^{T}v_{1}$
 associated with the first principal component $v_{1}$ has the largest variance
 among a few natural choices.
 
-Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn
-independently from some distribution $\P$, so that the variance is
-$\Covsubarg{\P}{x_{i}} = \Sigma$. Consider an arbitrary linear combination of
-$x_{i}$'s $p$ coordinates: $z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$.
-The first PCA direction gives the unit-length $c$ such that the variance of this
-coordinate, $\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second
-direction gives the linear combination that maximizes variance, subject to being
-orthogonal to the first, and so forth.
+Formally, suppose that the $x_{i}\in\reals^{p}$ are drawn independently from
+some distribution $\P$, so that the variance is $\Covsubarg{\P}{x_{i}} =
+\Sigma$. Consider an arbitrary linear combination of $x_{i}$'s $p$ coordinates:
+$z_{i} := c^{T}x_{i}$ for some $c \in \reals^{p}$. The first PCA direction gives
+the unit-length $c$ such that the variance of this coordinate,
+$\Varsubarg{\P}{z_{i}} = c^{T}\Sigma c$, is maximal. The second direction gives
+the linear combination that maximizes variance, subject to being orthogonal to
+the first, and so forth.
 
 While our description of the method of concatenating multiple tables into a
 single one has focused on PCA, note that other single table methods could be
@@ -261,16 +231,16 @@ Nonetheless, it is not ideal in the multitable setting.
 \subsubsection{Example}
 \label{subsubsec:pca_example}
 
-Figure \ref{fig:loadings} and \ref{fig:scores_android_fm} illustrate this approach
-on body composition and bacterial abundance data from the WELL-China study. Note
-that we have subsetted to only women, since men and women have very different
-body compositions, and we have slightly more data for women. Further, the 16s
-data have been variance stabilized according the methodology proposed in
+Figure \ref{fig:loadings} and \ref{fig:scores_android_fm} illustrate this
+approach on body composition and bacterial abundance data from the WELL-China
+study. Note that we have subsetted to only women, since men and women have very
+different body compositions, and we have slightly more data for women. Further,
+the 16S data have been variance stabilized according the methodology proposed in
 \citep{Anders2010} and filtered to only those species that have count $\geq 5$
 in at least 7\% of samples.
 
 Figure \ref{fig:loadings} displays the loadings associated with this
-concatenated PCA approach, where body composition (36 columns) and 16s
+concatenated PCA approach, where body composition (36 columns) and 16S
 abundances (372 columns) were combined into one dataset (408 columns). Columns
 associated with bacterial species are displayed as points, shaded by taxonomic
 family, while columns associated with body composition variables are labeled
@@ -279,9 +249,8 @@ with text.
 Most body composition variables lie on the top right, in a direction
 approximately orthogonal to the main direction of variation among species.
 Columns that are highly correlated -- e.g., right (R) and left (L) leg fat mass
-(FM) -- have loadings nearly equal to one another. Age appears in generally
-negatively correlated with the other variables. Among species, the most notable
-pattern is the concentration of Ruminococcaceae on the right.
+(FM) -- have loadings nearly equal to one another. Among species, the most
+notable pattern is the concentration of Ruminococcaceae on the right.
 
 To identify relationships between species and body composition variables, it
 would be of interest to isolate those species with large contributions along the
@@ -292,12 +261,11 @@ fact that such associations seem weak with respect to the top two principal
 components does not mean such relationships do not exist.
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pca/loadings}
+  \centering \includegraphics[width=\textwidth]{figure/multitable/pca/loadings}
   \caption{The loadings obtained by applying PCA to the combined body
-    composition and microbial abundance data. Species are points, and are
-    shaded in by taxonomic family. Body composition variables are plotted as
-    text. The size of points and words measures the contribution of the third PC
+    composition and microbial abundance data. Species are points, and are shaded
+    in by taxonomic family. Body composition variables are plotted as text. The
+    size of points and words measures the contribution of the third PC
     dimension. \label{fig:loadings} }
 \end{figure}
 
@@ -316,29 +284,29 @@ Bacteroidaceae vs. Ruminococcaceae differentiation is visible in Figure
 \ref{fig:scores_rl_ratio}, which is consistent with the loadings.
 
 In this approach, the loadings provide a description of the relationship between
-variables across datasets. Further, scores summarize variation in samples
-across multiple datasets. Hence, this heuristic is a natural first step in
-analyzing multiple table data. However, considering the difficulty in directly
-interpreting the covariation across datasets, as well as the method's failure
-to use any sense of covariation in the dimensionality reductions strategy,
-suggests that this method should not be the last step of an analysis workflow.
+variables across datasets. Further, scores summarize variation in samples across
+multiple datasets. Hence, this heuristic is a natural first step in analyzing
+multiple table data. However, considering the difficulty in directly
+interpreting the covariation across datasets, as well as the method's failure to
+use any sense of covariation in the dimensionality reductions strategy, suggests
+that this method should not be the last step of an analysis workflow.
 Nevertheless, we now have a baseline with which to compare the more elaborate
 methods of subsequent sections.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
+  \includegraphics[width=\textwidth]{figure/multitable/pca/scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
-    composition and microbial abundance data. The first two principal
-    components explain about 4\% of the variance. Points are species, shaded in
-    by taxonomic family. Text are columns from the body composition data. Points
+    composition and microbial abundance data. The first two principal components
+    explain about 4\% of the variance. Points are species, shaded in by
+    taxonomic family. Text are columns from the body composition data. Points
     and text with small angle between one another are more correlated.
     \label{fig:scores_android_fm} }
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{figure/multitable/pca/scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:scores_android_fm}, but shaded now
     by the transformed ratio of Bacteroidaceae over Ruminococcaceae abundances.
     The slight increase in Ruminococcaceae from left to right is consistent with
@@ -350,10 +318,10 @@ methods of subsequent sections.
 \label{subsec:cca}
 
 CCA is a close relative of PCA, designed to compare sets of features across
-tables. Like PCA, it provides low-dimensional representations of samples, but it
-also allows comparisons at the table level. Suppose for now that there are only
-two tables of interest, $X \in \reals^{n \times p_{1}}$ and $Y \in \reals^{n
-  \times p_{2}}$. Let $\hat{\Sigma}_{XX}, \hat{\Sigma}_{YY}$, and
+tables. Like PCA, it provides low-dimensional representations of observations,
+but it also allows comparisons at the table level. Suppose for now that there
+are only two tables of interest, $X \in \reals^{n \times p_{1}}$ and $Y \in
+\reals^{n \times p_{2}}$. Let $\hat{\Sigma}_{XX}, \hat{\Sigma}_{YY}$, and
 $\hat{\Sigma}_{XY}$ be the associated covariance estimates. Take the SVD,
 $\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
 = \tilde{U}D\tilde{V}^{T}$. The canonical correlation directions associated with
@@ -372,19 +340,19 @@ As with PCA, there are many ways to view this procedure -- here we discuss
 geometric, statistical, and probabilistic interpretations. Unlike the geometric
 interpretation of PCA, the geometric interpretation for CCA identifies point
 locations with features, not samples. Specifically, the columns of $X$ and $Y$
-are thought of as points in $\reals^{n}$. Consider two subspaces
-spanning the columns of $X$ and $Y$, respectively. These subspaces correspond to
-the linear combinations of features within each table. Place two ellipses on the
-respective subspaces, centered at the origin and with size and shape depending
-on the within table covariances $\hat{\Sigma}_{XX}$ and $\hat{\Sigma}_{YY}$. The
-first canonical correlation directions are the pair of points, one lying on each
+are thought of as points in $\reals^{n}$. Consider two subspaces spanning the
+columns of $X$ and $Y$, respectively. These subspaces correspond to the linear
+combinations of features within each table. Place two ellipses on the respective
+subspaces, centered at the origin and with size and shape depending on the
+within table covariances $\hat{\Sigma}_{XX}$ and $\hat{\Sigma}_{YY}$. The first
+canonical correlation directions are the pair of points, one lying on each
 ellipse, such that the angle from the origin to those two points is smallest. In
 this sense, it finds a pair of variance-constrained linear combinations of
-features within the two tables such that the two combinations appear ``close'' to
-one another. The second pair of canonical correlation directions identify a pair
-of points with a similar interpretation, except they are required to be orthogonal
-to the first pair, with respect to the inner product induced by the covariances
-in each table.
+features within the two tables such that the two combinations appear ``close''
+to one another. The second pair of canonical correlation directions identify a
+pair of points with a similar interpretation, except they are required to be
+orthogonal to the first pair, with respect to the inner product induced by the
+covariances in each table.
 
 For a statistical interpretation, the idea of CCA is to find the low-dimensional
 representations of the two tables with maximal covariance -- this is analogous
@@ -397,9 +365,9 @@ are chosen to optimize
 \begin{align}
   \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace
   &\Covsubarg{\P^{XY}}{z_{i}^{(1)}\left(u\right),
-    z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\
-\text{subject to } &\Varsubarg{\P^{X}}{z_{i}^{(1)}\left(u\right)} = 1 \nonumber \\
-&\Varsubarg{\P^{Y}}{z_{i}^{(2)}\left(v\right)} = 1. \nonumber
+    z_{i}^{(2)}\left(v\right)} \label{eq:cancor_optim} \\ \text{subject to }
+  &\Varsubarg{\P^{X}}{z_{i}^{(1)}\left(u\right)} = 1 \nonumber
+  \\ &\Varsubarg{\P^{Y}}{z_{i}^{(2)}\left(v\right)} = 1. \nonumber
 \end{align}
 To produce subsequent directions, the same optimization is performed, but with
 the additional constraint that the directions must be orthogonal to all the
@@ -411,22 +379,23 @@ this section. The empirical version of the optimization problem
 \ref{eq:cancor_optim} is
 \begin{align}
   \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace
-  &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\
-  \text{subject to } & u^{T}\hat{\Sigma}_{XX}u = 1 \nonumber \\
-  & v^{T}\hat{\Sigma}_{YY}v = 1. \nonumber
+  &u^{T}\hat{\Sigma}_{XY}v \label{eq:cancor_optim_emp}\\ \text{subject to } &
+  u^{T}\hat{\Sigma}_{XX}u = 1 \nonumber \\ & v^{T}\hat{\Sigma}_{YY}v = 1.
+  \nonumber
 \end{align}
 
 Consider the transformed data, $\tilde{u} = \hat{\Sigma}_{XX}^{\frac{1}{2}}u$
 and $\tilde{v} = \hat{\Sigma}_{YY}^{\frac{1}{2}}v$. The
 optimization \label{eq:cancor_emp} can now be expressed as
 \begin{align}
-  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in \reals^{p_{2}}}\medspace
-    &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans} \\
-    \text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber \\
-    &\|\tilde{v}\|_{2}^{2} = 1. \nonumber
+  \maximize_{\tilde{u} \in \reals^{p_{1}}, \tilde{v} \in
+    \reals^{p_{2}}}\medspace
+  &\tilde{u}^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{v} \label{eq:cancor_trans}
+  \\ \text{such that } & \|\tilde{u}\|^{2}_{2} = 1 \nonumber
+  \\ &\|\tilde{v}\|_{2}^{2} = 1. \nonumber
 \end{align}
-The optimal $\tilde{u}_1$ and $\tilde{v}_1$ for this problem are
-well known -- they're exactly the first left and right eigenvectors of
+The optimal $\tilde{u}_1$ and $\tilde{v}_1$ for this problem are well known --
+they're exactly the first left and right eigenvectors of
 $\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}
 = \tilde{U}D\tilde{V}^{T}$, respectively. The argument is standard\footnote{See
   \citep{mardia1980multivariate}, for example.}, but we include it for
@@ -440,17 +409,15 @@ one, $1 = \|\xi\|^{2}_{2} = w_{u}^{T}\tilde{U}^{T}\tilde{U}w_{u} =
 \ref{eq:cancor_trans} can be bounded by
 \begin{align*}
 \xi^{T}\hat{\Sigma}_{XX}^{-\frac{1}{2}}\hat{\Sigma}_{XY}\hat{\Sigma}_{YY}^{-\frac{1}{2}}\nu
-&= w_{u}^{T}\tilde{U}^{T}\tilde{U}D\tilde{V}^{T}\tilde{V}w_{v} \\
-&= w_{u}^{T}Dw_{v} \\
-&= \sum_{k = 1}^{p_{1} \wedge p_{2}} d_{k}w_{uk}w_{vk} \\
-&\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\
-&\leq d_{1} \|w_{u}\|\|w_{v}\| = d_{1},
+&= w_{u}^{T}\tilde{U}^{T}\tilde{U}D\tilde{V}^{T}\tilde{V}w_{v} \\ &=
+w_{u}^{T}Dw_{v} \\ &= \sum_{k = 1}^{p_{1} \wedge p_{2}} d_{k}w_{uk}w_{vk}
+\\ &\leq d_{1} \sum_{k = 1}^{p_{1} \wedge p_{2}} w_{uk}w_{vk} \\ &\leq d_{1}
+\|w_{u}\|\|w_{v}\| = d_{1},
 \end{align*}
-and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their
-on the first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu =
-\tilde{v}_{1}$. For subsequent directions, we repeat the argument but require
-that $w_{u}$ and $w_{v}$ have zero  on the first columns of $\tilde{U}$
-and $\tilde{V}$.
+and this maximum is attained when $w_{u}$ and $w_{v}$ both put all their on the
+first coordinate, that is $\xi = \tilde{u}_{1}$ and $\nu = \tilde{v}_{1}$. For
+subsequent directions, we repeat the argument but require that $w_{u}$ and
+$w_{v}$ have zero on the first columns of $\tilde{U}$ and $\tilde{V}$.
 
 To recover the solutions to the original problem, we reverse the original
 variable transformation, yielding optimal $u_{1} =
@@ -463,9 +430,9 @@ factors in an implicit latent variable model. In particular,
 from the model,
 \begin{align*}
   \xi_{i} := \left(\xi_{i}^{s}, \xi_{i}^{x}, \xi_{i}^{y}\right) &\sim
-  \Gsn\left(0, I_{d}\right) \\
-  x_{i} \vert \xi_{i} &\sim \Gsn\left(\mu_{x} + W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{x}, I_{d} \right) \\
-  y_{i} \vert \xi_{i} &\sim \Gsn\left(\mu_{Y} + W_{Y}\xi_{i}^{s} + B_{Y}\xi_{i}^{y}, I_{d}\right)
+  \Gsn\left(0, I_{d}\right) \\ x_{i} \vert \xi_{i} &\sim \Gsn\left(\mu_{x} +
+  W_{X}\xi_{i}^{s} + B_{X}\xi_{i}^{x}, I_{d} \right) \\ y_{i} \vert \xi_{i}
+  &\sim \Gsn\left(\mu_{Y} + W_{Y}\xi_{i}^{s} + B_{Y}\xi_{i}^{y}, I_{d}\right)
 \end{align*}
 That is, each sample is associated with a $d$-dimensional latent variable
 $\xi_{i}$, drawn from a spherical normal prior. A few of the coordinates of
@@ -475,13 +442,13 @@ through $B_{X}$ and $B_{Y}$. It can be shown that the posterior expectations of
 the latent $\xi_{i}^{s}$ (assumed $\in \reals^{K}$) given the observed tables
 must lie on the subspace defined by the CCA directions. More precisely,
 \begin{align*}
-  \Earg{\xi_{i} \mid x_{i}^{(1)}} \in \text{span}\left(z_{1}^{(1)},
-    \dots, z_{K}^{(1)}\right),
+  \Earg{\xi_{i} \mid x_{i}^{(1)}} \in \text{span}\left(z_{1}^{(1)}, \dots,
+  z_{K}^{(1)}\right),
 \end{align*}
 and
 \begin{align*}
-  \Earg{\xi_{i} \mid x_{i}^{(2)}} \in \text{span}\left(z_{1}^{(2)},
-    \dots, z_{K}^{(2)}\right).
+  \Earg{\xi_{i} \mid x_{i}^{(2)}} \in \text{span}\left(z_{1}^{(2)}, \dots,
+  z_{K}^{(2)}\right).
 \end{align*}
 
 Finally, we observe that the logic for CCA generalizes to an arbitrary number
@@ -497,22 +464,21 @@ maximize the sum of cross-covariances $\sum_{l,l^{\prime} = 1}^{L}
 \subsubsection{Example}
 \label{subsubsec:cca_example}
 
-We next apply CCA to the WELL-China body composition and microbiome data,
-with particular interest in how the results compare with those of Section
+We next apply CCA to the WELL-China body composition and microbiome data, with
+particular interest in how the results compare with those of Section
 \ref{subsubsec:pca_example}. To this end, we provide analogous loadings and
 scores plots in Figures \ref{fig:cca_loadings} through
 \ref{fig:cca_scores_rl_ratio}. However, note that the data are \textit{not}
-quite the same between the two analysis -- we have filtered down to species passing
-a filter, which reduces the number of species to 66, from 2565. This very
-aggressive filtering is necessary because CCA requires estimation of covariances
-matrices $\Sigma_{XX}, \Sigma_{XY}$, and $\Sigma_{YY}$, which is impossible for
-$p > n$ and highly unstable when $p$ is a large fraction of $n$. Besides this
-stronger filtering, all preprocessing steps remain the same as in Section
-\ref{subsubsec:pca_example}.
+quite the same between the two analysis -- we have filtered down to species
+passing a filter, which reduces the number of species to 66, from 2565. This
+very aggressive filtering is necessary because CCA requires estimation of
+covariances matrices $\Sigma_{XX}, \Sigma_{XY}$, and $\Sigma_{YY}$, which is
+impossible for $p > n$ and highly unstable when $p$ is a large fraction of $n$.
+Besides this stronger filtering, all preprocessing steps remain the same as in
+Section \ref{subsubsec:pca_example}.
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/CCA/loadings}
+  \centering \includegraphics[width=\textwidth]{figure/multitable/CCA/loadings}
   \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
     loadings obtained by applying CCA to the combined body composition and
     microbial abundance data. Each point is a species, and text are body
@@ -551,7 +517,7 @@ pairs of scores for each individual sample are drawn with small links. Since
 most links are relatively short, linear combinations of the two tables could be
 found that optimized the objective -- indeed, the top two canonical correlations
 are 0.968 and 0.957. However, some caution is necessary here, and a more honest
-evaluation would be based scores obtained by projecting new samples onto the
+evaluation would be based on scores obtained by projecting new samples onto the
 original CCA directions. This is especially important in this nearly
 high-dimensional setting, where covariance estimation may be unreliable.
 
@@ -563,39 +529,39 @@ Ruminococcaceae difference, respectively, as in Figures
 \ref{fig:scores_android_fm} and \ref{fig:cca_scores_rl_ratio}. The association
 between these variables and the sample positions is not as strong as when
 performing PCA on the combined table. This is to be expected, however, as PCA
-maximizes variance without any thought to on covariance, and the body
+maximizes variance without any thought to covariance, and the body
 composition table alone has a large portion of its variance related to android
 fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_linked}
+  \includegraphics[width=\textwidth]{figure/multitable/cca/scores_linked}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data. Each measurement type provides
-    a different set of scores for the observed samples, and the similarity
-    between the sets of scores is reflected in the CCA objective. Each sample
-    appears as two separate circles, since there is one score per measurement
-    type. A light line links the two appearances of each sample. Colors
-    distinguish the two table sources. The higher the CCA objective, the shorter
-    the links between pairs.
+    composition and microbial abundance data. Each measurement type provides a
+    different set of scores for the observed samples, and the similarity between
+    the sets of scores is reflected in the CCA objective. Each sample appears as
+    two separate circles, since there is one score per measurement type. A light
+    line links the two appearances of each sample. Colors distinguish the two
+    table sources. The higher the CCA objective, the shorter the links between
+    pairs.
     \label{fig:cca_scores_linked}}
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_android_fm}
+  \includegraphics[width=\textwidth]{figure/multitable/cca/scores_android_fm}
   \caption{The scores resulting from CCA applied to the combined body
-    composition and microbial abundance data, shaded in by android fat mass.
-    The positions of points are identical to those in Figure
-    \ref{fig:cca_scores_linked}, and other than the shading, the plots are read in
-    the same way. The first two CCA dimensions suggest smooth variation across
-    samples, according to amount of android fat
+    composition and microbial abundance data, shaded in by android fat mass. The
+    positions of points are identical to those in Figure
+    \ref{fig:cca_scores_linked}, and other than the shading, the plots are read
+    in the same way. The first two CCA dimensions suggest smooth variation
+    across samples, according to amount of android fat
     mass. \label{fig:cca_scores_android_fm} }
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/cca/scores_rl_ratio}
+  \includegraphics[width=\textwidth]{figure/multitable/cca/scores_rl_ratio}
   \caption{The same scores as Figure \ref{fig:cca_scores_android_fm}, but shaded
     now by the difference in Bacteroidaceae to Ruminococcaceae
     abundances. \label{fig:cca_scores_rl_ratio} }
@@ -612,9 +578,8 @@ and $Yv_{k}$ explain most of the covariation between the tables. Unlike CCA,
 CoIA finds its first directions by maximizing the covariance -- not the
 correlation -- between scores,
 \begin{align*}
-\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace &u^{T}X^{T}Yv \\
-\text{ such that}\medspace &\|u\| = 1\\
-&\|v\| = 1,
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace &u^{T}X^{T}Yv
+\\ \text{ such that}\medspace &\|u\| = 1\\ &\|v\| = 1,
 \end{align*}
 with subsequent directions found by the same optimization, after adding the
 constraint that they are orthogonal to the previously derived directions.
@@ -655,9 +620,9 @@ and CCA that is responsible for this difference.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_android_fm}
-  \caption{The normalized scores from each table, displayed
-    simultaneously, as obtained by CoIA. This is the analog of Figure
+  \includegraphics[width=\textwidth]{figure/multitable/coia/scores_android_fm}
+  \caption{The normalized scores from each table, displayed simultaneously, as
+    obtained by CoIA. This is the analog of Figure
     \ref{fig:cca_scores_android_fm} from CCA, though the aspect ratio has been
     adjusted according to the relative amount of variance explained by the first
     two CoIA axes.
@@ -670,35 +635,35 @@ and CCA that is responsible for this difference.
 MFA gives an alternative approach to producing scores and relating features
 across multiple tables \citep{pages2014multiple}. It can be understood as a
 refined version of the concatenated PCA described in Section \ref{subsec:pca}
-that res tables in a way that prevents any one table from dominating the
+that reweights tables in a way that prevents any one table from dominating the
 resulting ordination Specifically, MFA is a concatenated PCA on the matrix
 \begin{align*}
-X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots
-  \vert \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
+X := \left[\frac{1}{\lambda_{1}\left(X^{(1)}\right)}X^{(1)} \vert \dots \vert
+  \frac{1}{\lambda_{1}\left(X^{(L)}\right)}X^{(L)}\right],
 \end{align*}
 which reweights each table by its largest eigenvalue. This procedure is the
 multitable analog of the common practice of standardizing variables before
 performing PCA.
 
-The resulting MFA directions and scores can be interpreted in the same
-way as those from PCA -- the MFA directions still specify the
-relationship between measured features, and the position of each
-sample's projection describes the relative value of each feature for
-that sample. Moreover, MFA gives a way of comparing entire tables to
-each other, called a ``canonical analysis'' \citep{pages2004multiple}. A
-$K$-dimensional representation of the $l^{th}$ group is given by
+The resulting MFA directions and scores can be interpreted in the same way as
+those from PCA -- the MFA directions still specify the relationship between
+measured features, and the position of each sample's projection describes the
+relative value of each feature for that sample. Moreover, MFA gives a way of
+comparing entire tables to each other, called a ``canonical analysis''
+\citep{pages2004multiple}. A $K$-dimensional representation of the $l^{th}$
+group is given by
 \begin{align*}
-\left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots,
-  \mathcal{L}\left(z_{K}, X^{(l)}\right)\right]
+\left[\mathcal{L}\left(z_{1}, X^{(l)}\right), \dots, \mathcal{L}\left(z_{K},
+  X^{(l)}\right)\right]
 \end{align*}
 where $z_{k} = d_{k}u_{k} \in \reals^{n}$ is the $k^{th}$ column of principal
 component scores and
 \begin{align*}
   \mathcal{L}\left(z_{k}, X^{(l)}\right) =
   \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\tr\left(X^{(l)}X^{(l)
-      T} z_{k}z_{k}^{T}\right) =
-  \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\|X^{(l)
-  T} z_{k}\|^{2}_{2}
+    T} z_{k}z_{k}^{T}\right) =
+  \frac{\lambda_{k}\left(X\right)}{\lambda_{1}\left(X^{(l)}\right)}\|X^{(l) T}
+  z_{k}\|^{2}_{2}
 \end{align*}
 is a measure of aggregate similarity between the coordinates in the $l^{th}$
 table and the $k^{th}$ column of scores. According to this definition, if the
@@ -734,8 +699,7 @@ are jointly normal with mean 0 and covariance
 \begin{align*}
 \Var_{\P}\begin{pmatrix}y_{i} \\ x_{i}\end{pmatrix} &=
 \begin{pmatrix}
-  \Sigma_{YY} & \Sigma_{YX} \\
-  \Sigma_{XY} & \Sigma_{XX}
+  \Sigma_{YY} & \Sigma_{YX} \\ \Sigma_{XY} & \Sigma_{XX}
 \end{pmatrix}.
 \end{align*}
 
@@ -743,8 +707,7 @@ If $z_{i} = V^{T}x_{i}$, then the joint covariance of $y_{i}$ and $z_{i}$ is
 \begin{align*}
   \Var_{\P}\begin{pmatrix} y_{i} \\ z_{i} \end{pmatrix} &=
   \begin{pmatrix}
-    \Sigma_{YY} & \Sigma_{YX}V \\
-    V^{T}\Sigma_{XY} & V^{T}\Sigma_{XX}V
+    \Sigma_{YY} & \Sigma_{YX}V \\ V^{T}\Sigma_{XY} & V^{T}\Sigma_{XX}V
   \end{pmatrix},
 \end{align*}
 so the residual covariance of $y_i$ given $z_{i}$ is
@@ -770,14 +733,13 @@ The optimal $V$ are the top $K$ generalized eigenvectors of
 $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}$ with respect to $\hat{\Sigma}_{XX}$, that
 is, the orthonormal set of $\left(v_{k}\right)$ satisfying
 \begin{align*}
-  \hat{\Sigma}_{XY}\hat{\Sigma}_{YX}v_{k} &= \lambda_{k}
-  \hat{\Sigma}_{XX}v_{k}, \text{for } k = 1, \dots, K
+  \hat{\Sigma}_{XY}\hat{\Sigma}_{YX}v_{k} &= \lambda_{k} \hat{\Sigma}_{XX}v_{k},
+  \text{for } k = 1, \dots, K
 \end{align*}
 or more concisely,
 \begin{align*}
-\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}V &= \left( \lambda_{1}
-  \hat{\Sigma}_{XX}v_{1} \vert \dots \vert
-  \lambda_{k}\hat{\Sigma}_{XX}v_{k}\right) =
+\hat{\Sigma}_{XY}\hat{\Sigma}_{YX}V &= \left( \lambda_{1} \hat{\Sigma}_{XX}v_{1}
+\vert \dots \vert \lambda_{k}\hat{\Sigma}_{XX}v_{k}\right) =
 \hat{\Sigma}_{XX}V\Lambda,
 \end{align*}
 where $\Lambda = \diag\left(\lambda_{k}\right) \in \reals^{K \times K}$. A
@@ -797,37 +759,35 @@ this further subspace is not much worse. This is displayed in Figure
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{figure/pca_iv/pca_iv_geometry}
+  \includegraphics[width=0.7\textwidth]{figure/multitable/pca_iv/pca_iv_geometry}
   \caption{A geometric view of PCA-IV. The columns of the response $Y$ are views
-    as $n$-dimensional vectors. The grey plane is the span of
-    $X$. Multivariate OLS simply projects the columns of $Y$ onto the plane,
-    while PCA-IV searches for a further subspace $V$ on which to project all
+    as $n$-dimensional vectors. The grey plane is the span of $X$. Multivariate
+    OLS simply projects the columns of $Y$ onto the plane, while PCA-IV searches
+    for a further subspace $V$ on which to project all
     responses. \label{fig:pca_iv_geometry} }
 \end{figure}
 
 Indeed, write the usual estimates for the covariance matrices of interest,
 \begin{align*}
-  \hat{\Sigma}_{YY} = \frac{1}{n}Y^{T}Y \\
-  \hat{\Sigma}_{YX} = \frac{1}{n}Y^{T}X \\
-  \hat{\Sigma}_{XX} = \frac{1}{n}X^{T}X
+  \hat{\Sigma}_{YY} = \frac{1}{n}Y^{T}Y \\ \hat{\Sigma}_{YX} = \frac{1}{n}Y^{T}X
+  \\ \hat{\Sigma}_{XX} = \frac{1}{n}X^{T}X
 \end{align*}
 and observe that the residual covariance of equation \ref{eq:pca_iv_resid_cov}
 can be expressed
 \begin{align*}
   &\frac{1}{n}\left[Y^{T}Y -
-    Y^{T}XV\left(V^{T}X^{T}XV\right)^{-1}V^{T}X^{T}Y\right] \\
-  = &\frac{1}{n}\left[Y^{T}Y - Y^{T}Z\left(Z^{T}Z\right)^{-1}Z^{T}Y\right] \\
-  = &Y^T \left(I - P_{Z}\right)Y,
+    Y^{T}XV\left(V^{T}X^{T}XV\right)^{-1}V^{T}X^{T}Y\right] \\ =
+  &\frac{1}{n}\left[Y^{T}Y - Y^{T}Z\left(Z^{T}Z\right)^{-1}Z^{T}Y\right] \\ =
+  &Y^T \left(I - P_{Z}\right)Y,
 \end{align*}
 where $P_{Z} = Z\left(Z^{T}Z\right)^{-1}Z^{T}$ is the projection operator onto
 the columns of $Z$. Minimizing the trace of this matrix is equivalent to
 minimizing
 \begin{align*}
-  \tr\left(Y^{T}\left(I - P_{Z}\right)Y\right) &=
-  \tr\left(Y^{T}\left(I - P_{Z}\right)^{T}\left(I -
-      P_{Z}\right)Y\right) \\
-  &= \|\left(I - P_{Z}\right)Y\|_{F}^{2} \\
-  &= \sum_{j = 1}^{p_{1}}\|\left(I - P_{j}\right)y_{\cdot j}\|^{2}_{2},
+  \tr\left(Y^{T}\left(I - P_{Z}\right)Y\right) &= \tr\left(Y^{T}\left(I -
+  P_{Z}\right)^{T}\left(I - P_{Z}\right)Y\right) \\ &= \|\left(I -
+  P_{Z}\right)Y\|_{F}^{2} \\ &= \sum_{j = 1}^{p_{1}}\|\left(I -
+  P_{j}\right)y_{\cdot j}\|^{2}_{2},
 \end{align*}
 which is exactly the sum of squared residuals from the columns of $Y$ onto the
 span of the PCA-IV subspace, justifying the earlier geometric picture.
@@ -862,7 +822,7 @@ quality of within-table approximations deteriorates.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
+  \includegraphics[width=\textwidth]{figure/multitable/pca_iv/loadings}
   \caption{The loadings for PCA-IV can be interpreted like loadings from
     previous methods, for example Figure \ref{fig:loadings}. Some of the
     relationships between variables seem less intuitive than those observed
@@ -874,31 +834,32 @@ quality of within-table approximations deteriorates.
 \label{subsec:partial_triadic_analysis}
 
 Partial Triadic Analysis (PTA) gives an approach to working with multitable data
-when each table has the same dimension, $p_1 = p_2$ \citep{thioulouse2011simultaneous}.
-Specifically, it gives a way of analyzing data of the form $\left(X_{\cdot\cdot
-  l}\right)_{l = 1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$.
-This is called a data cube because it can also be written as a three-dimensional
-array $X \in \reals^{n \times p \times L}$. We denote the $j^{th}$ feature
-measured on the $i^{th}$ sample in the $l^{th}$ table by $x_{ijl}$, and the
-slices over fixed $i$, $j$, and $l$ by $X_{i \cdot \cdot}$, $X_{\cdot j \cdot}$
-and $X_{\cdot \cdot l}$. This type of data arises frequently in longitudinal
-data analysis, where the same features are collected for the same samples over
-a series of $L$ times. However, the actual ordering of the $L$ tables is not
-ever used by this method: if we scrambled the time ordering for $L$ tables, the
-algorithm's result would not change.
+when each table has the same dimension, $p_1 = p_2$
+\citep{leibovici1993facteurs, thioulouse2011simultaneous}. Specifically, it
+gives a way of analyzing data of the form $\left(X_{\cdot\cdot l}\right)_{l =
+  1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$. This is called
+a data cube because it can also be written as a three-dimensional array $X \in
+\reals^{n \times p \times L}$. We denote the $j^{th}$ feature measured on the
+$i^{th}$ sample in the $l^{th}$ table by $x_{ijl}$, and the slices over fixed
+$i$, $j$, and $l$ by $X_{i \cdot \cdot}$, $X_{\cdot j \cdot}$ and $X_{\cdot
+  \cdot l}$. This type of data arises frequently in longitudinal data analysis,
+where the same features are collected for the same samples over a series of $L$
+times. However, the actual ordering of the $L$ tables is not ever used by this
+method: if we scrambled the time ordering for $L$ tables, the algorithm's result
+would not change.
 
 The main idea in PTA is to divide the analysis into two steps,
 \begin{itemize}
   \item Combine the $L$ tables into a single compromise table.
-  \item Apply any standard single-table method, e.g., PCA, on the
-    compromise table.
+  \item Apply any standard single-table method, e.g., PCA, on the compromise
+    table.
 \end{itemize}
 
 A naive approach to constructing the compromise table would be to average each
 entry across the $L$ tables. Instead, PTA upweights tables that are more similar
 to the average table, as these are considered more representative. Formally, the
-compromise is defined as $X_c = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l}
-= X\alpha \in \reals^{n \times p}$, where $\alpha$ (constrained to norm one) is
+compromise is defined as $X_c = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l} =
+X\alpha \in \reals^{n \times p}$, where $\alpha$ (constrained to norm one) is
 chosen to maximize $\sum_{l = 1}^{L} \alpha_{l} \left<\overline{X},
 X_{\cdot\cdot l}\right>$, a weighted average of inner-products\footnote{We are
   using $\left<A, B\right> = \tr\left(A^{T}B\right)$.} between each of the $L$
@@ -908,18 +869,18 @@ X_{\cdot\cdot l}$.
 The optimal $\alpha$ can be derived using Lagrange multipliers (see Supplemental
 Section \ref{subsec:pta_alpha_derivation}), and leads to the compromise table,
 \begin{align*}
-  X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime}
-      =1}^{L}\left<\overline{X},
-      X_{\cdot\cdot l^{\prime}}\right>^{2}}} X_{\cdot\cdot l}.
+  X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot
+      l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X}, X_{\cdot\cdot
+        l^{\prime}}\right>^{2}}} X_{\cdot\cdot l}.
 \end{align*}
 
-We can try to interpret the compromise matrix geometrically. Suppose
-the $X_{\cdot\cdot l}$ define an orthonormal basis, so that $\left<X^{l},
-  X^{l^{\prime}}\right> = \indic{l = l^{\prime}}$. Then, we can write
-the compromise table as
+We can try to interpret the compromise matrix geometrically. Suppose the
+$X_{\cdot\cdot l}$ define an orthonormal basis, so that $\left<X^{l},
+X^{l^{\prime}}\right> = \indic{l = l^{\prime}}$. Then, we can write the
+compromise table as
 \begin{align*}
-  X_{c} = \sqrt{L}\sum_{l = 1}^{L}\left<\overline{X},
-    X_{\cdot\cdot l}\right>X_{\cdot\cdot l} = \sqrt{L}\overline{X},
+  X_{c} = \sqrt{L}\sum_{l = 1}^{L}\left<\overline{X}, X_{\cdot\cdot
+    l}\right>X_{\cdot\cdot l} = \sqrt{L}\overline{X},
 \end{align*}
 a scaled version of the mean.
 
@@ -997,8 +958,9 @@ dimension may be relatively low. Reduced-rank regression formalizes this with an
 explicit constraint on the rank of $B$, defining an estimate
 $\hat{B}^{\text{rr}}$ by the optimal value of
 \begin{align}
-\minimize_{B \in \reals^{p_{2} \times p_{1}}} &\|\left(Y - XB\right)\Sigma_{YY}^{-\frac{1}{2}}\|_{F}^{2} \label{eq:rr_obj}\\
-\text{such that } &\text{ rank}\left(B\right) \leq K, \nonumber
+\minimize_{B \in \reals^{p_{2} \times p_{1}}} &\|\left(Y -
+XB\right)\Sigma_{YY}^{-\frac{1}{2}}\|_{F}^{2} \label{eq:rr_obj}\\ \text{such
+  that } &\text{ rank}\left(B\right) \leq K, \nonumber
 \end{align}
 for some $K < p_{1}\wedge p_{2}$.
 
@@ -1042,12 +1004,11 @@ orthogonalize both $Y$ and $X$ with respect to the current directions, and
 repeat the process.
 
 This procedure is appealing because, like PCA, it reduces a potentially
-high-dimensional matrix $X$ with many correlated columns into a
-smaller set of orthogonal directions. Moreover, it achieves this
-reduction in a way that accounts for correlation with columns in
-$Y$: columns of $X$ that are uncorrelated with $Y$
-will have no contribution to the PLS directions, even if they account
-for a large proportion of variation in $X$.
+high-dimensional matrix $X$ with many correlated columns into a smaller set of
+orthogonal directions. Moreover, it achieves this reduction in a way that
+accounts for correlation with columns in $Y$: columns of $X$ that are
+uncorrelated with $Y$ will have no contribution to the PLS directions, even if
+they account for a large proportion of variation in $X$.
 
 We have stated the procedure in the form it was originally proposed, but this
 algorithmic description is difficult to understand geometrically or
@@ -1060,18 +1021,15 @@ $z$ that solves the optimization
 \begin{align}
   \label{eq:pls_obj}
 \maximize_{z} & \Corrsubarg{\P^{YX}}{x_{i}^{T}z_{k},
-y_{i}}\Varsubarg{\P^{X}}{z^{T}x_i} \\
-\text{such that }&z^{T}X^{T}X z_{j} = 0 \text{ for all }j \nonumber
-\leq k - 1 \nonumber \\
-\|z\|_2 = 1. \nonumber
+  y_{i}}\Varsubarg{\P^{X}}{z^{T}x_i} \\ \text{such that }&z^{T}X^{T}X z_{j} = 0
+\text{ for all }j \nonumber \leq k - 1 \nonumber \\ \|z\|_2 = 1. \nonumber
 \end{align}
 If the covariance term is omitted, the optimization is identical to the maximum
 variance problem that gives the principal component directions based on $X$.
 This formulation makes precise the idea that PLS is a version of principal
 components that accounts for correlation with $Y$. For $p_1 > 1$, this objective
 can be generalized to the total covariance across response dimensions, $\sum_{j
-  = 1}^{p_1} \Covsubarg{\P^{YX}}{x_i^T z_k, y_{ij}}$
-\citep{chun2010sparse}.
+  = 1}^{p_1} \Covsubarg{\P^{YX}}{x_i^T z_k, y_{ij}}$ \citep{chun2010sparse}.
 
 An alternative interptetation, due to \citep{gustafsson2001probabilistic}, is
 that PLS fits a particular latent variable model. Suppose $\xi_{i} =
@@ -1079,14 +1037,14 @@ that PLS fits a particular latent variable model. Suppose $\xi_{i} =
 K$ dimensional spherical normal. PLS assumes the observed tables $Y$ and $X$
 have rows drawn i.i.d. from
 \begin{align*}
-y_{i} \mid \xi_{i} &\sim \Gsn\left(\mu_Y + W_{Y}\xi_{i}^{s}, \sigma^{2}I_{p_{1}}\right) \\
-x_{i} \mid \xi_{i} &\sim \Gsn\left(\mu_{X} + W_{X} \xi_{i}^{s} + B_{X}\xi_{i}^{X}, \sigma^{2}I_{p_{2}}\right).
+y_{i} \mid \xi_{i} &\sim \Gsn\left(\mu_Y + W_{Y}\xi_{i}^{s},
+\sigma^{2}I_{p_{1}}\right) \\ x_{i} \mid \xi_{i} &\sim \Gsn\left(\mu_{X} + W_{X}
+\xi_{i}^{s} + B_{X}\xi_{i}^{X}, \sigma^{2}I_{p_{2}}\right).
 \end{align*}
-That is, each table is the sum of two components, one that is a
-table-specific linear combination of a shared latent variable, and
-another that is an arbitrary linear combination of a table-specific
-latent variable. The shared feature $\xi^{s}$ is the object of
-interest, and is what PLS implictly estimates.
+That is, each table is the sum of two components, one that is a table-specific
+linear combination of a shared latent variable, and another that is an arbitrary
+linear combination of a table-specific latent variable. The shared feature
+$\xi^{s}$ is the object of interest, and is what PLS implictly estimates.
 
 \subsection{Sparse PLS}
 \label{subsec:spls}
@@ -1107,10 +1065,9 @@ these issues in the PCA context \citep{jolliffe2003modified, zou2006sparse,
 Directly regularizing the multiresponse version of the PLS optimization
 \ref{eq:pls_obj} leads to the problem
 \begin{align*}
-  \maximize_{z_k} &\sum_{j = 1}^{p1} \Covsubarg{\P^{YX}}{x_i^T z_k, y_{ij}} \\
-  \text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j \leq k - 1 \\
-  &\|z_k\|_2 = 1 \\
-  &\|z_k\|_1 \leq \lambda,
+  \maximize_{z_k} &\sum_{j = 1}^{p1} \Covsubarg{\P^{YX}}{x_i^T z_k, y_{ij}}
+  \\ \text{such that }&z^{T}x^{T}x z_{j} = 0 \text{ for all }j \leq k - 1
+  \\ &\|z_k\|_2 = 1 \\ &\|z_k\|_1 \leq \lambda,
 \end{align*}
 which can be applied to real data by replacing the objective with its sample
 version, $z_k^{T} M z_k$, where $M = X^{T}YY^{T}X$. In this sample version, the
@@ -1125,10 +1082,9 @@ and another, $\left(z_k\right)$, that approximates the first set by a sparser
 alternative. Formally, consider
 \begin{align}
   \label{eq:spls_obj}
-  \minimize_{z_k, a_k} &-\kappa \|a_k\|_M^2 + \left(1 - \kappa\right) \|z_k - a_k\|_M^2 \\
-  \text{ such that } & \|a_k\|_2^2 = 1 \nonumber \\
-  &\|z_k\|_1 \leq \lambda_1 \nonumber \\
-  &\|z_k\|_2 \leq \lambda_2, \nonumber
+  \minimize_{z_k, a_k} &-\kappa \|a_k\|_M^2 + \left(1 - \kappa\right) \|z_k -
+  a_k\|_M^2 \\ \text{ such that } & \|a_k\|_2^2 = 1 \nonumber \\ &\|z_k\|_1 \leq
+  \lambda_1 \nonumber \\ &\|z_k\|_2 \leq \lambda_2, \nonumber
 \end{align}
 where we have defined $\|x\|_M = \sqrt{x^T M x}$ and $\kappa, \lambda_1$, and
 $\lambda_2$ are tuning parameters. The first term in the objective is the
@@ -1147,9 +1103,9 @@ proportional to the solution of a ridge regression onto $y_k = u_k d_k$,
 \end{align*}
 Indeed, according to the usual ridge regression formula, the minimizer is
 \begin{align*}
-  \left(X^TX + \lambda I\right)^{-1} X^T y_k &= \left(V^T D^2 V + \lambda I\right)^{-1} V D U^T u_k d_k \\
-  &= V\left(D^2 + \lambda I\right)^{-1} D e_k d_k \\
-  &= \frac{d_k^2}{d_k^2 + \lambda}v_k.
+  \left(X^TX + \lambda I\right)^{-1} X^T y_k &= \left(V^T D^2 V + \lambda
+  I\right)^{-1} V D U^T u_k d_k \\ &= V\left(D^2 + \lambda I\right)^{-1} D e_k
+  d_k \\ &= \frac{d_k^2}{d_k^2 + \lambda}v_k.
 \end{align*}
 
 A less obvious fact is that still this connection between PCA continues to hold
@@ -1157,9 +1113,8 @@ even without direct access to the $u_k$ and $d_k$. Indeed, it turns out that in
 the problem
 \begin{align}
   \label{eq:spca_obj_reform}
-  \text{minimize}_{A, V} &\sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 +
-  \lambda \sum_{k = 1}^{K} \|v_k\|_2 \\
-  \text{subject to } &A^T A = I_K, \nonumber
+  \text{minimize}_{A, V} &\sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 + \lambda
+  \sum_{k = 1}^{K} \|v_k\|_2 \\ \text{subject to } &A^T A = I_K, \nonumber
 \end{align}
 the optimal $\hat{V}$ corresponds exactly to the top $K$ right singular vectors
 of $X$. The idea of \cite{zou2006sparse} is to induce sparsity on $v_k$ by
@@ -1173,18 +1128,17 @@ algorithm for solving it. First, notice that if we extend $\tilde{A}
 since norms are preserved under orthonormal rotations,
 
 \begin{align*}
-  \sum_{i = 1}^{n} \left\|x_i - AV^T x_i\right\|_2^2 &= \left\|X - XVA\right\|_{F}^2 \\
-  &= \left\|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \right\|_{F}^2 \\
-  &= \left\|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \tilde{A} \right\|_{F}^2 \\
-  &= \sum_{k = 1}^{K} \left\|Xa_k - X v_k\right\|_2^2 + C
+  \sum_{i = 1}^{n} \|x_i - AV^T x_i\|_2^2 &= \|X - XVA\|_{F}^2 \\ &=
+  \|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \|_{F}^2 \\ &=
+  \|\begin{pmatrix} XA - XV \\ XA^{\perp} \end{pmatrix} \tilde{A} \|_{F}^2 \\ &=
+  \sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + C
 \end{align*}
 where $C$ is constant in $A$, and hence the sparse PCA objective can be written
 as
 \begin{align*}
-  \text{minimize}_{A, V} &\sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + \sum_{k = 1}^{K} \lambda_2 \|v_k\|_2 \\
-  \text{such that }&\|a_k\|_2 = 1 \\
-  & \|v_k\|_1 \leq \lambda_1 \\
-  &A^TA = I_K.
+  \text{minimize}_{A, V} &\sum_{k = 1}^{K} \|Xa_k - X v_k\|_2^2 + \sum_{k =
+    1}^{K} \lambda_2 \|v_k\|_2 \\ \text{such that }&\|a_k\|_2 = 1 \\ & \|v_k\|_1
+  \leq \lambda_1 \\ &A^TA = I_K.
 \end{align*}
 For a fixed $A$, this is an elastic-net regression. For fixed $V$, considering
 that $\sum_{k = 1}^{K} \|Xa_k - Xv_k\|^2_2 = \|XA - XV\|_F^2$, this is a
@@ -1195,10 +1149,10 @@ these two steps until convergence.
 \label{subsubsec:spls_example}
 
 Next we apply the SPLS implementation of \cite{chung2012spls} to the WELL-China
-body composition data. We use the body composition variables as the response
-$Y$ and the microbiome community composition as $X$. We subset to female
-subjects and filter species according to a $K$-over-$A$ filter with $K$ = 7\% of
-samples and $A = 5$. This leaves 372 species over 119 participants. All species
+body composition data. We use the body composition variables as the response $Y$
+and the microbiome community composition as $X$. We subset to female subjects
+and filter species according to a $K$-over-$A$ filter with $K$ = 7\% of samples
+and $A = 5$. This leaves 372 species over 119 participants. All species
 abundances are variance-stabilized using the approach of
 \cite{anders2010differential}. We cross-validate with 5 folds, searching through
 a grid over $K \in \{4, \dots, 8\}$ and $\lambda_1 \in \{0, 0.05, \dots, 0.7\}$.
@@ -1220,14 +1174,13 @@ the possible exception of Porphyromonodaceae.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/coef_heatmap}
-  \caption{
-    Coefficients learned by SPLS. Each row is a response dimension, which is a
-    body composition variable. Each column is associated with a species. The
-    shading within each cell corresponds to the SPLS coefficient for that
-    species-response pair. Green and purple cells are positive and negative
-    coefficients, respectively. Species are grouped first according to their
-    taxonomic family, marked by grouping panel colors, and then by a
+  \includegraphics[width=\textwidth]{figure/multitable/spls/coef_heatmap}
+  \caption{ Coefficients learned by SPLS. Each row is a response dimension,
+    which is a body composition variable. Each column is associated with a
+    species. The shading within each cell corresponds to the SPLS coefficient
+    for that species-response pair. Green and purple cells are positive and
+    negative coefficients, respectively. Species are grouped first according to
+    their taxonomic family, marked by grouping panel colors, and then by a
     hierarchical clustering on coefficient values.
     \label{fig:spls_coef_heatmap} }
 \end{figure}
@@ -1252,7 +1205,7 @@ data just as well, with the advantage of being somewhat more interpretable.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/android_fm_species}
+  \includegraphics[width=\textwidth]{figure/multitable/spls/android_fm_species}
   \caption{A subset of the species whose coefficients for total lean and fat
     mass are high in magnitude. Each panel represents one species, and each
     point is a samples $\times$ species combination. The $x$-axis gives the
@@ -1267,12 +1220,10 @@ data just as well, with the advantage of being somewhat more interpretable.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/spls/gynoid_fm_species}
-  \caption{
-    The analog of Figure \ref{fig:spls_android_fm_species}, but with gynoid,
-    rather than android, fat mass along the
-    $y$-axis. \label{fig:spls_gynoid_fm_species}
-  }
+  \includegraphics[width=\textwidth]{figure/multitable/spls/gynoid_fm_species}
+  \caption{ The analog of Figure \ref{fig:spls_android_fm_species}, but with
+    gynoid, rather than android, fat mass along the
+    $y$-axis. \label{fig:spls_gynoid_fm_species} }
 \end{figure}
 
 \subsection{CCpnA}
@@ -1297,8 +1248,7 @@ following matrices, where $1_{r}$ denotes a column vector of $r$ ones,
     \begin{align*}
       F = \frac{1}{n_{\cdot\cdot}^{Y}} Y,
   \end{align*}
-  where $n_{\cdot\cdot}^{Y}$ is the sum of all counts in matrix
-  $Y$.
+  where $n_{\cdot\cdot}^{Y}$ is the sum of all counts in matrix $Y$.
 \item A diagonal matrix of row (site) proportions,
   \begin{align*}
     D_{r} &= \diag\left(F 1_{p_{1}}\right) \in \reals^{n \times n}.
@@ -1307,11 +1257,12 @@ following matrices, where $1_{r}$ denotes a column vector of $r$ ones,
   \begin{align*}
     D_{c} &= \diag\left(F^{T}1_{n}\right) \in \reals^{p_{1} \times p_{1}}.
   \end{align*}
-\item A projection onto the columns of the environmental matrix
-  $X$, reweighting sites according to their species counts,
+\item A projection onto the columns of the environmental matrix $X$, reweighting
+  sites according to their species counts,
   \begin{align*}
-    P_{X} &= D_{r}^{\frac{1}{2}}X\left(X^{T}D_{r}X\right)^{-1}X^{T}D_{r}^{\frac{1}{2}} \in
-  \reals^{n \times n}.
+    P_{X} &=
+    D_{r}^{\frac{1}{2}}X\left(X^{T}D_{r}X\right)^{-1}X^{T}D_{r}^{\frac{1}{2}}
+    \in \reals^{n \times n}.
 \end{align*}
 \end{enumerate}
 
@@ -1322,8 +1273,7 @@ D_{r}^{-\frac{1}{2}}\left(F - F 1_{p}1_{p}^{T}F\right)D_{c}^{-\frac{1}{2}}P_{X}
 \end{align*}
 and define row and column scores $Z$ and $Q$ by
 \begin{align*}
-  Z &= D_{r}^{-\frac{1}{2}} UD \\
-  Q &= D_{c}^{-\frac{1}{2}}V^{T}D.
+  Z &= D_{r}^{-\frac{1}{2}} UD \\ Q &= D_{c}^{-\frac{1}{2}}V^{T}D.
 \end{align*}
 
 There are several ways to interpret this procedure. CCpnA was originally
@@ -1337,13 +1287,13 @@ different sites should be a weighted average of the species scores, with larger
 weights for the species that are more common at those sites. Similarly, species
 scores can be defined according to a weighted average of site scores. That is,
 \begin{align*}
-  z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\
-  q_{j} \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
+  z_{i} \propto \frac{1}{f_{i\cdot}}\sum_{j = 1}^{p_{1}}f_{ij}q_{ij} \\ q_{j}
+  \propto \frac{1}{f_{\cdot j}} \sum_{i = 1}^{n} f_{ij}z_{ij},
 \end{align*}
 or, in matrix form,
 \begin{align*}
-Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\
-Q \propto \diag\left(F^{T} 1_{n}\right)^{-1} Z.
+Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\ Q \propto \diag\left(F^{T}
+1_{n}\right)^{-1} Z.
 \end{align*}
 This formulation suggests an algorithm for finding $Z$ and $Q$ -- arbitrarily
 initialize one and iterate these calculations until convergence.
@@ -1426,9 +1376,10 @@ correlation between the more general inner products, $z_{i}\left(u\right) =
 \left<u, \varphi\left(x_{i}\right)\right>$ and $z_{i}\left(v\right) = \left<v,
 \varphi\left(y_{i}\right)\right>$,
 \begin{align}
-  \argmax_{u \in H^{X}, v \in H^{Y}}
-  &\Covsubarg{\P^{YX}}{z_{i}\left(u\right), z_{i}\left(v\right)} \label{eq:optim_kcca}\\
-\text{subject to } &\Varsubarg{\P^{X}}{z_{i}\left(u\right)} = \Varsubarg{\P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
+  \argmax_{u \in H^{X}, v \in H^{Y}} &\Covsubarg{\P^{YX}}{z_{i}\left(u\right),
+    z_{i}\left(v\right)} \label{eq:optim_kcca}\\ \text{subject to }
+  &\Varsubarg{\P^{X}}{z_{i}\left(u\right)} =
+  \Varsubarg{\P^{Y}}{z_{i}\left(v\right)} = 1. \nonumber
 \end{align}
 
 As is, the problem is not well-posed, and it is necessarily to regularize. The
@@ -1437,8 +1388,9 @@ regularized Lagrangian associated with the optimization in equation
 \begin{align}
   &\Covsubarg{\P^{YX}}{z_{i}\left(u\right), z_{i}\left(v\right)} -
   \frac{\rho^{X}}{2}\Varsubarg{\P^{X}}{z_{i}\left(u\right)} -
-  \frac{\rho^{Y}}{2}\Varsubarg{\P^{Y}}{z_{i}\left(v\right)} + \label{eq:lagrangian_kcca}\\
-  &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right) + \frac{\lambda^{Y}}{2}\text{Pen}\left(v\right), \nonumber
+  \frac{\rho^{Y}}{2}\Varsubarg{\P^{Y}}{z_{i}\left(v\right)}
+  + \label{eq:lagrangian_kcca}\\ &\frac{\lambda^{X}}{2}\text{Pen}\left(u\right)
+  + \frac{\lambda^{Y}}{2}\text{Pen}\left(v\right), \nonumber
 \end{align}
 where $\text{Pen}\left(x\right)$ is some regularizer, the $\ell^{1}$ or
 $\ell^{2}$ norm, for example.
@@ -1449,8 +1401,7 @@ $\left(\varphi^{Y}\left(y_{i}\right)\right)_{i =1 }^{n}$, respectively, since
 directions orthogonal to these subspaces cannot improve the correlation in the
 objective. Therefore,
 \begin{align*}
-u &= \Phi^{X} \alpha^{X} \\
-v &= \Phi^{Y} \alpha^{Y},
+u &= \Phi^{X} \alpha^{X} \\ v &= \Phi^{Y} \alpha^{Y},
 \end{align*}
 for some $\alpha^{X}, \alpha^{Y}$, where $\Phi^{X} \in \reals^{n \times
   \text{dim}\left(H^{X}\right)}$ has $i^{th}$ row
@@ -1465,21 +1416,18 @@ $Y$. It can then be shown that the optimal $\alpha^{X}$ and $\alpha^{Y}$ are the
 solutions to the generalized eigenvalue problem,
 \begin{align*}
   \begin{pmatrix}
-    0 & K^{X}K^{Y} \\
-    K^{Y}K^{X} & 0
+    0 & K^{X}K^{Y} \\ K^{Y}K^{X} & 0
   \end{pmatrix}
   \begin{pmatrix}
-    \alpha^{X} \\
-    \alpha^{Y}
+    \alpha^{X} \\ \alpha^{Y}
   \end{pmatrix}
 &= \rho
 \begin{pmatrix}
-  \left(K^{X} + \lambda^{X}I_{p_{1}}\right)^{2} & 0 \\
-  0 & \left(K^{Y} + \lambda^{Y}I_{p_{2}}\right)^{2}
+  \left(K^{X} + \lambda^{X}I_{p_{1}}\right)^{2} & 0 \\ 0 & \left(K^{Y} +
+  \lambda^{Y}I_{p_{2}}\right)^{2}
 \end{pmatrix}
 \begin{pmatrix}
-  \alpha^{X} \\
-  \alpha^{Y}
+  \alpha^{X} \\ \alpha^{Y}
 \end{pmatrix}.
 \end{align*}
 A geometric interpretation of Kernel CCA is given in \cite{kuss2003geometry},
@@ -1497,8 +1445,9 @@ In high-dimensional settings, sparsity is a desirable property, both for
 qualitative interpretability and statistical stability. A regression model using
 only a few features is easier to understand than one involving a linear
 combination of all possible features. Further, regularized models typically
-outperform their unregularized counterparts, and in fact, it is impossible to
-fit a unregularized linear regression when the number of features is greater
+outperform their unregularized counterparts in terms of both predictive accuracy
+and inferential power \citep{buhlmann2011statistics}. In fact, it is impossible
+to fit a unregularized linear regression when the number of features is greater
 than the number of samples.
 
 The Penalized Matrix Decomposition (PMD) is a general approach to adapting the
@@ -1514,13 +1463,13 @@ $\ell^{2}$-distance from the original data to their projections onto that
 subspace. In particular, when $k = 1$, the associated PCA coordinates $u \in
 \reals^{n}$ and eigenvector $v$ are the optimal values in the problem
 \begin{align*}
-  \minimize_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1.
+  \minimize_{u \in \reals^{n}, v \in \reals^{p}, d \in \reals} &\|X -
+  duv^{T}\|_{2}^{2} \\ \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1.
 \end{align*}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/illustration_sequence}
+  \includegraphics[width=\textwidth]{figure/multitable/pmd/illustration_sequence}
   \caption{An example of the PMD CCA solution in a high-dimensional source
     separation problem, based on the simulation experiment in
     \citep{witten2009penalized}. The solid lines indicate true ``sources''
@@ -1544,10 +1493,9 @@ structure on $u$ and $v$. The PMD solutions $u$ and $v$ are defined as the
 optimizers of
 \begin{align}
 \label{eq:pmd_opt} \minimize_{u \in \reals^{n}, v \in \reals^{p}, d
-  \in \reals} &\|X - duv^{T}\|_{2}^{2} \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\
-  & \text{Pen}_{u}\left(u\right) \leq \mu_{1} \nonumber \\
-  & \text{Pen}_{v}\left(v\right) \leq \mu_{2}, \nonumber
+  \in \reals} &\|X - duv^{T}\|_{2}^{2} \\ \text{subject to } &\|u\|_{2}^{2} =
+\|v\|_{2}^{2} = 1 \nonumber \\ & \text{Pen}_{u}\left(u\right) \leq \mu_{1}
+\nonumber \\ & \text{Pen}_{v}\left(v\right) \leq \mu_{2}, \nonumber
 \end{align}
 where $\text{Pen}_u$ and $\text{Pen}_v$ are arbitrary constraints on $u$ and
 $v$.
@@ -1558,8 +1506,8 @@ errors after holding out random entries in $X$. To obtain a sequence of scores
 and eigenvectors $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
   1}^{K}$ for $K > 1$, define $u_{k}$ and $v_{k}$ as the optimizers of the
 problem \ref{eq:pmd_opt} on the residual: $X^{k} := X^{k - 1} - d_{k - 1}u_{k -
-  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$.
-The effect of regularization is illustrated in Figure
+  1}v_{k - 1}^{T}$ where $d_{k} = u_{k}^{T} X^{k}v_{k}$ and $X^{1} = X$. The
+effect of regularization is illustrated in Figure
 \ref{fig:pmd_illustration_sequence}.
 
 %% (todo: geometric interpretation)
@@ -1573,10 +1521,9 @@ linearity and the cyclic properties of the trace, the objective in
 \ref{eq:pmd_opt} can be rewritten, using $\equiv$ to mean equality up to terms
 constant in $u$ and $v$,
 \begin{align*}
-  \|X - duv^{T}\|_{F}^{2} &= \tr\left(\left(X -
-      duv^{T}\right)^{T}\left(X - duv^{T}\right)\right) \\
-  &\equiv -2d\tr\left(X^{T}uv^{T}\right) + d^{2}tr\left(uv^{T}vu^{T}\right) \\
-  &\equiv -2d v^{T}X^{T}u + d^{2}
+  \|X - duv^{T}\|_{F}^{2} &= \tr\left(\left(X - duv^{T}\right)^{T}\left(X -
+  duv^{T}\right)\right) \\ &\equiv -2d\tr\left(X^{T}uv^{T}\right) +
+  d^{2}tr\left(uv^{T}vu^{T}\right) \\ &\equiv -2d v^{T}X^{T}u + d^{2}
 \end{align*}
 where for the last equivalence we used that $v^{T}v = u^{T}u = 1$.
 
@@ -1585,31 +1532,30 @@ that the PMD solutions $u$ and $v$ in \ref{eq:pmd_opt} can be found as the
 optimizers of
 \begin{align}
 \label{eq:pmd_reform}  \maximize_{u \in \reals^{n}, v \in \reals^{p}} \medspace &u^{T}X^{T}v \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber \\
-  &\text{Pen}_{u}\left(u\right) \leq \mu_{1}\nonumber \\
-  &\text{Pen}_{v}\left(v\right) \leq \mu_{2} \nonumber
+  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \nonumber
+  \\ &\text{Pen}_{u}\left(u\right) \leq \mu_{1}\nonumber
+  \\ &\text{Pen}_{v}\left(v\right) \leq \mu_{2} \nonumber
 \end{align}
 
 Notice that, as long as the penalties are convex in $u$ and $v$, the
-optimization is biconvex, so a local maximum can be found by
-alternately maximizing over $u$ and $v$.
+optimization is biconvex, so a local maximum can be found by alternately
+maximizing over $u$ and $v$.
 
-From this form, we can derive a sparsity-inducing version of
-CCA. Recall the maximal-covariance interpretation of CCA,
+From this form, we can derive a sparsity-inducing version of CCA. Recall the
+maximal-covariance interpretation of CCA,
 \begin{align*}
-  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} \medspace &u^{T}\hat{\Sigma}_{XY}v \\
-  \text{subject to } &u^{T}\hat{\Sigma}_{XX} u = v^{ T}\hat{\Sigma}_{YY}v = 1.
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} \medspace
+  &u^{T}\hat{\Sigma}_{XY}v \\ \text{subject to } &u^{T}\hat{\Sigma}_{XX} u = v^{
+    T}\hat{\Sigma}_{YY}v = 1.
 \end{align*}
 
 \citep{witten2009penalized} argues for diagonalized CCA, in which the variance
 constraints are replaced by unit norm constraints, and sparsity-inducing
 $\ell^{1}$-constraints are added,
 \begin{align*}
-  \maximize_{u \in \reals^{p_{1}}, v \in
-    \reals^{p_{2}}} & u^T\hat{\Sigma}_{XY}v  \\
-  \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \\
-  &\|u\|_{1} \leq \mu_{1} \\
-  &\|v\|_{1} \leq \mu_{2}
+  \maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}} & u^T\hat{\Sigma}_{XY}v
+  \\ \text{subject to } &\|u\|_{2}^{2} = \|v\|_{2}^{2} = 1 \\ &\|u\|_{1} \leq
+  \mu_{1} \\ &\|v\|_{1} \leq \mu_{2}
 \end{align*}
 which is exactly of the form of equation \ref{eq:pmd_reform} where $X =
 \hat{\Sigma}_{XY}$.
@@ -1622,26 +1568,26 @@ constraints for each of the $c_{1}^{(l)}$.
 \subsubsection{Example}
 \label{subsec:sparse_cca_example}
 
-We apply the PMD formulation of sparse CCA to the WELL-China data. As
-before, we $k$-over-$A$ filter the microbiome data, requiring species to have
-counts of at least 5 in at least 7\% of samples. Further, we first
-variance-stabilize, center, and scale these species abundances. For the
-regularization parameters, we set $\mu_1 = 0.7$ for the body composition data
-and $\mu_2 = 0.3$ for the species count data. Our reasoning is that sparsity
-within species loadings is more important than sparsity across body composition
-variables, because the microbiome data is more high-dimensional. We only compute
-the first three PMD directions, and the associated correlations between scores
-are $\left(d_1, d_2, d_3\right) = \left(0.700, 0.435, 0.632\right)$. Note that
-the correlation can increase in subsequent directions, since directions are
-computed iteratively, and cannot be defined and sorted all at once.
+We apply the PMD formulation of sparse CCA to the WELL-China data. As before, we
+$k$-over-$A$ filter the microbiome data, requiring species to have counts of at
+least 5 in at least 7\% of samples. Further, we first variance-stabilize,
+center, and scale these species abundances. For the regularization parameters,
+we set $\mu_1 = 0.7$ for the body composition data and $\mu_2 = 0.3$ for the
+species count data. Our reasoning is that sparsity within species loadings is
+more important than sparsity across body composition variables, because the
+microbiome data is more high-dimensional. We only compute the first three PMD
+directions, and the associated correlations between scores are $\left(d_1, d_2,
+d_3\right) = \left(0.700, 0.435, 0.632\right)$. Note that the correlation can
+increase in subsequent directions, since directions are computed iteratively,
+and cannot be defined and sorted all at once.
 
 The learned loadings and scores are displayed in Figures \ref{fig:pmd_loadings}
 and \ref{fig:pmd_scores_android_fm}, respectively. The $x$-axis in the loadings
 differentiates between high android and gynoid fat mass. The $y$-axes in the
 loadings reflect a gradient between overall right and left body mass. The size
 of points corresponds to the third PMD direction, and it seems to highlight high
-BMI, ratio of fat to lean mass, and overall weight. We interpret species
-based on their positions relative to these body composition variables, as in an
+BMI, ratio of fat to lean mass, and overall weight. We interpret species based
+on their positions relative to these body composition variables, as in an
 ordinary biplot. For example, species 271 seems to be more common among people
 with higher android and lower gynoid fat mass.
 
@@ -1654,34 +1600,31 @@ species, but this is likely a consequence of regularization and overfitting on
 the part of ordinary CCA.
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pmd/loadings}
-  \caption{
-    Body composition and species loadings produced by sparse CCA, for variables
-    with at least one nonzero coordinate. Each point corresponds to a species
-    loading, and is shaded in by taxonomic family. Species with loadings far
-    from the origin are also annotated with their names. Black text are loadings
-    for body composition variables. The size of points and text reflects the
-    contribution of the third CCA dimension. Many loadings have at least one
-    dimension that is exactly zero, due to $\ell^{1}$-regularization. There
-    appear to be a gradient with android and gynoid weight, running from left to
-    right, and this is confirmed in Figures \ref{fig:pmd_scores_android_fm} and
-    \ref{fig:pmd_android_fm_species}.
+  \centering \includegraphics[width=\textwidth]{figure/multitable/pmd/loadings}
+  \caption{ Body composition and species loadings produced by sparse CCA, for
+    variables with at least one nonzero coordinate. Each point corresponds to a
+    species loading, and is shaded in by taxonomic family. Species with loadings
+    far from the origin are also annotated with their names. Black text are
+    loadings for body composition variables. The size of points and text
+    reflects the contribution of the third CCA dimension. Many loadings have at
+    least one dimension that is exactly zero, due to $\ell^{1}$-regularization.
+    There appear to be a gradient with android and gynoid weight, running from
+    left to right, and this is confirmed in Figures
+    \ref{fig:pmd_scores_android_fm} and \ref{fig:pmd_android_fm_species}.
     \label{fig:pmd_loadings}
   }
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/scores_android_fm}
-  \caption{
-    Sample scores provided by sparse CCA. Each point is a sample, positioned at
-    their coordinates with respect to the first two learned sparse CCA
-    directions. Points are shaded in according to android fat mass, and their
-    sizes are set according to the third sparse CCA direction's contribution.
-    Evidently, the first two directions reflect a gradient across android fat
-    mass, suggesting that this is a substantial contributor to covariation
-    across microbiome and body composition tables.
+  \includegraphics[width=\textwidth]{figure/multitable/pmd/scores_android_fm}
+  \caption{ Sample scores provided by sparse CCA. Each point is a sample,
+    positioned at their coordinates with respect to the first two learned sparse
+    CCA directions. Points are shaded in according to android fat mass, and
+    their sizes are set according to the third sparse CCA direction's
+    contribution. Evidently, the first two directions reflect a gradient across
+    android fat mass, suggesting that this is a substantial contributor to
+    covariation across microbiome and body composition tables.
     \label{fig:pmd_scores_android_fm}
   }
 \end{figure}
@@ -1700,9 +1643,8 @@ taxonomic groups seem to be associated with android fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/pmd/android_fm_species}
-  \caption{
-    A more focused view of the species with high loadings in Figure
+  \includegraphics[width=\textwidth]{figure/multitable/pmd/android_fm_species}
+  \caption{ A more focused view of the species with high loadings in Figure
     \ref{fig:pmd_loadings}. Each panel corresponds to a species. Points are
     shaded in according to each species' taxonomic family. The $x$-axis within
     panels corresponds to variance-stabilized species abundance, while the
@@ -1755,9 +1697,8 @@ are potentially interesting as well. Formally, this model supposes that counts
 are drawn according to
 \begin{align*}
   x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
-  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\
-  \theta_{i} &\sim \Dir\left(\alpha\right)\\
-  \beta_k &\sim \Dir\left(\gamma\right),
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\ \theta_{i} &\sim
+  \Dir\left(\alpha\right)\\ \beta_k &\sim \Dir\left(\gamma\right),
 \end{align*}
 where $N_i = \sum_{j = 1}^{p_1} x_{ij}$ is the total count in sample $i$. This
 has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k =1}^{K}$
@@ -1777,8 +1718,8 @@ $\left[\simplex\left(v\right)\right]_{k} =
 \frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
 \begin{align*}
   x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
-  \simplex\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right) \\
-  \xi_{i}^{s} &\sim \Gsn\left(\xi_i^s \vert 0, \tau^{2}\right).
+  \simplex\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right)
+  \\ \xi_{i}^{s} &\sim \Gsn\left(\xi_i^s \vert 0, \tau^{2}\right).
 \end{align*}
 It is this second model that we use in our experiments below.
 
@@ -1802,7 +1743,7 @@ $1$ throughout.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_seq_boxplots}
+  \includegraphics[width=\textwidth]{figure/multitable/lda_cca/within_loadings_seq_boxplots}
   \caption{Table-specific loadings for different species. As in Figure
     \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, each row is a loading
     dimension, columns are features (species in this case), and intervals
@@ -1815,7 +1756,7 @@ $1$ throughout.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_body_comp_boxplots}
+  \includegraphics[width=\textwidth]{figure/multitable/lda_cca/within_loadings_body_comp_boxplots}
   \caption{Table-specific loadings for the body composition variables. Each row
     is one loading dimension, columns are features, and boxplots summarize
     posterior samples for the associated loading parameter, $W_{jk}^{Y}$.
@@ -1866,26 +1807,26 @@ a probabilistic model with shared and unshared parameters is more difficult than
 optimization of a single set of shared parameters. It may be possible to improve
 this approach through the following strategies,
 \begin{itemize}
-\item Applying LDA-CCA only to those species that are not sent entirely to zero by
-  sparse CCA.
+\item Applying LDA-CCA only to those species that are not sent entirely to zero
+  by sparse CCA.
 \item Placing a sparsity-inducing prior the scores $B^{X}, B^{Y}, W^{X}$, and
   $W^{Y}$, respectively, in the spirit of \citep{archambeau2009sparse}.
 \end{itemize}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/lda_cca/between_loadings_seq_boxplots}
-  \caption{Cross-table loadings for species, as in
-    Figure \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
+  \includegraphics[width=\textwidth]{figure/multitable/lda_cca/between_loadings_seq_boxplots}
+  \caption{Cross-table loadings for species, as in Figure
+    \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
     $B^{X}_{jk}$. \label{fig:lda_cca_between_loadings_seq_boxplots} }
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.95\textwidth]{figure/lda_cca/between_loadings_body_comp_boxplots}
+  \includegraphics[width=0.95\textwidth]{figure/multitable/lda_cca/between_loadings_body_comp_boxplots}
   \caption{Cross-table loadings for the body composition variables, read exactly
-    as in Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, but for for the
-    parameters
+    as in Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, but for
+    for the parameters
     $B^{Y}_{jk}$. \label{fig:lda_cca_between_loadings_body_comp_boxplots}}
 \end{figure}
 
@@ -1906,8 +1847,8 @@ More precisely, the C\&W algorithm fits a table $Y$ according to
 \end{align}
 where again $V \in \reals^{p_{1} \times p_{1}}$ are the CCA directions
 associated with the response $Y$ and $P_{X}$ is the projection operator onto the
-column space of $X$. $\Lambda$ is defined to be a diagonal matrix that determines
-the degree of shrinkage for the different canonical directions.
+column space of $X$. $\Lambda$ is defined to be a diagonal matrix that
+determines the degree of shrinkage for the different canonical directions.
 
 The main difficulty in C\&W is the choice of $\Lambda$, and
 \cite{breiman1997predicting} suggest several possibilities. One choice is
@@ -1930,17 +1871,16 @@ assume a correlation network between the $p_{2}$ tasks. This is denoted by $G =
 with a weight, $r\left(e\right)$, giving the correlation between the pair of
 responses.
 
-The graph-fused lasso idea is to estimate a coefficient matrix $B \in
-\reals^{p_{2} \times p_{1}}$ whose columns $\beta^{(r)}$ are the regression
-coefficients across tasks, but which have been pooled together, with the
-strength of the pooling depending on the separately computed strength of the
-relationship between tasks. Formally, $\hat{B}^{gf}$ is defined as the solution
-to the optimization,
+The graph-fused lasso estimates a coefficient matrix $B \in \reals^{p_{2} \times
+  p_{1}}$ whose columns $\beta^{(r)}$ are the regression coefficients across
+tasks, but which have been pooled together, with the strength of the pooling
+depending on the separately computed strength of the relationship between tasks.
+Formally, $\hat{B}^{gf}$ is defined as the solution to the optimization,
 \begin{align}
-\minimize_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y -
-  XB\|_{F}^{2} + \lambda \|B\|_{1} + \gamma \sum_{e \in E} \sum_{j =
-    1}^{p_{2}} \absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} -
-      \sign\left(r_{e}\right) \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
+\minimize_{B \in \reals^{p_{2} \times p_{1}}} \frac{1}{2}\|Y - XB\|_{F}^{2} +
+\lambda \|B\|_{1} + \gamma \sum_{e \in E} \sum_{j = 1}^{p_{2}}
+\absarg{r_{e}}\absarg{\beta_{j}^{(e^{+})} - \sign\left(r_{e}\right)
+  \beta^{(e^{-})}_{j}}, \label{eq:gflasso_obj}
 \end{align}
 where $\|B\|_{1}$ is the sum of the absolute values of all entries of $B$,
 $\beta_j$ is the $j^{th}$ column of $B$, and $e^{-}$ and $e^{+}$ denote the
@@ -1971,14 +1911,14 @@ spirit to optimizing a Huber loss instead of an $\ell^{1}$-penalty. Rather than
 directly smoothing the loss in equation \ref{eq:gflasso_reform}, they first
 reformulate it as
 \begin{align*}
-  \frac{1}{2}\|Y - XB\|_{F}^{2} + \max_{\|A\|_{\infty} \leq 1}
-  \left<A, BC\right>,
+  \frac{1}{2}\|Y - XB\|_{F}^{2} + \max_{\|A\|_{\infty} \leq 1} \left<A,
+  BC\right>,
 \end{align*}
-using the duality between the $\ell^{1}$ and $\ell^{\infty}$ norms. It is
-for this objective that a family of smooth surrogates is introduced,
+using the duality between the $\ell^{1}$ and $\ell^{\infty}$ norms. It is for
+this objective that a family of smooth surrogates is introduced,
 \begin{align*}
-f_{\mu}\left(B\right) &:= \max_{\|A\|_{\infty} \leq 1}
-\left[\left<A, BC\right> - \frac{\mu}{2}\|A\|_{F}^{2}\right],
+f_{\mu}\left(B\right) &:= \max_{\|A\|_{\infty} \leq 1} \left[\left<A, BC\right>
+  - \frac{\mu}{2}\|A\|_{F}^{2}\right],
 \end{align*}
 and the new objective is to minimize
 \begin{align*}
@@ -1992,9 +1932,9 @@ restricted to $\|X\|_{\infty} \leq 1$. Then $g$ has Fenchel conjugate
 $g^{\ast}\left(Y\right) = \max_{\|X\|_{\infty}\leq 1}\left<Y, X\right> -
 \frac{1}{2}\|X\|_{F}^{2}$. In particular,
 \begin{align*}
-f_{\mu}\left(B\right) &=  \mu \max_{\|A\|_{\infty} \leq 1}
-\left[\left<A, \frac{1}{\mu}BC\right> - \frac{1}{2}\|A\|_{F}^{2}\right] \\
-&= \mu g^{\ast}\left(BC\right)
+f_{\mu}\left(B\right) &= \mu \max_{\|A\|_{\infty} \leq 1} \left[\left<A,
+  \frac{1}{\mu}BC\right> - \frac{1}{2}\|A\|_{F}^{2}\right] \\ &= \mu
+g^{\ast}\left(BC\right)
 \end{align*}
 Using the fact that the derivative of a Fenchel conjugate function is given by
 the argmax of the optimization that defines it, we find $\nabla
@@ -2003,7 +1943,8 @@ onto the $\ell^{\infty}$ ball\footnote{This is achieved by taking all entries
   larger than one and setting them to 1, and setting all entries smaller than -1
   to -1).}. Together with the chain rule, this gives
 \begin{align*}
-  \nabla f_{\mu}\left(B\right) &= P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
+  \nabla f_{\mu}\left(B\right) &=
+  P_{\ell^{\infty}}\left(\frac{1}{\mu}BC\right)C^{T},
 \end{align*}
 and so the gradient of the objective \ref{eq:gflasso_reform} has the form
 \begin{align*}
@@ -2013,8 +1954,8 @@ which can be input to any number of gradient-based routines.
 \cite{chen2010graph} uses Nesterov's accelerated method, a version of gradient
 descent with a momentum term, and this is what we use in our examples below.
 
-\subsubsection{Example}
-\label{subsubsec:graph_fused_example}
+\subsection{Example}
+\label{subsec:graph_fused_example}
 
 We apply the graph-fused lasso to the body composition problem and compare it to
 a naive version of lasso that doesn't share any information across responses. We
@@ -2030,18 +1971,15 @@ interpretable levels of sparsity and smoothness in the fitted coefficients.
 The graph-fused lasso requires a correlation graph between response variables.
 We estimate such a graph using the graphical lasso \citep{friedman2008sparse},
 since there are only $\sim 100$ with which to estimate the 36-dimensional
-covariance matrix. The resulting graph has two major components, corresponding
-to the lean and fat mass variables, respectively, though arm and leg mass do
-deviate somewhat from trunk and total mass. The full correlation matrix is
-displayed in Figure \ref{fig:graph_lasso_graph}.
+covariance matrix. The estimated correlation matrix is displayed in Figure
+\ref{fig:graph_lasso_graph}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.9\textwidth]{figure/graph_lasso/graph}
+  \includegraphics[width=0.9\textwidth]{figure/multitable/graph_lasso/graph}
   \caption{Correlation matrix used as the input graph $R$ for the graph-fused
     lasso, estimated itself according to the graphical
-    lasso. The two main blocks correspond to lean and fat mass variables,
-    respectively. \label{fig:graph_lasso_graph} }
+    lasso. \label{fig:graph_lasso_graph} }
 \end{figure}
 
 The fitted coefficients from the graph-fused lasso are given in Figure
@@ -2069,7 +2007,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
+  \includegraphics[width=\textwidth]{figure/multitable/graph_lasso/coef_heatmap}
   \caption{Coefficients for the graph-fused lasso highlight groups of species
     with similar profiles across response variables. Colored rectangles
     demarcate taxonomic families. Individual cells give the coefficient for a
@@ -2083,7 +2021,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
+  \includegraphics[width=\textwidth]{figure/multitable/graph_lasso/multitask_lasso_hm}
   \caption{The analog of Figure \ref{fig:graph_lasso_coef_heatmap} when there is
     no sharing across response problems. Note that coefficients nonetheless seem
     to be similar within lean and fat mass response groups, respectively, but
@@ -2112,26 +2050,29 @@ shorthand $D = \left\{\left(x_{i}^{(r)}, y_i^{(r)}\right)_{i =
 The responses are assumed drawn i.i.d. from a linear model with problem-specific
 coefficient $\beta^{(r)}$,
 \begin{align*}
-  y_{i}^{(r)} \sim \Gsn\left(y_i^{(r)} \vert x_{i}^{(r) T}\beta^{(r)}, \sigma^{2}\right).
+  y_{i}^{(r)} \sim \Gsn\left(y_i^{(r)} \vert x_{i}^{(r) T}\beta^{(r)},
+  \sigma^{2}\right).
 \end{align*}
 To tie problems together, the $\beta^{(r)}$ are modeled using $K$-dimensional
 latent factors,
 \begin{align}
-  \beta^{(r)} \sim \Gsn\left(\beta^{(r)} \vert S w^{(r)}, \Psi\right), \label{eq:beta_r_zhang}
+  \beta^{(r)} \sim \Gsn\left(\beta^{(r)} \vert S w^{(r)},
+  \Psi\right), \label{eq:beta_r_zhang}
 \end{align}
 for some latent source matrix $S \in \reals^{p_{2} \times K}$ and mixing weights
 $w^{(r)}$. Different models come from choosing different priors on $w^{(r)}$;
 for now suppose the $w^{(r)}$ are drawn jointly from
 \begin{align*}
-w^{(1)}, \dots, w^{(r)} \sim  p_{\Phi}\left(\left(w^{\left(r\right)}\right)_{r = 1}^{p_{1}}\right).
+w^{(1)}, \dots, w^{(r)} \sim p_{\Phi}\left(\left(w^{\left(r\right)}\right)_{r =
+  1}^{p_{1}}\right).
 \end{align*}
 
 The nonrandom parameters in this model are $\theta := \{\sigma^{2}, S, \Psi,
 \Phi\}$. The weights and coefficients $w^{(r)}$ and $\beta^{(r)}$ are random
 parameters, and for inference they will be treated as latent data.
 
-Note that the form of the $\beta^{(r)}$ in equation \ref{eq:beta_r_zhang} can
-be reparameterized as
+Note that the form of the $\beta^{(r)}$ in equation \ref{eq:beta_r_zhang} can be
+reparameterized as
 \begin{align*}
 \beta^{(r)} &= Sw^{(r)} + \eta^{(r)},
 \end{align*}
@@ -2156,7 +2097,9 @@ prior $p_{\Phi}\left(\left(w^{(r)}\right)_{r = 1}^{p_{1}}\right)$.
   \item Drawing $w^{(r)} \sim \text{Lap}\left(0, \Phi\right)$ encourages sparse
     weights. Though not technically a part of the specification above, it is
     possible to put a similar prior on $S$ to induce sparsity on the shared
-    sources.
+    sources. This sparsity-inducing property can be understood by noting that
+    MAP estimation with a Laplace prior on a parameter is equivalent to maximum
+    likelihood with an $\ell^{1}$-penalty on that parameter.
   \item Drawing $w^{(r)} \sim DP\left(\alpha, G_{0}\right)$ has a similar effect
     as the clustered-regressions model, though now the number of clusters need
     not be explicitly specified in advance\footnote{The concentration parameter
@@ -2181,8 +2124,13 @@ a proxy for the true posterior.
 The loglikelihood assuming that the latent $z^{(r)}$ are known is called the
 complete-data loglikelihood. In our multitask setting, this has the form
 \begin{align*}
-  \ell_{c}\left(\theta\right) = &\sum_{r = 1}^{p_{1}}\left[\sum_{i = 1}^{n_{r}} \log p\left(y_{i}^{(r)} \mid \beta^{(r)} ; X^{(r)}, \sigma^{2}\right)\right] + \log p\left(\beta^{(r)} \mid w^{(r)}; \Lambda, \Psi\right) + \log p_{\Phi}\left(w^{(r)}\right) \\
-  = &\sum_{r = 1}^{p_{1}}\sum_{i = 1}^{n} \log \Gsn\left(y_{i}^{(r)} \mid x_{i}^{(r) T}\beta^{(r)}; \sigma^{2}\right) + \sum_{r = 1}^{p_{1}}\log \Gsn\left(\beta^{(r)} \mid S w^{(r)}; \Psi\right) + \log p_{\Phi}\left(w^{(r)}\right),
+  \ell_{c}\left(\theta\right) = &\sum_{r = 1}^{p_{1}}\left[\sum_{i = 1}^{n_{r}}
+    \log p\left(y_{i}^{(r)} \mid \beta^{(r)} ; X^{(r)}, \sigma^{2}\right)\right]
+  + \log p\left(\beta^{(r)} \mid w^{(r)}; \Lambda, \Psi\right) + \log
+  p_{\Phi}\left(w^{(r)}\right) \\ = &\sum_{r = 1}^{p_{1}}\sum_{i = 1}^{n} \log
+  \Gsn\left(y_{i}^{(r)} \mid x_{i}^{(r) T}\beta^{(r)}; \sigma^{2}\right) +
+  \sum_{r = 1}^{p_{1}}\log \Gsn\left(\beta^{(r)} \mid S w^{(r)}; \Psi\right) +
+  \log p_{\Phi}\left(w^{(r)}\right),
 \end{align*}
 where we have assumed that, in the prior, the $w^{(r)}$ are independent across
 problems -- this covers most cases above, though variations are possible in case
@@ -2197,21 +2145,31 @@ $p_{\theta}\left(\left(z^{r}\right) \vert \left(x_{i}\right), y_{i}\right)$.
 Since the posterior is intractable, we instead search for the element
 $q_{\gamma^{\ast}}$ that is closest to the posterior in KL-divergence sense,
 \begin{align*}
-q_{\gamma^{\ast}}:= \arg\min_{\gamma \in \Gamma} KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
-p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]\right).
+q_{\gamma^{\ast}}:= \arg\min_{\gamma \in \Gamma}
+KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
+p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right),
+  \left(y_{i}\right)\right]\right).
 \end{align*}
 
 This is a convenient measure to use, because it can be rewritten as
 \begin{align*}
 &KL\left(q_{\gamma}\left[\left(z^{(r)}\right)\right] \vert \vert
-p_{\theta}\left[\left(z^{r}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]\right) \\
-= &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right)\right]}{p_{\theta}\left[\left(z^{(r)}\right) \vert \left(x_{i}\right), \left(y_{i}\right)\right]}} \\
-= &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right]\right)}{p_{\theta}\left[\left(z^{(r)}\right), \left(x_{i}\right), \left(y_{i}\right)\right]}} + \log p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right] \\
-= &\Esubarg{q_{\gamma}}{\log q_{\gamma}\left[\left(z^{(r)}\right)\right]} - \Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)} + \log p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right],
+  p_{\theta}\left[\left(z^{r}\right) \vert \left(x_{i}\right),
+    \left(y_{i}\right)\right]\right) \\ =
+  &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right)\right]}{p_{\theta}\left[\left(z^{(r)}\right)
+        \vert \left(x_{i}\right), \left(y_{i}\right)\right]}} \\ =
+  &\Esubarg{q_{\gamma}}{\log\frac{q_{\gamma}\left[\left(z^{(r)}\right]\right)}{p_{\theta}\left[\left(z^{(r)}\right),
+        \left(x_{i}\right), \left(y_{i}\right)\right]}} + \log
+  p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right] \\ =
+  &\Esubarg{q_{\gamma}}{\log q_{\gamma}\left[\left(z^{(r)}\right)\right]} -
+  \Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)} + \log
+  p_{\theta}\left[\left(x_{i}\right), \left(y_{i}\right)\right],
 \end{align*}
 so we can equivalently choose the $q_{\gamma^{\ast}}$ to maximize
 \begin{align*}
-\F\left(\gamma, \theta\right) := -\Esubarg{q_{\gamma}}{\log q_{\gamma}\left(z^{(r)}\right)} + \Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)},
+\F\left(\gamma, \theta\right) := -\Esubarg{q_{\gamma}}{\log
+  q_{\gamma}\left(z^{(r)}\right)} +
+\Esubarg{q_{\gamma}}{\ell_{c}\left(\theta\right)},
 \end{align*}
 which can be interpreted as a regularized complete data loglikelihood.
 
@@ -2221,12 +2179,11 @@ it is easy to find a $\gamma$ to maximize this quantity, when $\theta$ is kept
 fixed.
 
 Further, for a fixed choice of $\theta$, it may be possible to choose $\gamma$
-to maximize this quantity, and vice versa. This is the variational  strategy
+to maximize this quantity, and vice versa. This is the variational strategy
 adopted by \citep{zhang2005learning} -- initialize $\theta^{0}$, then choose
-$\gamma^{1}$ to minimize $\F\left(\gamma, \theta^{0}\right)$, then
-find a $\theta^{1}$ to maximize $\F\left(\gamma^{(1)}, \theta\right)$, and
-so forth. The final posterior is approximated by $q_{\gamma^{t}}$ for some
-large $t$.
+$\gamma^{1}$ to minimize $\F\left(\gamma, \theta^{0}\right)$, then find a
+$\theta^{1}$ to maximize $\F\left(\gamma^{(1)}, \theta\right)$, and so forth.
+The final posterior is approximated by $q_{\gamma^{t}}$ for some large $t$.
 
 \section{Discussion}
 \label{sec:Discussion}
@@ -2248,18 +2205,26 @@ of these methods is given in Table \ref{tab:methods_comparison}.
 \centering
 \begin{tabularx}{16cm}{p{2cm}Xp{8cm}}
 \textbf{Property} & \textbf{Algorithms} & \textbf{Consequence} \\
+\hline
 Analytical solution & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods with analytical solutions generally run much faster than those that require iterative updates, optimization, or Monte Carlo sampling. They tend to be restricted to more classical settings, however. \\
+\hline
 Require covariance estimate & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costatis & Methods that require estimates of covariance matrices cannot be applied to data with more variables than samples, and become unstable in high-dimensional settings. \\
+\hline
 Sparsity & SPLS, Graph-Fused Lasso, Graph-Fused Lasso & Encouraging sparsity on scores or loadings can result in more interpretable, results for high-dimensional data sets. These methods provide automatic variable selection in the multitable analysis problem. \\
+\hline
 Tuning parameters &
   \textit{Sparsity}: Graph-Fused Lasso, PMD, SPLS \newline
   \textit{Number of Factors}: PCA-IV, Red. Rank Regression, Mixed-Membership CCA \newline
   \textit{Prior Parameters}: Mixed-Membership CCA, Bayesian Multitask Regression \newline
   \textit{Kernel}: KCCA & 
   Methods with many tuning parameters are often more expressive than those without any, since it makes it possible to adapt to different degrees of model complexity. However, in the absence of automatic tuning strategies, these methods are typically more difficult to use effectively. \\
+  \hline
 Probabilistic & Mixed-Membership CCA, Bayesian Multitask Regression & Probabilistic techniques provide estimates of uncertainty, along with representations of cross-table covariation. This comes at the cost of more involved computation and difficulty in assessing convergence. \\
+\hline
 Not Normal or Nonlinear & KCCA, CCpNA, Mixed-Membership CCA, Bayesian Multitask Regression & When data are not normal (and are difficult to transform to normality) or there are sources of nonlinear covariation across tables, it can be beneficial to directly model this structure. KCCA allows the most general types of nonlinearity, while the probabilistic methods are suited to specific count-structure. \\
+\hline
 \textgreater 2 Tables & Concat. PCA, CCA, MFA, PMD, KCCA & Methods that allow more than two tables are applicable in a wider range of multitable problems. Note these are a subset of the cross-table symmetric methods. \\
+\hline
 Cross-Table Symmetry & Concat. PCA, CCA, CoIA, Statico / Costatis, MFA, PMD, KCCA & Cross-table symmetry refers to the idea that some methods don't need a supervised or multitask setup, where one table contains response variable and the other requires predictors. The results of these methods do not change when the two tables are swapped in the method input. \\
 \end{tabularx}
 \caption{A high-level comparison of the multitable analysis methods discussed in
@@ -2280,7 +2245,7 @@ vegan & CCA, CCpnA & High & \url{https://cran.r-project.org/web/packages/vegan/}
 spls & SPLS & High & \url{https://cran.r-project.org/web/packages/spls/} \\
 kernlab & KCCA & High & \url{https://cran.r-project.org/web/packages/kernlab/} \\
 PMA & PMD & High & \url{https://cran.r-project.org/web/packages/PMA/} \\
-pls & PLS & High & \url{https://cran.r-project.org/web/packages/pls/}
+pls & PLS & High & \url{https://cran.r-project.org/web/packages/pls/} \\
 Base R & PCA, CCA & High & \url{https://cran.r-project.org/} \\
 GFLasso & Graph-Fused Lasso & Low & \url{https://github.com/krisrs1128/gflasso} \\
 bayesMult & Bayesian Multitask Regression & Low & \url{https://github.com/krisrs1128/bayesmult}
@@ -2295,14 +2260,12 @@ bayesMult & Bayesian Multitask Regression & Low & \url{https://github.com/krisrs
 In developing our WELL-China case study, we have both (1) described the types of
 interpretations facilitated by different approaches and (2) provided accessible
 implementations that can be incorporated into practical scientific workflows.
-Packages providing the implementations of the multitable methods we have
-reviewed in this work are linked in Table \ref{tab:r-packages}. Our case study
-includes carefully thought-through visualizations of model results, a step that
-is crucial in scientific study but often overlooked in methodological research,
-where model results are reduced to tables of performance metrics. Recognizing
-that a good deal of effort in statistical work goes into data preparation and
-visualization of model results, we have ensured that code for all steps are
-available, so that our work is fully reproducible.
+Our case study includes carefully thought-through visualizations of model
+results, a step that is crucial in scientific study but often overlooked in
+methodological research, where model results are reduced to tables of
+performance metrics. Recognizing that a good deal of effort in statistical work
+goes into data preparation and visualization of model results, we have ensured
+that code for all steps are available, so that our work is fully reproducible.
 
 We have found that multitable data analysis problem have motivated a wide range
 of analysis approaches. This is not surprising, considering the variety of
@@ -2310,377 +2273,3 @@ contexts in which it arises, and it speaks to the richness of this
 methodological problem. As new data sources arise and as science evolves, we
 expect these ideas will inspire future generations of multitable research
 advances.
-
-\bibliographystyle{plainnat}
-\bibliography{refs.bib}
-
-\section{Supplementary Material}
-
-\begin{table}
-\centering
-\begin{tabular}{lll}
-Statistics & Ecology & Machine Learning \\
-Samples & Sites & Samples \\
-Variables & Species & Features \\
-Scores & Scores & Embeddings \\
-Biplot & Ordination & ----- \\
-Variance explained & Inertia & Training Error \\
-Entropy & Diversity & Entropy
-\end{tabular}
-\caption{A brief translation of terms used in multitable data analysis, across
-  three of the fields where many methods have been proposed.}
-\label{tab:multitable_translation}
-\end{table}
-
-\subsection{Additional figures}
-
-\begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_2}
-  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
-    PCA is run on all body composition variables, rather than just lean and
-    fat mass. That is, we project the original values for these two features
-    onto the top two PCs obtained from a PCA on all body composition variables.
-    Since the PCA is working in a large space, the projected points are
-    generally not too far from their original positions. However, note that one
-    outlier on the far right is projected into the bulk of points in the center
-    -- the variation coming from this one point is too specific to be preserved
-    by PCA.
-  \label{fig:pca-approx-2}}
-\end{figure}
-
-\begin{figure}
-  \includegraphics[width=0.7\textwidth]{figure/pca/proj_plot_3}
-  \caption{Here we perform the same procedure as in Figure
-    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
-    we project onto only the top PC. The main point is that, while in two
-    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
-    easy to understand in terms of orthogonal errors, the corresponding
-    orthogonal projection in higher dimensions is more complex.
-  \label{fig:pca-approx-3}}
-\end{figure}
-
-\begin{figure}
-  \centering \includegraphics[width=\textwidth]{figure/coia/loadings}
-  \caption{These are the loadings obtained from CoIA, which are analogous to
-    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
-    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/coia/scores_rl_ratio}
-  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_android_fm},
-    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
-    \ref{fig:scores_rl_ratio} and
-    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_android_fm}
-  \caption{We can display the scores obtained by PCA-IV. The results are similar
-    to those from combined-PCA, which is not surprising, since they are related
-    to the PCA based only on microbial
-    abundances. \label{fig:pca_iv_scores_android_fm} }
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pca_iv/scores_rl_ratio}
-  \caption{This provides the same scores as Figure
-    \ref{fig:pca_iv_scores_android_fm}, but shaded by Ruminoccoccaceae vs.
-    Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/pmd/illustration_scatter}
-  \caption{An alternative view of Figure \ref{fig:pmd_illustration_sequence},
-    where the two underlying sources are plotted in two dimensions rather than
-    one. Basic unidentifiabilities in the model are visible as long swaps
-    between true and recovered points. \label{fig:pmd_illustration_scatter} }
-\end{figure}
-
- \begin{figure}
-   \centering
-   \includegraphics[width=0.9\textwidth]{figure/lda_cca/unshared_scores_fm_posterior}
-   \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
-     composition variables. These are much more spread out than either the
-     $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
-     36 body composition variables, rather than counts for all $\sim 400$
-     species.
-     \label{fig:lda_cca_unshared_scores_fm_posterior} }
- \end{figure}
-
- \begin{figure}
-   \centering
-   \includegraphics[width=0.9\textwidth]{figure/lda_cca/shared_scores_fm_posterior}
-   \caption{Posterior samples of scores $\xi^{s}_i$ shared across both bacterial
-     abundance and body composition variables. Points are positioned according
-     to their value in the first two dimensions shared body composition loading
-     dimensions, $B^{Y}_{\cdot, 1:2}$. Clouds of points correspond to
-     participants, and they are shaded by their android fat mass. This method
-     does not appear to pick up on any associations between body composition and
-     microbiome structure.
- \label{fig:lda_cca_shared_scores_fm_posterior} }
- \end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm_lambdas}
-  \caption{ Inspecting coefficients from multitask lasso across $\lambda$
-    regularization parameters highlights species with different directions and
-    strengths of association with body composition variables. Different panel
-    columns indicate different taxonomic families, while rows correspond to
-    different response variables. Individual tiles give the coefficients of an
-    individual species (column) against a response at a particular $\lambda$
-    (row). Within panels, the $\lambda$s are sorted from least to most
-    regularization. Species have been clustered according to their lasso
-    coefficients, revealing groups of species with similar coefficient profiles
-    across groups of responses.
-    \label{fig:graph_lasso_multitask_lasso_hm_lambdas} }
-\end{figure}
-
-\subsection{Derivation details for PCA-IV}
-\label{subsec:pca_iv_derivation}
-
-In this section, we provide the argument for why the generalized
-eigendecomposition $\hat{\Sigma}_{XY}\hat{\Sigma}_{YX} =
-\hat{\Sigma}_{XX}V\Lambda V^{T}$ provides the optimal $V$ used in PCA-IV.
-
-First consider $k = 1$. For any $\tilde{v}$, the objective
-in equation \ref{eq:pca_iv_obj_2} has the form
-\begin{align}
-  \tr\left(\hat{\Sigma}_{YX}\tilde{v}\left(\tilde{v}\hat{\Sigma}_{XX}\tilde{v}\right)^{-1}
-  \left(\hat{\Sigma}_{YX}\tilde{v}\right)^{T}\right) &=
-  \frac{\tilde{v}^{T}\Sigma_{XY}\Sigma_{YX}\tilde{v}}{\tilde{v}^{T}\Sigma_{XX}\tilde{v}} \nonumber \\
-  &= \frac{\tilde{w}^{T}\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w}}{\|\tilde{w}\|_{2}^{2}}, \label{eq:gev_opt_2}
-\end{align}
-where we change variables $\tilde{w} = \Sigma_{XX}^{\frac{1}{2}}\tilde{v}$. But
-to maximize equation \ref{eq:gev_opt_2}, just choose $\tilde{w}$ to be the top
-eigenvector of
-$\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}$,
-which implies that $\tilde{v}$ is the top generalized eigenvector of
-$\Sigma_{XY}\Sigma_{YX}$ with respect to $\Sigma_{XX}$. Indeed, in this case,
-\begin{align*}
-  \Sigma_{XY}\Sigma_{YX}\tilde{v}
-  &=\Sigma_{XY}\Sigma_{YX}\Sigma_{XX}^{-\frac{1}{2}}\tilde{w} \\
-  &= \Sigma_{XX}^{\frac{1}{2}} \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YX} \Sigma_{XX}^{-\frac{1}{2}}\tilde{w}\\
-  &= \Sigma_{XX}^{\frac{1}{2}}\lambda_{1}\tilde{w} \\
-  &= \lambda_{1}\Sigma_{XX}\tilde{v}.
-\end{align*}
-
-Hence, in the case $K = 1$, the criterion is maximized by the top generalized
-eigenvector. For larger $K$, recall that the problem of maximizing
-$\frac{v^{T}Av}{\|v\|^{2}}$ over $v$ subject to being orthogonal to the first $K
-- 1$ eigenvectors of $A$ is solved by the $K^{th}$ eigenvector of $A$, and
-applying this fact in step \ref{eq:gev_opt_2} of the argument above gives the
-result for general $K$.
-
-\subsection{Derivation of PTA $\alpha$}
-\label{subsec:pta_alpha_derivation}
-
- The Lagrangian of the optimization defined by PTA is
-\begin{align*}
-\mathcal{L}\left(\alpha, \lambda\right) &= \sum_{l = 1}^{L}
-\alpha_{l}\left<\overline{X}, X_{\cdot\cdot l}\right> +
-\lambda\left(\|\alpha\|^{2}_{2} - 1\right),
-\end{align*}
-which when differentiated with respect to $\alpha$ yields $\alpha_{l} =
--\frac{1}{2\lambda} \left<\overline{X}, X_{\cdot\cdot l}\right>$ for all $l$.
-The constraint that $\|\alpha\|_{2}^{2} = 1$ implies that
-$\frac{1}{4\lambda^{2}} \sum_{l^{\prime} = 1}^{L} \left<\overline{X},
-X_{\cdot\cdot l^{\prime}}\right>^{2} = 1$, which gives $\lambda = \frac{1}{2}
-\sqrt{\sum_{l^{\prime} =1 }^{L} \left<\overline{X}, X_{\cdot\cdot
-    l^{\prime}}\right>^{2}}$, so $\alpha_{l} = \frac{\left<\overline{X},
-  X_{\cdot\cdot l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X},
-    X_{\cdot\cdot l^{\prime}}\right>^{2}}}$.
-
-\subsection{Derivation of Reduced Rank Solution}
-\label{subsec:reduced_rank_derivation}
-
-Consider the data and parameters in the whitened space, $Y^{\ast} =
-Y\hat{\Sigma}_{YY}^{-\frac{1}{2}}$ and $B^{\ast} =
-B\hat{\Sigma}_{YY}^{-\frac{1}{2}}$, and rewrite the objective \ref{eq:rr_obj} as
-\begin{align*}
-\|Y^{\ast} - XB^{\ast}\|_{F}^{2} &= \|Y^{\ast} - \hat{Y}^{\ast \text{ols}}\|_{F}^{2} + \|\hat{Y}^{\ast \text{ols}} - XB^{\ast}\|_{F}^{2},
-\end{align*}
-where we used the fact that the residuals are orthogonal to the column space of
-$X$ to remove the cross term. The first term does not involve $B^{\ast}$, so we
-can focus on minimizing the second. Consider the SVD $\hat{Y}^{\ast \text{ols}}
-= \dot{U}\dot{D}\dot{V}^{T}$. We know that the matrix $A$ of rank $K$ that
-minimizes $\|\hat{Y}^{\ast \text{ols}} - A\|_{F}^{2}$ is $A =
-\dot{U}_{K}\dot{D}_{K}\dot{V}_{K}^{T} = Y^{\ast
-  \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}$, the truncated SVD of $\hat{Y}^{\ast
-  \text{ols}}$, or alternatively its projection onto the top $K$ right
-eigenvectors.
-
-In particular, any matrix $B$ that satisfies
-\begin{align*}
-  XB^{\ast} = \hat{Y}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T} = X\hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T}
-\end{align*}
-solves the reduced rank regression problem, so we can choose
-\begin{align*}
-  \hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\dot{V}_{k}\dot{V}_{k}^{T},
-\end{align*}
-which involves $\hat{B}^{\ast \text{ols}}$, the OLS fit of $Y^{\ast}$ on $X$, and
-$V_{k}$, the top $K$ right eigenvectors of the resulting fitted vector
-$\hat{Y}^{\ast \text{ols}}$.
-
-There is a connection between this fit and the response canonical directions of
-$\hat{Y}$. In particular, consider the eigendecomposition that follows from the
-earlier SVD,
-\begin{align}
-\dot{V}\dot{D}\dot{V}^{T} &=   \hat{Y}^{\ast \text{ols} T}  \hat{Y}^{\ast \text{ols}} \nonumber \\
-&= \left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)^{T}\left(P_{X}Y\Sigma_{YY}^{-\frac{1}{2}}\right)\nonumber \\
-  &= \Sigma_{YY}^{-\frac{1}{2}}\Sigma_{YX} \Sigma_{XX}^{-1}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}}. \label{eq:star_ols}
-\end{align}
-
-Recall that the response canonical directions $V$ are derived by taking the SVD
-of $\Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{YY}^{-\frac{1}{2}} =
-\tilde{U}\tilde{D}\tilde{V}^{T}$ and setting $V =
-\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}$. But comparing this to the form of Equation
-\ref{eq:star_ols}, we find that $\dot{V} = \tilde{V}$, the eigenvectors from
-which the CCA response directions are derived are equal to the eigenvectors of
-the cross-products of the OLS fits in the whitened space. Hence,
-\begin{align*}
-\hat{B}^{\text{rr}} &= \hat{B}^{\ast \text{ols}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y^{\ast}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y\Sigma_{YY}^{-\frac{1}{2}}\tilde{V}_{K}\tilde{V}_{K}^{T} \\
-&= \left(X^{T}X\right)^{-1}X^{T}Y V_{K} \Sigma_{YY}^{\frac{1}{2}}V_{K}^{T} \\
-&= \hat{B}^{\text{ols}}V_{K}V_{K}^{-},
-\end{align*}
-
-Therefore, the reduced-rank coefficients are just the projection of the original
-OLS coefficients onto the subspace spanned by the top $K$ response canonical
-directions.
-
-\subsection{Derivation of Curds \& Whey Shrinkage}
-\label{subsec:derivation_curds_and_whey}
-
-Consider prediction across many related response variables. One way to pool
-information across respones is to define new fitted values from a linear
-combination of independent OLS fits. That is, to predict a response $y_{i} \in
-\reals^{p_{1}}$, we set $\hat{y}^{\text{cw}}_{i} = B\hat{y}^{\text{ols}}_{i}$
-for some square matrix $B \in \reals^{p_{1} \times p_{1}}$. But how to choose
-$B$?
-
-One reasonable idea is to choose a $B$ that has the best performance in a
-generalized cross-validation (GCV). The GCV approximation is that the $h_{ii}$
-can be approximated by their average across all diagonal elements of $H$:
-$h_{ii} \approx h := \frac{1}{n}\tr\left(H\right)$ for all $i$. In this spirit,
-define $g = \frac{1}{1 - h}$, and approximate
-\begin{align*}
-  \hat{y}_{-i} \approx \left(1 - g\right)y_{i} + g\hat{y}_{i}.
-\end{align*}
-
-Then, the leave-one-out CV error can be simplified to
-\begin{align*}
-  \sum_{i = 1}^{n}\|y_{i} - B\hat{y}_{-i}\|_{2}^{2} &= \sum_{i =
-    1}^{n} \|y_{i} - B\left(\left(1 - g\right)y_{i} +
-    g\hat{y}_{-i}\right)\|_{2}^{2},
-\end{align*}
-and differentiating with respect to $B$, we find that the optimal
-$\hat{B}^{\text{cw}}$ in this GCV framework must satisfy
-\begin{align*}
-\sum_{i = 1}^{n}\left(y_{i} - B\left(\left(1 - g\right)y_{i} +
-    g\hat{y}_{-i}\right)\right)\left(\left(1 - g\right)y_{i} +
-  g\hat{y}_{-i}\right)^{T},
-\end{align*}
-or equivalently
-\begin{align*}
-\sum_{i = 1}^{n} y_{i}\left(\left(1 - g\right)y_{i} +
-  g\hat{y}_{-i}\right)^{T} &=  \sum_{i = 1}^{n}B\left(\left(1 -
-    g\right)y_{i} + g\hat{y}_{-i}\right)\left(\left(1 - g\right)y_{i}
-  +  g\hat{y}_{-i}\right)^{T},
-\end{align*}
-which in matrix form is
-\begin{align}
-\left(1 - g\right)Y^{T}Y + g\hat{Y}^{T}Y = B\left(\left(1 - g\right)Y
-  + g \hat{Y}\right)^{T}\left(\left(1 - g\right)Y + g \hat{Y}\right), \label{eq:gcv_mat_form}
-\end{align}
-where $\hat{Y} \in \reals^{n \times p_{1}}$ has $i^{th}$ row
-$\hat{y}_{-i}$.
-
-Next, we can represent these cross-products in a way that is suggestive of CCA,
-\begin{align*}
-  Y^{T}Y &= n \hat{\Sigma}_{YY} \\
-  \hat{Y}^{T}Y &= Y^{T}HY = Y^{T}X\left(X^{T}X\right)^{-1}X^{T}Y =
-  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY} \\
-  \hat{Y}^{T}\hat{Y} &= Y^{T}P_{X}^2 Y = Y^{T}P_{X}Y=
-  n\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1} \hat{\Sigma}_{XY},
-\end{align*}
-Substituting this into equation \ref{eq:gcv_mat_form} and ignoring the scaling
-$n$ yields
-\begin{align*}
-\left(1 - g\right)\hat{\Sigma}_{YY} + g
-\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY} &=
-B\left[\left(1 - g\right)\hat{\Sigma}_{YY} + \left(2g -
-    g^{2}\right)\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}\right].
-\end{align*}
-Postmultiplying by $\hat{\Sigma}_{YY}$ gives
-\begin{align}
-  \left(1 - g\right)I_{p_{1}} + g\hat{Q}^{T} &= B\left[\left(1 -
-      g\right)I_{p_{1}} + \left(2g -
-      g^{2}\right)\hat{Q}^{T}\right], \label{eq:cca_gcv_id}
-\end{align}
-where,
-\begin{align*}
-\hat{Q} :=
-\hat{\Sigma}_{YY}^{-1}\hat{\Sigma}_{YX}\hat{\Sigma}_{XX}^{-1}\hat{\Sigma}_{XY}
-\in \reals^{p_{1}\times p_{1}}.
-\end{align*}
-Now, we claim that we can decompose $\hat{Q} = VD^{2}V^{-1}$, where $V \in
-\reals^{p_{1} \times p_{1}}$ is the full matrix of CCA response directions and
-$D$ is diagonal with the canonical correlations. Indeed, the usual CCA response
-directions $V$ can be recovered by setting $V =
-\hat{\Sigma}_{YY}^{-\frac{1}{2}}\tilde{V}$, where $\tilde{V}$ comes from the SVD
-of $A := \Sigma_{XX}^{-\frac{1}{2}}\Sigma_{XY}\Sigma_{XX}^{-\frac{1}{2}} =
-\tilde{U}D\tilde{V}^{T}$. Hence,
-\begin{align*}
-  Q &= \Sigma_{YY}^{-\frac{1}{2}}A^{T}A\Sigma_{YY}^{\frac{1}{2}} \\
-  &= \Sigma_{YY}^{-\frac{1}{2}}\tilde{V}^{2}D^{2}\tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}\\
-  &= VD^{2}V^{-1},
-\end{align*}
-where we are able to write $V^{-1} = \tilde{V}^{T}\Sigma_{YY}^{\frac{1}{2}}$
-because $\tilde{V}$ is the full (untruncated) matrix of eigenvectors, so
-$\tilde{V}\tilde{V}^{T} = I$ in addition to the usual $\tilde{V}^{T}\tilde{V}
-=I$, which holds even for the truncated SVD.
-
-Therefore, equation \ref{eq:cca_gcv_id} can be expressed as
-\begin{align*}
-  V^{-T}\left[\left(1 - g\right)I_{p_{1}} + gD^{2}\right]V^{T} &=
-  BV^{-T}\left[\left(1 - g\right)I_{p_{1}} + \left(2g -
-      g^2\right)D^{2}\right]V^{T}
-\end{align*}
-and the $B$ satisfying the normal equations has the form
-\begin{align*}
-\hat{B}^{\text{cw}} &= V^{-T}\Lambda V^{T},
-\end{align*}
-where $\Lambda$ is a diagonal matrix with entries
-\begin{align*}
-\lambda_{jj} = \frac{1 - g + d_{jj}^{2}g}{1 - g + \left(2g -
-    g^{2}\right)d_{jj}^{2}}.
-\end{align*}
-Notice that when $n$ is large, $\frac{1}{n}\tr P_{X}$ will be small, leading to
-a smaller $g \approx 0$ less shrinkage.
-
-Recall that $\hat{B}^{\text{cw}}$ is used to pool across OLS fits,
-$\hat{y}_{i}^{\text{cw}} = \hat{B}^{\text{cw}}\hat{y}_{i}^{\text{ols}}$. That
-is,
-\begin{align*}
-\hat{Y}^{\text{cw}} &= \hat{Y}^{\text{ols}}B^{T} =
-\hat{Y}^{\text{ols}}V\Lambda V^{-1}
-\end{align*}
-which we can also view as $\hat{Y}^{\text{cw}}V =
-\left(\hat{Y}^{\text{ols}}V\right)\Lambda$. This means that the C\&W coordinates
-along the canonical directions $V$ are set as the OLS fits
-$\hat{Y}^{\text{ols}}$ along the canonical directions $V$, with weights defined
-by $\Lambda$. The actual $\hat{Y}^{\text{cw}}$ are recovered by transforming
-back to the original coordinate system. A similar way to view the C\&W fits is
-to note $\hat{Y}^{\text{cw}}V = P_{X}\left(YV\right)\Lambda$, which the original
-data $Y$ according to the canonical directions, then projects the shrunk data
-onto the subspace defined by the columns of $X$. In any case, we see that C\&W
-pools across regression problems through a soft shrinkage weighted along
-canonical response directions.
-\end{document}

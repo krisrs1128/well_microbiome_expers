@@ -1,0 +1,114 @@
+\chapter{Supplementary Figures for Multitable Methods}
+\label{ch:multitable_supp_figs}
+
+This appendix includes figures complementing those in Chapter
+\ref{ch:multitable}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\textwidth]{figure/multitable/pca/proj_plot_2}
+  \caption{This is the analog of Figure \ref{fig:pca-approx} in the case that
+    PCA is run on all body composition variables, rather than just lean and
+    fat mass. That is, we project the original values for these two features
+    onto the top two PCs obtained from a PCA on all body composition variables.
+    Since the PCA is working in a large space, the projected points are
+    generally not too far from their original positions. However, note that one
+    outlier on the far right is projected into the bulk of points in the center
+    -- the variation coming from this one point is too specific to be preserved
+    by PCA.
+  \label{fig:pca-approx-2}}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\textwidth]{figure/multitable/pca/proj_plot_3}
+  \caption{Here we perform the same procedure as in Figure
+    \ref{fig:pca-approx-2}, except instead of projecting onto the top two PCs,
+    we project onto only the top PC. The main point is that, while in two
+    dimensions (Figure \ref{fig:pca-approx}), the behavior of the projection is
+    easy to understand in terms of orthogonal errors, the corresponding
+    orthogonal projection in higher dimensions is more complex.
+  \label{fig:pca-approx-3}}
+\end{figure}
+
+\begin{figure}
+  \centering \includegraphics[width=\textwidth]{figure/multitable/coia/loadings}
+  \caption{These are the loadings obtained from CoIA, which are analogous to
+    those obtained from concatenated PCA (Figure \ref{fig:loadings}) and CCA
+    (Figure \ref{fig:cca_loadings}). \label{fig:coia_loadings} }
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/coia/scores_rl_ratio}
+  \caption{These the same CoIA scores as in Figure \ref{fig:coia_scores_android_fm},
+    but shaded instead by Ruminococcaceae / Lachnospiraceae ratio, as in Figures
+    \ref{fig:scores_rl_ratio} and
+    \ref{fig:cca_scores_rl_ratio}. \label{fig:coia_scores_rl_ratio} }
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/pca_iv/scores_android_fm}
+  \caption{We can display the scores obtained by PCA-IV. The results are similar
+    to those from combined-PCA, which is not surprising, since they are related
+    to the PCA based only on microbial
+    abundances. \label{fig:pca_iv_scores_android_fm} }
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/pca_iv/scores_rl_ratio}
+  \caption{This provides the same scores as Figure
+    \ref{fig:pca_iv_scores_android_fm}, but shaded by Ruminoccoccaceae vs.
+    Lachnospiraceae ratio. \label{fig:pca_iv_scores_rl_ratio} }
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/pmd/illustration_scatter}
+  \caption{An alternative view of Figure \ref{fig:pmd_illustration_sequence},
+    where the two underlying sources are plotted in two dimensions rather than
+    one. Basic unidentifiabilities in the model are visible as long swaps
+    between true and recovered points. \label{fig:pmd_illustration_scatter} }
+\end{figure}
+
+ \begin{figure}
+   \centering
+   \includegraphics[width=0.9\textwidth]{figure/multitable/lda_cca/unshared_scores_fm_posterior}
+   \caption{Posterior samples of scores $\xi^{Y}_i$ associated with the body
+     composition variables. These are much more spread out than either the
+     $\xi_{i}^s$ or $\xi_{i}^Y$, likely because each scores is based on just the
+     36 body composition variables, rather than counts for all $\sim 400$
+     species.
+     \label{fig:lda_cca_unshared_scores_fm_posterior} }
+ \end{figure}
+
+ \begin{figure}
+   \centering
+   \includegraphics[width=0.9\textwidth]{figure/multitable/lda_cca/shared_scores_fm_posterior}
+   \caption{Posterior samples of scores $\xi^{s}_i$ shared across both bacterial
+     abundance and body composition variables. Points are positioned according
+     to their value in the first two dimensions shared body composition loading
+     dimensions, $B^{Y}_{\cdot, 1:2}$. Clouds of points correspond to
+     participants, and they are shaded by their android fat mass. This method
+     does not appear to pick up on any associations between body composition and
+     microbiome structure.
+ \label{fig:lda_cca_shared_scores_fm_posterior} }
+ \end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/graph_lasso/multitask_lasso_hm_lambdas}
+  \caption{ Inspecting coefficients from multitask lasso across $\lambda$
+    regularization parameters highlights species with different directions and
+    strengths of association with body composition variables. Different panel
+    columns indicate different taxonomic families, while rows correspond to
+    different response variables. Individual tiles give the coefficients of an
+    individual species (column) against a response at a particular $\lambda$
+    (row). Within panels, the $\lambda$s are sorted from least to most
+    regularization. Species have been clustered according to their lasso
+    coefficients, revealing groups of species with similar coefficient profiles
+    across groups of responses.
+    \label{fig:graph_lasso_multitask_lasso_hm_lambdas} }
+\end{figure}
