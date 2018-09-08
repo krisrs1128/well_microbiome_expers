@@ -717,8 +717,8 @@ Directly regularizing the multiresponse version of the PLS optimization
   \\ &\|z_k\|_2 = 1 \\ &\|z_k\|_1 \leq \lambda,
 \end{align*}
 which can be applied to real data by replacing the objective with its sample
-version, $z_k^{T} M z_k$, where $M = X^{T}YY^{T}X$. In this sample version, the
-problem falls into the Penalized Matrix Decomposition framework of
+version, $z_k^{T} M z_k$, where $M = X^{T}YY^{T}X$. This version of the problem
+falls into the Penalized Matrix Decomposition framework of
 \citep{witten2009penalized}, reviewed in Section \ref{subsec:pmd}.
 
 However, \cite{chun2010sparse} argue that this formulation does not lead to
@@ -726,7 +726,7 @@ However, \cite{chun2010sparse} argue that this formulation does not lead to
 \cite{zou2006sparse} to PLS. The resulting objective identifies two sets of
 directions, a set $\left(a_k\right)$ that maximize the PLS-defining covariance
 and another, $\left(z_k\right)$, that approximates the first set by a sparser
-alternative. Formally, consider
+alternative. Formally,
 \begin{align}
   \label{eq:spls_obj}
   \minimize_{z_k, a_k} &-\kappa \|a_k\|_M^2 + \left(1 - \kappa\right) \|z_k -
@@ -737,9 +737,9 @@ where we have defined $\|x\|_M = \sqrt{x^T M x}$ and $\kappa, \lambda_1$, and
 $\lambda_2$ are tuning parameters. The first term in the objective is the
 PLS-defining covariance, the second ensures that the solutions $z_k$ and $a_k$
 are similar, and the norm constraints induce sparsity and stability on $z_k$.
-$\kappa$ trades off the importance of the two components of the objective. Note
-that while this objective is not convex, for fixed $a_k$, it is an elastic-net
-regression, while for fixed $z_k$, it is a type of eigenvalue problem.
+Note that while this objective is not convex, for fixed $a_k$, it is an
+elastic-net regression, while for fixed $z_k$, it is a type of eigenvalue
+problem.
 
 \subsubsection{Example}
 \label{subsubsec:spls_example}
@@ -783,21 +783,17 @@ the possible exception of Porphyromonodaceae.
 
 To interpret these coefficients in the raw data, we can visualize individual
 species with strong associations to body composition. Specifically, we study
-associations with the android and gynoid fat mass variables. In Figures
-\ref{fig:spls_android_fm_species} and \ref{fig:spls_gynoid_fm_species}, we
-display the abundances $X$ for species against android and gynoid fat mass,
-respectively. The species are chosen according to whether the two-dimensional
-coefficient across android and gynoid fat mass has large
-norm\footnote{Specifically, $\left\| \begin{pmatrix} \beta_{android}
+associations with the android and gynoid fat mass variables. In Figure
+\ref{fig:spls_android_fm_species}, we display the abundances $X$ for species
+against android fat mass, respectively. The species are chosen according to
+whether the two-dimensional coefficient across android and gynoid fat mass has
+large norm\footnote{Specifically, $\left\| \begin{pmatrix} \beta_{android}
     \\ \beta_{gynoid} \end{pmatrix} \right\|_{2} > 0.065$.}. The main
 associations that are visible are those between the body composition and species
 presence or absence. That is, there don't seem to be any cases where a body
 composition feature varies smoothly as a species becomes more or less abundant.
 Instead, SPLS has identified species whose samples have lower or higher android
-or gynoid fat mass, depending on whether that species is present or absent. This
-suggests that a logistic regression version of SPLS \citep{chung2010sparse},
-applied to the presence-absence transformed version of this data may fit the
-data just as well, with the advantage of being somewhat more interpretable.
+or gynoid fat mass, depending on whether that species is present or absent.
 
 \begin{figure}
   \centering
@@ -808,8 +804,7 @@ data just as well, with the advantage of being somewhat more interpretable.
     abundance of that species across samples, and the $y$-axis gives android fat
     mass of the associated sample. Colors indicate taxonomic family membership.
     Panels are sorted from most positive to most negative association. Within
-    each panel, a linear smooth is given, independent of the estimated
-    coefficient.
+    each panel, a linear smooth is given.
     \label{fig:spls_android_fm_species} }
 \end{figure}
 
@@ -885,11 +880,9 @@ Z \propto \diag\left(F 1_{p}\right)^{-1} F Q^{T} \\ Q \propto \diag\left(F^{T}
 This formulation suggests an algorithm for finding $Z$ and $Q$ -- arbitrarily
 initialize one and iterate these calculations until convergence.
 
-As is, this is not yet the setup that yields CCpnA\footnote{It in fact gives the
-  solution to the Correspondence Analysis problem (the similarity is the reason
-  for the name Canonical \textit{Correspondence Analysis}).} -- it doesn't use
-information in the environmental table $X$. To recover CCpnA, a projection step
-needs to be inserted before the calculation of row scores,
+As is, this is not yet the setup that yields CCpnA -- it doesn't use information
+in the environmental table $X$. To recover CCpnA, a projection step needs to be
+inserted before the calculation of row scores,
 \begin{enumerate}
 \item Arbitrarily initialize $Z$.
 \item While not converged,
