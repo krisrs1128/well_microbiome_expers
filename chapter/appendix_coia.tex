@@ -1,0 +1,63 @@
+\documentclass{article}
+\begin{document}
+
+\subsection{Co-Inertia Analysis}
+
+Co-Inertia Analysis (CoIA) emerged in ecology to facilitate analysis of
+variation in species abundance as a function of environmental conditions
+\citep{doledec1994co}. It can be viewed as a slight modification of CCA. Again,
+we seek sets of orthonormal directions $\left(u_{k}\right)_{k = 1}^{K}$ and
+$\left(v_{k}\right)_{k = 1}^{K}$ such that the associated projections $Xu_{k}$
+and $Yv_{k}$ explain most of the covariation between the tables. Unlike CCA,
+CoIA finds its first directions by maximizing the covariance -- not the
+correlation -- between scores,
+\begin{align*}
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace &u^{T}X^{T}Yv
+\\ \text{ such that}\medspace &\|u\| = 1\\ &\|v\| = 1,
+\end{align*}
+with subsequent directions found by the same optimization, after adding the
+constraint that they are orthogonal to the previously derived directions.
+
+The only difference with the objective in equation \ref{eq:cancor_optim_emp} is
+that norm constraint is imposed on $u$ and $v$ directly, rather than their
+transformations $\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$.
+It is in this sense that the CCA objective maximizes the correlation between
+scores, while CoIA maximizes the covariance. The solutions
+$\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k = 1}^{K}$ can be
+obtained as the first $K$ left and right eigenvectors from the SVD of $X^{T}Y$,
+as opposed to the first $K$ generalized eigenvectors, as in CCA.
+
+\subsubsection{Example}
+\label{subsubsec:coia_example}
+
+We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
+as CoIA also needs to estimate the covariance between tables, which is difficult
+when the number of species is large. The loadings are displayed in Supplementary
+Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
+\ref{fig:cca_loadings}. However, the associated scores are quite different than
+those found using CCA. Compare Figure \ref{fig:coia_scores_android_fm}, which
+shades samples by android fat mass, or Supplemental Figure
+\ref{fig:coia_scores_rl_ratio}, which shades them by Bacteroides vs.
+Ruminococcaceae differences, with Figures \ref{fig:cca_scores_android_fm} and
+\ref{fig:cca_scores_rl_ratio} for CCA. The scores for CoIA are not so closely
+aligned across tables, but they exhibit a clearer gradient across supplemental
+variables. We find that the scores are not nearly as closely aligned as they are
+for CCA (see Figure \ref{fig:cca_scores_android_fm}), but that they are more
+strongly associated with variation in android fat mass, as in the concatenated
+PCA result of Figure \ref{fig:scores_android_fm}. It is not clear whether this
+phenomena -- the CoIA scores being more similar to those from PCA than CCA --
+holds in general, or what it is about the change in inner products between CoIA
+and CCA that is responsible for this difference.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/coia/scores_android_fm}
+  \caption{The normalized scores from each table, displayed simultaneously, as
+    obtained by CoIA. This is the analog of Figure
+    \ref{fig:cca_scores_android_fm} from CCA, though the aspect ratio has been
+    adjusted according to the relative amount of variance explained by the first
+    two CoIA axes.
+    \label{fig:coia_scores_android_fm} }
+\end{figure}
+
+\end{document}
