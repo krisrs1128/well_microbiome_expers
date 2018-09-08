@@ -1,13 +1,27 @@
-\documentclass{article}
-\usepackage{natbib}
-\usepackage{amssymb, amsmath, amsfonts}
-\usepackage{graphicx, hyperref}
+\documentclass[utf8]{frontiersFPHY} % for Physics and Applied Mathematics and Statistics articles
+\usepackage{url,hyperref,lineno,microtype,subcaption}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{natbib, amssymb, amsmath, amsfonts,graphicx, hyperref}
 \input{preamble.tex}
 
-\title{Multitable Methods and Microbiome Data Integration}
-\author{Kris Sankaran and Susan P. Holmes}
+\linenumbers
+
+\def\keyFont{\fontsize{8}{11}\helveticabold }
+\def\firstAuthorLast{Sankaran {et~al.}} %use et al only if is more than 1 author
+\def\Authors{Kris Sankaran\,$^{1}$ and Susan P. Holmes\,$^{2}$}
+
+\def\Address{$^{1}$Montreal Institute for Learning Algorithms, Montreal, Quebec, Canada\\
+$^{2}$Department of Statistics, Stanford University, Stanford, California, United States}
+\def\corrAuthor{Kris Sankaran}
+\def\corrEmail{sankaran.kris@gmail.com}
 
 \begin{document}
+\title[Multitable Methods]{Multitable Methods and Microbiome Data Integration}
+\author[\firstAuthorLast ]{\Authors}
+\address{}
+\correspondance{}
+
+\maketitle
 
 \begin{abstract}
 The simultaneous study of multiple measurement types is a frequently encountered
@@ -36,6 +50,9 @@ workflows for approaching analysis, as a function of ultimate analysis goals and
 data characteristics (heterogeneity, dimensionality, sparsity, ...). Towards the
 second goal, we have made code for all analysis and figures available online at
 \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
+
+\tiny
+ \keyFont{ \section{Keywords:} microbiome, data integration, multiomics, dimensionality reduction, heterogeneity} %All article types: you may provide up to 8 keywords; at least 5 are mandatory.
 \end{abstract}
 
 Most methods in statistics expect data to be available as a single table. To a
@@ -1311,3 +1328,13 @@ contexts in which it arises, and it speaks to the richness of this
 methodological problem. As new data sources arise and as science evolves, we
 expect these ideas will inspire future generations of multitable research
 advances.
+
+\section*{Funding}
+\section*{Acknowledgements}
+\section*{Supplemental Data}
+\section*{Data Availability Statement}
+
+\bibliographystyle{frontiersinSCNS_ENG_HUMS} % for Science, Engineering and Humanities and Social Sciences articles, for Humanities and Social Sciences articles please include page numbers in the in-text citations
+\bibliography{test}
+
+\end{document}
