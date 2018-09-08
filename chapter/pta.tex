@@ -1,0 +1,60 @@
+\subsection{Partial Triadic Analysis}
+\label{subsec:partial_triadic_analysis}
+
+Partial Triadic Analysis (PTA) gives an approach to working with multitable data
+when each table has the same dimension, $p_1 = p_2$
+\citep{leibovici1993facteurs, thioulouse2011simultaneous}. Specifically, it
+gives a way of analyzing data of the form $\left(X_{\cdot\cdot l}\right)_{l =
+  1}^{L}$, where each $X_{\cdot\cdot l} \in \reals^{n \times p}$. This is called
+a data cube because it can also be written as a three-dimensional array $X \in
+\reals^{n \times p \times L}$. We denote the $j^{th}$ feature measured on the
+$i^{th}$ sample in the $l^{th}$ table by $x_{ijl}$, and the slices over fixed
+$i$, $j$, and $l$ by $X_{i \cdot \cdot}$, $X_{\cdot j \cdot}$ and $X_{\cdot
+  \cdot l}$. This type of data arises frequently in longitudinal data analysis,
+where the same features are collected for the same samples over a series of $L$
+times. However, the actual ordering of the $L$ tables is not ever used by this
+method: if we scrambled the time ordering for $L$ tables, the algorithm's result
+would not change.
+
+The main idea in PTA is to divide the analysis into two steps,
+\begin{itemize}
+  \item Combine the $L$ tables into a single compromise table.
+  \item Apply any standard single-table method, e.g., PCA, on the compromise
+    table.
+\end{itemize}
+
+A naive approach to constructing the compromise table would be to average each
+entry across the $L$ tables. Instead, PTA upweights tables that are more similar
+to the average table, as these are considered more representative. Formally, the
+compromise is defined as $X_c = \sum_{l = 1}^{L}\alpha_{l} X_{\cdot\cdot l} =
+X\alpha \in \reals^{n \times p}$, where $\alpha$ (constrained to norm one) is
+chosen to maximize $\sum_{l = 1}^{L} \alpha_{l} \left<\overline{X},
+X_{\cdot\cdot l}\right>$, a weighted average of inner-products\footnote{We are
+  using $\left<A, B\right> = \tr\left(A^{T}B\right)$.} between each of the $L$
+tables and the naive-average table, $\overline{X} = \frac{1}{L}\sum_{l = 1}^{L}
+X_{\cdot\cdot l}$.
+
+The optimal $\alpha$ can be derived using Lagrange multipliers (see Supplemental
+Section \ref{subsec:pta_alpha_derivation}), and leads to the compromise table,
+\begin{align*}
+  X_{c} = \sum_{l = 1}^{L} \frac{\left<\overline{X}, X_{\cdot\cdot
+      l}\right>}{\sqrt{\sum_{l^{\prime} =1}^{L}\left<\overline{X}, X_{\cdot\cdot
+        l^{\prime}}\right>^{2}}} X_{\cdot\cdot l}.
+\end{align*}
+
+We can try to interpret the compromise matrix geometrically. Suppose the
+$X_{\cdot\cdot l}$ define an orthonormal basis, so that $\left<X^{l},
+X^{l^{\prime}}\right> = \indic{l = l^{\prime}}$. Then, we can write the
+compromise table as
+\begin{align*}
+  X_{c} = \sqrt{L}\sum_{l = 1}^{L}\left<\overline{X}, X_{\cdot\cdot
+    l}\right>X_{\cdot\cdot l} = \sqrt{L}\overline{X},
+\end{align*}
+a scaled version of the mean.
+
+If, however, the tables are not orthonormal, then we place more weight on
+directions that are correlated. For example, if $X^{(1)} = X^{(2)}$, but the
+rest of the tables are orthogonal to each other and to these first two tables,
+then the compromise double counts the direction $X^{(1)}$. Therefore, compared
+to the naive average $\overline{X}$, $X_c$ upweights more highly represented
+tables.
