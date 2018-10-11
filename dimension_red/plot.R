@@ -68,7 +68,7 @@ reshape_posterior_score <- function(xi, bc) {
 
 perc_label <- function(eigs, i) {
   perc <- 100 * eigs[i] / sum(eigs)
-  sprintf("Axis %s [%s%%]", i, round(perc, 2))
+  sprintf("Axis %s [%s%%]", i, round(perc, 1))
 }
 
 taxa_order <- function(loadings) {
@@ -146,16 +146,16 @@ plot_loadings <- function(loadings,
     labs(
       "x" = perc_label(eigs, plot_dims[1]),
       "y" = perc_label(eigs, plot_dims[2]),
+      "size" = perc_label(eigs, plot_dims[3]),
       "col" = "Family"
     ) +
     scale_size_continuous(
-      range = c(1, 3.5),
+      range = c(0.2, 2),
       breaks = size_breaks
     ) +
-    coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]])) +
-    theme(
-      legend.position = "bottom"
-    )
+    guides(col=guide_legend(keyheight=0.1, default.unit="inch"),
+           size=guide_legend(keyheight=0.1, default.unit="inch")) +
+    coord_fixed(sqrt(eigs[plot_dims[2]] / eigs[plot_dims[1]]))
 }
 
 plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)) {
@@ -174,13 +174,11 @@ plot_scores <- function(scores, col_var, col_label, eigs, size_breaks = c(-3, 3)
     labs(
       "col" = col_label,
       "x" = perc_label(eigs, 1),
-      "y" = perc_label(eigs, 2)
+      "y" = perc_label(eigs, 2),
+      "size" = perc_label(eigs, 3)
     ) +
     scale_size_continuous(range = c(0, 1.5), breaks = size_breaks) +
-    coord_fixed(sqrt(eigs[2] / eigs[1])) +
-    theme(
-      legend.position = "bottom"
-    )
+    coord_fixed(sqrt(eigs[2] / eigs[1]))
 }
 
 link_scores <- function(mscores, alpha = 0.1) {

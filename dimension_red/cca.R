@@ -79,7 +79,7 @@ loadings <- prepare_loadings(
   left_join(seq_fam)
 
 plot_loadings(loadings, cca_res$Eigenvalues)
-ggsave("../chapter/figure/cca/loadings.png", width = 5.77, height = 4.73)
+ggsave("../chapter/figure/cca/loadings.png", width = 4.4, height = 3.2)
 
 ## Plot the scores
 scores <- prepare_scores(
@@ -98,9 +98,9 @@ ggsave("../chapter/figure/cca/scores_linked.png", width = 3.56, height = 2.6)
 plot_scores(scores, "android_fm", "Android FM", cca_res$Eigenvalues, c(-1, 1)) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/cca/scores_android_fm.png", width = 3.67, height = 3.4)
+ggsave("../chapter/figure/cca/scores_android_fm.png", width = 4.56, height = 3.6)
 
 ## color by bacteroides / ruminoccocus ratios
 scores <- scores %>%
@@ -109,6 +109,6 @@ scores <- scores %>%
 plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", cca_res$Eigenvalues) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
 ggsave("../chapter/figure/cca/scores_rl_ratio.png", width = 3.67, height = 3.4)
