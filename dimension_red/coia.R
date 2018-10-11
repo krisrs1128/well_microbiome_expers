@@ -104,9 +104,9 @@ plot_scores(scores, "android_fm", "Android FM", coia_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     "Android FM ",
-    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
-ggsave(file.path(out_path, "scores_android_fm.png"), width = 4.7, height = 1.7)
+ggsave(file.path(out_path, "scores_android_fm.png"), width = 4.7, height = 2.7)
 
 scores <- scores %>%
   left_join(family_means(processed$mseqtab))
@@ -114,6 +114,6 @@ plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", coia_res$eig) +
   link_scores(mscores) +
   scale_color_viridis(
     "Bact. / Rumino.",
-    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
-ggsave(file.path(out_path, "scores_rl_ratio.png"), width = 4.7, height = 1.7)
+ggsave(file.path(out_path, "scores_rl_ratio.png"), width = 4.7, height = 2.7)

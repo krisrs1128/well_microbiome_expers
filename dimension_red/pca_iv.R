@@ -90,9 +90,9 @@ loadings <- prepare_loadings(
     c("body_comp", "seq")
 ) %>%
   left_join(processed$mseqtab)
-plot_loadings(loadings, pcaiv_res$eig) +
-  scale_size_continuous(range = c(1, 3))
-ggsave("../chapter/figure/pca_iv/loadings.png", width = 4.56, height = 3)
+plot_loadings(loadings, pcaiv_res$eig, size_breaks=c(-6, 6)) +
+  scale_size_continuous(range = c(0.4, 3), breaks=c(-3, 3))
+ggsave("../chapter/figure/pca_iv/loadings.png", width = 4.6, height = 3.0)
 
 ## project the samples onto the principal axes
 scores <- prepare_scores(

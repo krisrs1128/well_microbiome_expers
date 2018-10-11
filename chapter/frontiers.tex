@@ -1,13 +1,52 @@
-\documentclass{article}
-\usepackage{natbib}
-\usepackage{amssymb, amsmath, amsfonts}
-\usepackage{graphicx, hyperref}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is just an example/guide for you to refer to when submitting manuscripts to Frontiers, it is not mandatory to use Frontiers .cls files nor frontiers.tex  %
+% This will only generate the Manuscript, the final article will be typeset by Frontiers after acceptance.   
+%                                              %
+%                                                                                                                                                         %
+% When submitting your files, remember to upload this *tex file, the pdf generated with it, the *bib file (if bibliography is not within the *tex) and all the figures.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Version 3.4 Generated 2018/06/15 %%%
+%%% You will need to have the following packages installed: datetime, fmtcount, etoolbox, fcprefix, which are normally inlcuded in WinEdt. %%%
+%%% In http://www.ctan.org/ you can find the packages and how to install them, if necessary. %%%
+%%%  NB logo1.jpg is required in the path in order to correctly compile front page header %%%
+
+\documentclass[utf8]{frontiersFPHY} % for Science, Engineering and Humanities and Social Sciences articles
+%\documentclass[utf8]{frontiersHLTH} % for Health articles
+
+%\setcitestyle{square} % for Physics and Applied Mathematics and Statistics articles
+\usepackage{url,hyperref,lineno,microtype,subcaption}
+\usepackage[onehalfspacing]{setspace}
 \input{preamble.tex}
 
-\title{Multitable Methods and Microbiome Data Integration}
-\author{Kris Sankaran and Susan P. Holmes}
+\linenumbers
+
+
+% Leave a blank line between paragraphs instead of using \\
+\def\keyFont{\fontsize{8}{11}\helveticabold }
+\def\firstAuthorLast{Sankaran {et~al.}} %use et al only if is more than 1 author
+\def\Authors{Kris Sankaran\,$^{1}$ and Susan P. Holmes\,$^{2}$}
+
+\def\Address{$^{1}$Montreal Institute for Learning Algorithms, Montreal, Québec, Canada\\
+$^{2}$Department of Statistics, Stanford University, Stanford, California, United States}
+\def\corrAuthor{Kris Sankaran}
+\def\corrEmail{sankarak@iro.umontreal.ca}
+
+
 
 \begin{document}
+\onecolumn
+\firstpage{1}
+
+\title{Multitable Methods for Microbiome Data Integration}
+
+\author[\firstAuthorLast ]{\Authors} %This field will be automatically populated
+\address{} %This field will be automatically populated
+\correspondance{} %This field will be automatically populated
+\extraAuth{}
+
+
+\maketitle
 
 \begin{abstract}
 The simultaneous study of multiple measurement types is a frequently encountered
@@ -36,6 +75,9 @@ workflows for approaching analysis, as a function of ultimate analysis goals and
 data characteristics (heterogeneity, dimensionality, sparsity, ...). Towards the
 second goal, we have made code for all analysis and figures available online at
 \url{https://github.com/krisrs1128/well\_microbiome\_expers}.
+
+\tiny
+ \keyFont{ \section{Keywords:} microbiome, data integration, multiomics, dimensionality reduction, heterogeneity} %All article types: you may provide up to 8 keywords; at least 5 are mandatory.
 \end{abstract}
 
 Most methods in statistics expect data to be available as a single table. To a
@@ -209,7 +251,7 @@ fact that such associations seem weak with respect to the top two principal
 components does not mean such relationships do not exist.
 
 \begin{figure}
-  \centering \includegraphics[width=\textwidth]{figure/multitable/pca/loadings}
+  \centering \includegraphics[width=\textwidth]{figure/pca/loadings}
   \caption{The loadings obtained by applying PCA to the combined body
     composition and microbial abundance data. Species are points, and are shaded
     in by taxonomic family. Body composition variables are plotted as text. The
@@ -240,7 +282,7 @@ methods of subsequent sections.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/pca/scores_android_fm}
+  \includegraphics[width=\textwidth]{figure/pca/scores_android_fm}
   \caption{The scores resulting from PCA applied to the combined body
     composition and microbial abundance data. The first two principal components
     explain about 4\% of the variance. Points are species, shaded in by
@@ -368,7 +410,7 @@ large fraction of $n$. Besides this stronger filtering, all preprocessing steps
 remain the same as in Section \ref{subsubsec:pca_example}.
 
 \begin{figure}
-  \centering \includegraphics[width=\textwidth]{figure/multitable/CCA/loadings}
+  \centering \includegraphics[width=\textwidth]{figure/CCA/loadings}
   \caption{The CCA analog of the PCA loadings plot in Figure \ref{fig:loadings}.
     loadings obtained by applying CCA to the combined body composition and
     microbial abundance data. Each point is a species, and text are body
@@ -419,7 +461,7 @@ android fat mass.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/cca/scores_android_fm}
+  \includegraphics[width=\textwidth]{figure/cca/scores_android_fm}
   \caption{The scores resulting from CCA applied to the combined body
     composition and microbial abundance data, shaded in by android fat mass.
     the sets of scores is reflected in the CCA objective. Each sample appears as
@@ -428,6 +470,69 @@ android fat mass.
     The first two CCA dimensions suggest smooth variation across samples,
     according to amount of android fat mass. \label{fig:cca_scores_android_fm} }
 \end{figure}
+
+\subsection{Co-Inertia Analysis}
+
+Co-Inertia Analysis (CoIA) emerged in ecology to facilitate analysis of
+variation in species abundance as a function of environmental conditions
+\citep{doledec1994co}. It can be viewed as a slight modification of CCA. Again,
+we seek sets of orthonormal directions $\left(u_{k}\right)_{k = 1}^{K}$ and
+$\left(v_{k}\right)_{k = 1}^{K}$ such that the associated projections $Xu_{k}$
+and $Yv_{k}$ explain most of the covariation between the tables. Unlike CCA,
+CoIA finds its first directions by maximizing the covariance -- not the
+correlation -- between scores,
+\begin{align*}
+\maximize_{u \in \reals^{p_{1}}, v \in \reals^{p_{2}}}\medspace &u^{T}X^{T}Yv
+\\ \text{ such that}\medspace &\|u\| = 1\\ &\|v\| = 1,
+\end{align*}
+with subsequent directions found by the same optimization, after adding the
+constraint that they are orthogonal to the previously derived directions.
+
+The only difference with the objective in equation \ref{eq:cancor_optim_emp} is
+that norm constraint is imposed on $u$ and $v$ directly, rather than their
+transformations $\Sigma_{XX}^{\frac{1}{2}}u$ and $\Sigma_{YY}^{\frac{1}{2}}v$.
+It is in this sense that the CCA objective maximizes the correlation between
+scores, while CoIA maximizes the covariance.
+
+The solutions $\left(u_{k}\right)_{k = 1}^{K}$ and $\left(v_{k}\right)_{k =
+  1}^{K}$ can be obtained as the first $K$ left and right eigenvectors from the
+SVD of $X^{T}Y$, as opposed to the first $K$ generalized eigenvectors, as in
+CCA. The proof of this fact is almost identical to the derivation in Section
+\ref{subsec:cca}, for CCA.
+
+\subsubsection{Example}
+\label{subsubsec:coia_example}
+
+We apply CoIA to the same data as used in Section \ref{subsubsec:cca_example},
+as CoIA also needs to estimate the covariance between tables, which is difficult
+when the number of species is large. The loadings are displayed in Supplementary
+Figure \ref{fig:coia_loadings}, and they are similar to those in Figure
+\ref{fig:cca_loadings}. However, the associated scores are quite different than
+those found using CCA. Compare Figure \ref{fig:coia_scores_android_fm}, which
+shades samples by android fat mass, or Supplemental Figure
+\ref{fig:coia_scores_rl_ratio}, which shades them by Bacteroides vs.
+Ruminococcaceae differences, with Figures \ref{fig:cca_scores_android_fm} and
+\ref{fig:cca_scores_rl_ratio} for CCA. The scores for CoIA are not so closely
+aligned across tables, but they exhibit a clearer gradient across supplemental
+variables. We find that the scores are not nearly as closely aligned as they are
+for CCA (see Figure \ref{fig:cca_scores_android_fm}), but that they are more
+strongly associated with variation in android fat mass, as in the concatenated
+PCA result of Figure \ref{fig:scores_android_fm}. It is not clear whether this
+phenomena -- the CoIA scores being more similar to those from PCA than CCA --
+holds in general, or what it is about the change in inner products between CoIA
+and CCA that is responsible for this difference.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/multitable/coia/scores_android_fm}
+  \caption{The normalized scores from each table, displayed simultaneously, as
+    obtained by CoIA. This is the analog of Figure
+    \ref{fig:cca_scores_android_fm} from CCA, though the aspect ratio has been
+    adjusted according to the relative amount of variance explained by the first
+    two CoIA axes.
+    \label{fig:coia_scores_android_fm} }
+\end{figure}
+
 
 \subsection{MFA}
 \label{subsec:mfa}
@@ -549,7 +654,7 @@ this further subspace is not much worse. This is displayed in Figure
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{figure/multitable/pca_iv/pca_iv_geometry}
+  \includegraphics[width=0.7\textwidth]{figure/pca_iv/pca_iv_geometry}
   \caption{A geometric view of PCA-IV. The columns of the response $Y$ are views
     as $n$-dimensional vectors. The grey plane is the span of $X$. Multivariate
     OLS simply projects the columns of $Y$ onto the plane, while PCA-IV searches
@@ -587,7 +692,7 @@ quality of within-table approximations deteriorates.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/pca_iv/loadings}
+  \includegraphics[width=\textwidth]{figure/pca_iv/loadings}
   \caption{The loadings for PCA-IV can be interpreted like loadings from
     previous methods, for example Figure \ref{fig:loadings}. Some of the
     relationships between variables seem less intuitive than those observed
@@ -770,7 +875,7 @@ the possible exception of Porphyromonodaceae.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/spls/coef_heatmap}
+  \includegraphics[width=\textwidth]{figure/spls/coef_heatmap}
   \caption{ Coefficients learned by SPLS. Each row is a response dimension,
     which is a body composition variable. Each column is associated with a
     species. The shading within each cell corresponds to the SPLS coefficient
@@ -797,7 +902,7 @@ or gynoid fat mass, depending on whether that species is present or absent.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/spls/android_fm_species}
+  \includegraphics[width=\textwidth]{figure/spls/android_fm_species}
   \caption{A subset of the species whose coefficients for total lean and fat
     mass are high in magnitude. Each panel represents one species, and each
     point is a samples $\times$ species combination. The $x$-axis gives the
@@ -1064,7 +1169,7 @@ species, but this is likely a consequence of regularization and overfitting on
 the part of ordinary CCA.
 
 \begin{figure}
-  \centering \includegraphics[width=\textwidth]{figure/multitable/pmd/loadings}
+  \centering \includegraphics[width=\textwidth]{figure/pmd/loadings}
   \caption{ Body composition and species loadings produced by sparse CCA, for
     variables with at least one nonzero coordinate. Each point corresponds to a
     species loading, and is shaded in by taxonomic family. Species with loadings
@@ -1081,7 +1186,7 @@ the part of ordinary CCA.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/pmd/scores_android_fm}
+  \includegraphics[width=\textwidth]{figure/pmd/scores_android_fm}
   \caption{ Sample scores provided by sparse CCA. Each point is a sample,
     positioned at their coordinates with respect to the first two learned sparse
     CCA directions. Points are shaded in according to android fat mass, and
@@ -1106,7 +1211,7 @@ associated species.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/pmd/android_fm_species}
+  \includegraphics[width=\textwidth]{figure/pmd/android_fm_species}
   \caption{ A more focused view of the species with high loadings in Figure
     \ref{fig:pmd_loadings}. Each panel corresponds to a species. Points are
     shaded in according to each species' taxonomic family. The $x$-axis within
@@ -1119,6 +1224,180 @@ associated species.
     \label{fig:pmd_android_fm_species}
   }
 \end{figure}
+
+\subsection{Multitable Mixed-Membership}
+\label{subsec:multitable_mixed_membership}
+
+In Section \ref{subsec:cca}, a latent variable interpretation of CCA was
+provided as an alternative to the standard covariance maximization perspective.
+Since likelihood based methods are easily adapted to different data types, it is
+natural to consider versions of CCA designed for non-Gaussian data, using
+Section \ref{subsec:cca} as a starting point. We are particularly interested in
+data with the same structure as the WELL-China body composition and microbiome
+data, namely two table data where one table is continuous with Gaussian
+marginals and correlated columns and the other is a high-dimensional collection
+of counts, where many entries are exactly zero.
+
+As before, define a set of shared scores $\xi_{i}^{s} \in \reals^{K}$, and two
+sets of within-table scores, $\xi_{i}^{X} \in \reals^{L_{1}}$ and $\xi_{i}^{Y}
+\in \reals^{L_{2}}$. As before, we model the body composition variables using a
+essentially a Gaussian factor analysis model, $y_{i} \vert \xi_{i}^{X},
+\xi_{i}^{Y} \sim \Gsn\left(B^{y}\xi_{i}^s + W^y \xi_{i}^y,
+\sigma^{2}I_{p_{2}}\right)$ with a spherical Gaussian prior on $\xi_{i}^{X},
+\xi_{i}^{Y}$. For the counts matrix, we might consider a few different
+approaches,
+
+\begin{itemize}
+\item Bayesian Exponential Family PCA \citep{mohamed2009bayesian}: By requiring
+  low-rank structure on the natural parameters of an exponential family model,
+  we could naturally model high-dimensional count data, using a Poisson or
+  multinomial likelihood, for example.
+\item Nonnegative Matrix Factorization \citep{lee2001algorithms}: A variant of
+  the exponential family approach is to model the counts matrix as a Poisson
+  likelihood over a low-rank product of Gamma random matrices.
+\item Latent Dirichlet Allocation (LDA) \citep{blei2003latent}: We can model the
+  observed samples as Dirichlet mixtures of a few underlying ``topics,'' which
+  are themselves drawn from a Dirichlet prior.
+\end{itemize}
+
+Here, we focus on the LDA approach, though we suspect the other two approaches
+are potentially interesting as well. Formally, this model supposes that counts
+are drawn according to
+\begin{align*}
+  x_{i} \vert \left(\theta_{k}\right) &\sim \Mult\left(x_{i} \vert N_{i},
+  \sum_{k = 1}^{K} \theta_{ik} \beta_{k}\right) \\ \theta_{i} &\sim
+  \Dir\left(\alpha\right)\\ \beta_k &\sim \Dir\left(\gamma\right),
+\end{align*}
+where $N_i = \sum_{j = 1}^{p_1} x_{ij}$ is the total count in sample $i$. This
+has the flavor of a factor analysis where $\left(\theta_{ik}\right)_{k =1}^{K}$
+are scores for the $i^{th}$ sample and $\left(\beta_{k}\right)$ are $K$
+underlying topics.
+
+The only complexity with using LDA model of $X$ together with a Gaussian factor
+analysis on $Y$ is that the shared scores $\xi_{i}^{s}$ typically have different
+priors -- a Dirichlet for LDA and a spherical Gaussian for factor analysis. In
+any formulation of probabilistic CCA that uses both models, this must be
+reconciled. One approach is to continue to place Dirichlet priors on all the
+scores, $\xi_{i}^s, \xi_{i}^x$, and $\xi_{i}^y$. While the model for the
+Gaussian data is no longer exactly traditional factor analysis, it has a similar
+interpretation. Alternatively, we could use a spherical Gaussian prior on all
+scores and then recover probability vectors by applying the softmax function,
+$\left[\simplex\left(v\right)\right]_{k} =
+\frac{\exp{v_{k}}}{\sum_{k^{\prime}}\exp{v_{k^{\prime}}}}$,
+\begin{align*}
+  x_{i} \vert \xi_{i}^{s}, \xi_{i}^{x} &\sim \Mult\left(x_{i} \vert N_{i},
+  \simplex\left(B^{X} \xi_{i}^{s} + W^{X} \xi_{i}^{x}\right)\right)
+  \\ \xi_{i}^{s} &\sim \Gsn\left(\xi_i^s \vert 0, \tau^{2}\right).
+\end{align*}
+It is this second model that we use in our experiments below.
+
+\subsubsection{Example}
+\label{subsubsec:lda_cca_example}
+
+We illustrate this multitable mixed-membership approach on the WELL-China data.
+We choose $K = 3$ for the number of shared topics and $L_{1} = L_{2} = 3$ for
+the number of unshared topics per table. We initialize scores and loadings using
+results from the PMD formulation of sparse CCA. While the use of shared
+($\xi_{i}^{s}$) and unshared ($\xi_{i}^{x}, \xi_{i}^{y}$) scores gives more
+flexibility in modeling, it also leads to additional complexity in
+interpretation -- there are both more scores and more loadings that need to be
+visualized.
+
+Consider the table specific loadings $W^{X}$ and $W^{Y}$, provided in Figures
+\ref{fig:lda_cca_within_loadings_seq_boxplots} and
+\ref{fig:lda_cca_within_loadings_body_comp_boxplots}. Note that there is no
+notion of variance explained by different axes, and we use an aspect ratio of
+$1$ throughout.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_seq_boxplots}
+  \caption{Table-specific loadings for different species. As in Figure
+    \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, each row is a loading
+    dimension, columns are features (species in this case), and intervals
+    summarize posterior samples for the associated loading parameter,
+    $W^{X}_{jk}$. Species are sorted from most to least abundant, within each
+    taxonomic family. Caution must be exercised when interpreting these
+    loadings, as loadings are invariant under rotations and
+    reflections. \label{fig:lda_cca_within_loadings_seq_boxplots}}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/within_loadings_body_comp_boxplots}
+  \caption{Table-specific loadings for the body composition variables. Each row
+    is one loading dimension, columns are features, and boxplots summarize
+    posterior samples for the associated loading parameter, $W_{jk}^{Y}$.
+  \label{fig:lda_cca_within_loadings_body_comp_boxplots}}
+\end{figure}
+
+Figure \ref{fig:lda_cca_within_loadings_seq_boxplots} summarizes table-specific
+variation in bacterial abundances. Invariance under rotation and reflection
+complicates interpretation of these loadings. If we flip the sign of all the
+loadings axes, then the more abundant species have larger loadings. The main
+difference between the first and second loadings is the rate of decay in
+frequencies, especially among Lachnospiraceae and and Ruminococcaceae. For
+example, topic 1 seems to species from these taxonomic families that are not
+very abundant. The second topic also seems to have generally lower loadings
+(hence higher abundances) for the Bacteroidaceae, and higher loadings (lower
+abundances) for Prevotella, compared to other topics. The main characteristic of
+the third loading is that it has higher values for Porphyromonadaceae, so
+samples with high weight on this loading have decreased levels of this taxa.
+
+Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots} suggests that the
+first and third axes of $W^{Y}$ captures variation between overall and android
+vs. gynoid fat mass, which can be used to interpret the scores in Supplementary
+Figure \ref{fig:lda_cca_unshared_scores_fm_posterior}. The first axes has high
+loadings for weight, BMI, and total fat mass, and the third contrasts areas with
+high android and high gynoid fat mass. The second axis distinguishes between
+right and left total lean and fat mass. variation, while the third axes captures
+difference between mass in the trunk versus arms and legs.
+
+These summaries could have been obtained by analyzing each table separately.
+More interest lies in covariation between the two tables, captured by the shared
+scores $\xi_{i}^{s}$ and loadings $B^{X}, B^{Y}$. The shared body composition
+loadings are given in Figure
+\ref{fig:lda_cca_between_loadings_body_comp_boxplots}. The first row of loadings
+again differentiates android and gynoid and fat mass variables. The second axis
+slightly differentiates left and right total fat mass, though the effect is less
+pronounced than in the table-specific loadings.
+
+The bacterial abundance loadings are given in Figures
+\ref{fig:lda_cca_within_loadings_seq_boxplots} and
+\ref{fig:lda_cca_between_loadings_seq_boxplots}. The most notable observation is
+that the first axes places more weight on rarer species, while the second places
+proportionally more weight on abundant species. Further, the two axes seem have
+very different behaviors with respect to Prevotellaceae and Veillonellaceae.
+
+In general, we find the results from the LDA-CCA approach less satisfying than
+those of the sparse CCA of Section \ref{subsec:pmd}. It seems that inference of
+a probabilistic model with shared and unshared parameters is more difficult than
+optimization of a single set of shared parameters. It may be possible to improve
+this approach through the following strategies,
+\begin{itemize}
+\item Applying LDA-CCA only to those species that are not sent entirely to zero
+  by sparse CCA.
+\item Placing a sparsity-inducing prior the scores $B^{X}, B^{Y}, W^{X}$, and
+  $W^{Y}$, respectively, in the spirit of \citep{archambeau2009sparse}.
+\end{itemize}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure/lda_cca/between_loadings_seq_boxplots}
+  \caption{Cross-table loadings for species, as in Figure
+    \ref{fig:lda_cca_within_loadings_seq_boxplots}, but for
+    $B^{X}_{jk}$. \label{fig:lda_cca_between_loadings_seq_boxplots} }
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.95\textwidth]{figure/lda_cca/between_loadings_body_comp_boxplots}
+  \caption{Cross-table loadings for the body composition variables, read exactly
+    as in Figure \ref{fig:lda_cca_within_loadings_body_comp_boxplots}, but for
+    for the parameters
+    $B^{Y}_{jk}$. \label{fig:lda_cca_between_loadings_body_comp_boxplots}}
+\end{figure}
+
 
 \subsection{Graph-Fused Lasso}
 \label{subsec:graph_fused_lasso}
@@ -1173,7 +1452,7 @@ covariance matrix. The estimated correlation matrix is displayed in Figure
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.9\textwidth]{figure/multitable/graph_lasso/graph}
+  \includegraphics[width=0.9\textwidth]{figure/graph_lasso/graph}
   \caption{Correlation matrix used as the input graph $R$ for the graph-fused
     lasso, estimated itself according to the graphical
     lasso. \label{fig:graph_lasso_graph} }
@@ -1202,7 +1481,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/graph_lasso/coef_heatmap}
+  \includegraphics[width=\textwidth]{figure/graph_lasso/coef_heatmap}
   \caption{Coefficients for the graph-fused lasso highlight groups of species
     with similar profiles across response variables. Colored rectangles
     demarcate taxonomic families. Individual cells give the coefficient for a
@@ -1216,7 +1495,7 @@ the parallel-lasso context, where such structure has not been directly imposed.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure/multitable/graph_lasso/multitask_lasso_hm}
+  \includegraphics[width=\textwidth]{figure/graph_lasso/multitask_lasso_hm}
   \caption{The analog of Figure \ref{fig:graph_lasso_coef_heatmap} when there is
     no sharing across response problems. Note that coefficients nonetheless seem
     to be similar within lean and fat mass response groups, respectively, but
@@ -1254,9 +1533,9 @@ Require covariance estimate & Concat. PCA, CCA, CoIA, MFA, PTA, Statico / Costat
 Sparsity & SPLS, Graph-Fused Lasso, Graph-Fused Lasso & Encouraging sparsity on scores or loadings can result in more interpretable, results for high-dimensional data sets. These methods provide automatic variable selection in the multitable analysis problem. \\
 \hline
 Tuning parameters &
-  \textit{Sparsity}: Graph-Fused Lasso, PMD, SPLS \newline
-  \textit{Number of Factors}: PCA-IV, Red. Rank Regression, Mixed-Membership CCA \newline
-  \textit{Prior Parameters}: Mixed-Membership CCA, Bayesian Multitask Regression \newline
+  \textit{Sparsity}: Graph-Fused Lasso, PMD, SPLS \\
+  \textit{Number of Factors}: PCA-IV, Red. Rank Regression, Mixed-Membership CCA \\
+  \textit{Prior Parameters}: Mixed-Membership CCA, Bayesian Multitask Regression \\
   \hline
 Probabilistic & Mixed-Membership CCA, Bayesian Multitask Regression & Probabilistic techniques provide estimates of uncertainty, along with representations of cross-table covariation. This comes at the cost of more involved computation and difficulty in assessing convergence. \\
 \hline
@@ -1311,3 +1590,31 @@ contexts in which it arises, and it speaks to the richness of this
 methodological problem. As new data sources arise and as science evolves, we
 expect these ideas will inspire future generations of multitable research
 advances.
+
+\section*{Funding}
+KS was supported by a Stanford University Weiland fellowship and the National
+Institute of Health T32 grant 5T32GM096982-04. SPH is supported by the National
+Institute of Health TR01 grant AI112401.
+Conflict of Interest: None declared.
+
+\section*{Acknowledgements}
+We thank the WELL China study team for the sharing data appearing in this study.
+
+An earlier version of this work first appeared in KS's PhD thesis
+\citep{sankaran2018thesis}.
+
+
+%% \section*{Supplemental Data}
+\section*{Appendix}
+\input{appendix_derivations}
+
+\section*{Data Availability Statement}
+The original data behind this study are not publicly available, due to privacy
+considerations.
+
+But we should provide a version of resampled or simulated data....just so people
+can rerun our scripts.
+
+\bibliographystyle{frontiersinSCNS_ENG_HUMS} % for Science, Engineering and Humanities and Social Sciences articles, for Humanities and Social Sciences articles please include page numbers in the in-text citations
+\bibliography{refs}
+\end{document}

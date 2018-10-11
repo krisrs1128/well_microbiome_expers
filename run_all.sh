@@ -1,3 +1,9 @@
+mkdir chapter/figure/pca
+mkdir chapter/figure/pmd
+mkdir chapter/figure/spls
+mkdir chapter/figure/graph_lasso
+mkdir chapter/figure/lda_cca
+
 cd dimension_red
 Rscript pca.R
 Rscript pmd.R

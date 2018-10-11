@@ -45,7 +45,11 @@ merge_process_opts <- function(opts = list()) {
 #'         microbiome study.
 #'    (4) bc_full: The body composition data across all participants in the
 #'         study.
-read_data <- function(data_dir = "../data/") {
+read_data <- function(simulate=TRUE, data_dir = "../data/") {
+  if (simulate) {
+    return (get(load(file.path(data_dir, "sim.rda"))))
+  }
+
   seqtab <- readRDS(file.path(data_dir, "seqtab.rds"))
   batch <- read_csv(file.path(data_dir, "222_Participant_Batch_Numbers.csv"))
   bc <- readRDS(file.path(data_dir, "sample_data_bc.rds")) %>%
@@ -84,6 +88,46 @@ read_data <- function(data_dir = "../data/") {
     "tree" = readRDS(file.path(data_dir, "phylo_tree.rds"))
   )
 }
+
+#' Simulated data
+#'
+#' This creates the made-up data set, used just for others to experiment with
+#' our code, without having to release the original (private) data.
+#'
+#' @param raw The output of the read_data() when given real data.
+#' @return sim A dataset with the same structure as `raw`, but with all
+#'   non-taxonomic data simulated.
+create_sim <- function(raw) {
+  sim <- list()
+
+  # simulate the rsv matrix
+  J <- 200
+  sim$seqtab <- raw$seqtab[, 1:J]
+  N <- nrow(sim$seqtab)
+  rownames(sim$seqtab) <- paste0("sa", seq_len(N))
+  for (j in seq_len(J)) {
+    sim$seqtab[, j] <- rnbinom(N, 0.5, mu=15)
+  }
+
+  # simulate the body compositions
+  sim$bc <- raw$bc
+  sim$bc[, "id"] <- as.character(seq_len(nrow(sim$bc)))
+  sim$bc[, "number"] <- as.character(seq_len(nrow(sim$bc)))
+  sim$bc[, "gender"] <- sample(c("Male", "Female"), nrow(sim$bc), replace =  TRUE)
+  sim$bc[, "age"] <- rpois(nrow(sim$bc), 50)
+  sim$bc[, "batch"] <- 1
+  sim$bc[, "operator"] <- 1
+  for (j in 5:36) {
+    sim$bc[, j] <- rnorm(nrow(sim$bc), 100, 20)
+  }
+
+  sim$bc_full <- sim$bc
+  sim$tree <- raw$tree
+  sim$taxa <- raw$taxa
+
+  sim
+}
+
 
 #' Prepare sample data
 #'
@@ -189,7 +233,7 @@ vst_ps <- function(ps, sf_quantile = 0.95, ...) {
   varianceStabilizingTransformation(dds, ...)
 }
 
-#' Preprocess Microbioem + Body Composition Data
+#' Preprocess Microbiome + Body Composition Data
 #'
 #' Prepare the output of read_data() for use in actual analysis. This basically
 #' wraps prepare_sample(), prepare_taxa() and some DESeq functions.

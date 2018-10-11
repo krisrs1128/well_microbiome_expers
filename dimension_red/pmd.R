@@ -72,9 +72,9 @@ plot_scores(scores, "type", "Meas. Type", cca_res$d) +
 plot_scores(scores, "android_fm", "android fm", cca_res$d, c(-3, 3)) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barheight = 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
-ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 5.52, height = 3.86)
+ggsave("../chapter/figure/pmd/scores_android_fm.png", width = 4.4, height = 3.1)
 
 ## color by ruminoccocus / lachnospiraceae ratios
 scores <- scores %>%
@@ -82,7 +82,7 @@ scores <- scores %>%
 plot_scores(scores, "rl_ratio", "tanh(Bact. - Rumino.)", cca_res$d) +
   link_scores(mscores) +
   scale_color_viridis(
-    guide = guide_colorbar(barheight= 0.15, ticks = FALSE)
+    guide = guide_colorbar(barheight = 3, barwidth = 0.15, ticks = FALSE)
   )
 
 ## Plot the loadings
@@ -115,10 +115,9 @@ plot_loadings(
       label = seq_num,
       col = family
     ),
-    size = 3
+    size = 1.5
   ) +
-  scale_size(range = c(1, 3), breaks = c(-5, 5))
-ggsave("../chapter/figure/pmd/loadings.png", width = 6.14, height = 4.76)
+ggsave("../chapter/figure/pmd/loadings.png", width = 4.5, height = 3.3)
 
 mlarge_species <- melt(
   data.frame(
